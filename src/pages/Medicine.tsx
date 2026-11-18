@@ -516,12 +516,12 @@ function Medicine() {
     };
 
     const categoryChartColors = [
-        "#3b82f6", // blue-500
-        "#60a5fa", // blue-400
-        "#2563eb", // blue-600
-        "#93c5fd", // blue-300
-        "#1d4ed8", // blue-700
-        "#38bdf8", // sky-400
+        "#70091f", // primary TCC maroon
+        "#8d1b32", // rich garnet maroon
+        "#a82b43", // crimson rose maroon
+        "#c2435b", // medium rose maroon
+        "#dc667a", // soft blush maroon
+        "#520616", // deep wine maroon
     ];
 
     const categoryChartData = useMemo(() => {
@@ -535,7 +535,7 @@ function Medicine() {
 
         const entries = Object.entries(totalsByCategory);
         if (entries.length === 0) {
-            return [{ name: "In Stock", value: totalStock || 1, fill: "#3b82f6" }];
+            return [{ name: "In Stock", value: totalStock || 1, fill: "#70091f" }];
         }
 
         return entries.map(([name, value], i) => ({
@@ -847,7 +847,7 @@ function Medicine() {
                                     onClick={() => setStockChartMode("category")}
                                     className={`rounded-md px-2 py-0.5 transition ${
                                         stockChartMode === "category"
-                                            ? "bg-[#8a6f50] text-white shadow-xs"
+                                            ? "bg-[#70091f] text-white shadow-xs"
                                             : "text-stone-500 hover:text-stone-800 dark:text-stone-400"
                                     }`}
                                 >
@@ -858,7 +858,7 @@ function Medicine() {
                                     onClick={() => setStockChartMode("status")}
                                     className={`rounded-md px-2 py-0.5 transition ${
                                         stockChartMode === "status"
-                                            ? "bg-[#8a6f50] text-white shadow-xs"
+                                            ? "bg-[#70091f] text-white shadow-xs"
                                             : "text-stone-500 hover:text-stone-800 dark:text-stone-400"
                                     }`}
                                 >
@@ -867,7 +867,7 @@ function Medicine() {
                             </div>
                         </div>
 
-                        {/* Recharts Pie Chart Canvas matching Image 2 */}
+                        {/* Recharts Pie Chart Canvas */}
                         <div className="my-auto flex h-[190px] w-full items-center justify-center">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -882,7 +882,7 @@ function Medicine() {
                                                     <p className="font-semibold text-stone-800 dark:text-stone-200">
                                                         {item.name}
                                                     </p>
-                                                    <p className="mt-0.5 font-bold text-sky-600 dark:text-sky-400">
+                                                    <p className="mt-0.5 font-bold text-[#70091f] dark:text-[#f492a3]">
                                                         {Number(item.value).toLocaleString()} {stockChartMode === "category" ? "units" : "medicines"} ({percent}%)
                                                     </p>
                                                 </div>
