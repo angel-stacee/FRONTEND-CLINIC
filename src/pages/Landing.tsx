@@ -368,12 +368,6 @@ export default function Landing(): React.JSX.Element {
                                 <Pill className="h-3.5 w-3.5 text-[#e5a93b]" />
                                 <span>Medicine Inventory</span>
                             </span>
-
-                            {/* Medical Certificates (Mid Right) */}
-                            <span className="animate-float-reverse absolute top-20 right-4 lg:right-0 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3.5 py-1.5 text-[11px] font-bold text-white shadow-lg shadow-black/25 backdrop-blur-md">
-                                <FileCheck className="h-3.5 w-3.5 text-[#e5a93b]" />
-                                <span>Medical Certificates</span>
-                            </span>
                         </div>
 
                         {/* Main Title */}
