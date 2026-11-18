@@ -1,4 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    CartesianGrid,
+    XAxis,
+    Tooltip,
+} from "recharts";
 import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache } from "../services/recordCache";
 
@@ -339,15 +347,15 @@ function Reports() {
                         <SummaryCard title="Staff Visits" value={summary.staff_visits || 0} icon={<Users size={21} />} />
                     </section>
 
-                    <section className="report-panel rounded-2xl border border-[#e8dfd4] bg-white p-5 shadow-sm sm:p-6">
-                        <div className="mb-2 flex flex-wrap items-end justify-between gap-2">
-                            <div>
-                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8a6f50]">Daily activity</p>
-                                <h2 className="mt-1 text-lg font-bold text-stone-900">Clinic visits by day</h2>
-                            </div>
-                            <p className="text-xs text-stone-500">Number of visits · {report.report?.period || `${monthNames[month - 1]} ${year}`}</p>
-                        </div>
-                        <DailyVisitsChart data={dailyVisits} month={month} year={year} />
+                    <section className="report-panel">
+                        <DailyVisitsChart
+                            data={dailyVisits}
+                            visits={visits}
+                            summary={summary}
+                            month={month}
+                            year={year}
+                            period={report.report?.period || `${monthNames[month - 1]} ${year}`}
+                        />
                     </section>
 
                     <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
@@ -543,78 +551,196 @@ type DailyVisitItem = {
 
 type DailyVisitsChartProps = {
     data: DailyVisitItem[];
+    visits?: VisitRecord[];
+    summary?: ReportSummary;
     month: number;
     year: number;
+    period?: string;
 };
 
-function DailyVisitsChart({ data, month, year }: DailyVisitsChartProps) {
+const CHART_TABS = {
+    students: {
+        label: "Students",
+        color: "#0284c7",
+    },
+    employees: {
+        label: "Faculty & Staff",
+        color: "#0284c7",
+    },
+    total: {
+        label: "Total Visits",
+        color: "#0284c7",
+    },
+} as const;
+
+type ChartTabKey = keyof typeof CHART_TABS;
+
+function DailyVisitsChart({ data, visits, summary, month, year, period }: DailyVisitsChartProps) {
+    const [activeChart, setActiveChart] = useState<ChartTabKey>("students");
+
     const daysInMonth = new Date(year, month, 0).getDate();
-    const countByDay = new Map<number, number>(
-        data.map((item): [number, number] => [
-            getDayOfMonth(item.date),
-            Number(item.count || 0),
-        ])
-    );
-    const points = Array.from({ length: daysInMonth }, (_, index) => ({
-        day: index + 1,
-        count: countByDay.get(index + 1) || 0,
-    }));
-    const totalVisits = points.reduce((total, point) => total + point.count, 0);
-    const maximum = Math.max(0, ...points.map((point) => point.count));
-    const axisMaximum = Math.max(4, Math.ceil(maximum / 4) * 4);
-    const left = 48;
-    const top = 20;
-    const plotWidth = 820;
-    const plotHeight = 190;
-    const baseline = top + plotHeight;
-    const slotWidth = plotWidth / daysInMonth;
-    const barWidth = Math.min(20, slotWidth * 0.62);
+    const monthNamesShort = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    const monthShort = monthNamesShort[month - 1] || "Nov";
+
+    const points = useMemo(() => {
+        const visitsByDay: Record<number, { total: number; students: number; employees: number }> = {};
+        for (let d = 1; d <= daysInMonth; d++) {
+            visitsByDay[d] = { total: 0, students: 0, employees: 0 };
+        }
+
+        if (Array.isArray(visits) && visits.length > 0) {
+            visits.forEach((v) => {
+                const dayNum = getDayOfMonth(v.date);
+                if (dayNum >= 1 && dayNum <= daysInMonth) {
+                    visitsByDay[dayNum].total += 1;
+                    const pType = String(v.person_type || "").toLowerCase();
+                    if (pType === "student") {
+                        visitsByDay[dayNum].students += 1;
+                    } else {
+                        visitsByDay[dayNum].employees += 1;
+                    }
+                }
+            });
+        } else if (Array.isArray(data) && data.length > 0) {
+            data.forEach((item) => {
+                const dayNum = getDayOfMonth(item.date);
+                if (dayNum >= 1 && dayNum <= daysInMonth) {
+                    const count = Number(item.count || 0);
+                    visitsByDay[dayNum].total = count;
+                    visitsByDay[dayNum].students = count;
+                }
+            });
+        }
+
+        return Array.from({ length: daysInMonth }, (_, index) => {
+            const day = index + 1;
+            const padMonth = String(month).padStart(2, "0");
+            const padDay = String(day).padStart(2, "0");
+            return {
+                date: `${year}-${padMonth}-${padDay}`,
+                day,
+                formattedDate: `${monthShort} ${day}`,
+                total: visitsByDay[day].total,
+                students: visitsByDay[day].students,
+                employees: visitsByDay[day].employees,
+            };
+        });
+    }, [data, visits, daysInMonth, month, year, monthShort]);
+
+    const totals = useMemo(() => {
+        return {
+            students: summary?.student_visits ?? points.reduce((acc, curr) => acc + curr.students, 0),
+            employees: (summary?.faculty_visits ?? 0) + (summary?.staff_visits ?? 0),
+            total: summary?.total_visits ?? points.reduce((acc, curr) => acc + curr.total, 0),
+        };
+    }, [summary, points]);
 
     return (
-        <div className="report-chart-wrap mt-4 overflow-x-auto">
-            <svg
-                className="report-chart min-w-[680px]"
-                viewBox="0 0 900 270"
-                role="img"
-                aria-label={`Daily clinic visits for ${month}/${year}; ${totalVisits} visits across ${daysInMonth} days.`}
-            >
-                <title>Daily clinic visits for {month}/{year}</title>
-                {[0, 1, 2, 3, 4].map((step) => {
-                    const y = top + (plotHeight / 4) * step;
-                    const value = Math.round(axisMaximum * (1 - step / 4));
+        <div className="report-chart-wrap w-full overflow-hidden rounded-2xl border border-[#e8dfd4] bg-white text-stone-900 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-[#382f25] dark:bg-[#251f19] dark:text-[#f4ecdf]">
+            {/* Top Header matching Light / Theme Mode */}
+            <div className="flex flex-col sm:flex-row items-stretch border-b border-[#e8dfd4] dark:border-[#382f25]">
+                <div className="flex flex-1 flex-col justify-center gap-1 p-5 sm:p-6">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#8a6f50] dark:text-[#d4b996]">
+                        Daily activity
+                    </p>
+                    <h2 className="text-base sm:text-lg font-bold tracking-tight text-stone-900 dark:text-[#f4ecdf]">
+                        Clinic visits by day
+                    </h2>
+                    <p className="text-xs text-stone-500 dark:text-stone-400">
+                        Number of visits · {period || `${monthShort} ${year}`}
+                    </p>
+                </div>
 
-                    return (
-                        <g key={step}>
-                            <line x1={left} y1={y} x2={left + plotWidth} y2={y} stroke="#e8dfd4" strokeDasharray={step === 4 ? undefined : "3 5"} />
-                            <text x={left - 10} y={y + 4} textAnchor="end" fill="#887d70" fontSize="10">{value}</text>
-                        </g>
-                    );
-                })}
+                {/* Interactive Metric Tabs */}
+                <div className="flex border-t border-[#e8dfd4] sm:border-t-0 sm:border-l sm:border-[#e8dfd4] dark:border-[#382f25]">
+                    {(["students", "employees", "total"] as ChartTabKey[]).map((key) => {
+                        const isActive = activeChart === key;
+                        const config = CHART_TABS[key];
+                        return (
+                            <button
+                                key={key}
+                                type="button"
+                                onClick={() => setActiveChart(key)}
+                                className={`flex flex-1 sm:min-w-[130px] flex-col justify-center gap-1 px-5 py-4 text-left transition-colors even:border-l even:border-[#e8dfd4] dark:even:border-[#382f25] ${
+                                    isActive
+                                        ? "bg-[#fcfaf6] text-stone-900 shadow-xs dark:bg-[#30261e] dark:text-stone-100"
+                                        : "text-stone-500 hover:bg-stone-50/70 dark:text-stone-400 dark:hover:bg-[#2b221a]"
+                                }`}
+                            >
+                                <span className="text-xs font-medium text-stone-500 dark:text-stone-400">
+                                    {config.label}
+                                </span>
+                                <span className="text-xl sm:text-3xl font-bold tracking-tight text-stone-900 dark:text-[#f4ecdf]">
+                                    {totals[key].toLocaleString()}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
 
-                {points.map((point, index) => {
-                    const height = (point.count / axisMaximum) * plotHeight;
-                    const x = left + index * slotWidth + (slotWidth - barWidth) / 2;
-                    const showLabel = point.day === 1 || point.day % 5 === 0 || point.day === daysInMonth;
-
-                    return (
-                        <g key={point.day}>
-                            {point.count > 0 && (
-                                <rect x={x} y={baseline - height} width={barWidth} height={height} rx="3" fill="#8a6f50">
-                                    <title>Day {point.day}: {point.count} visits</title>
-                                </rect>
-                            )}
-                            {showLabel && (
-                                <text x={left + index * slotWidth + slotWidth / 2} y={baseline + 22} textAnchor="middle" fill="#887d70" fontSize="10">{point.day}</text>
-                            )}
-                        </g>
-                    );
-                })}
-
-                <text x={left} y="263" fill="#887d70" fontSize="10">Day of month</text>
-            </svg>
-            <p className="mt-1 text-right text-xs text-stone-500">
-                {totalVisits.toLocaleString()} visits recorded this month
-            </p>
+            {/* Recharts Canvas */}
+            <div className="p-4 sm:p-6">
+                <div className="h-[260px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                            data={points}
+                            margin={{ left: 8, right: 12, top: 12, bottom: 4 }}
+                        >
+                            <CartesianGrid
+                                vertical={false}
+                                stroke="#e8dfd4"
+                                strokeDasharray="3 3"
+                            />
+                            <XAxis
+                                dataKey="formattedDate"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={10}
+                                minTickGap={28}
+                                stroke="#a8a29e"
+                                tick={{ fill: "#78716c", fontSize: 11 }}
+                            />
+                            <Tooltip
+                                content={({ active, payload }) => {
+                                    if (!active || !payload || !payload.length) return null;
+                                    const item = payload[0].payload;
+                                    return (
+                                        <div className="rounded-xl border border-[#e8dfd4] bg-white p-3 text-xs shadow-lg dark:border-[#382f25] dark:bg-[#251f19]">
+                                            <p className="font-semibold text-stone-800 dark:text-stone-200">
+                                                {item.date} ({item.formattedDate})
+                                            </p>
+                                            <p className="mt-1 font-bold text-sky-600 dark:text-sky-400">
+                                                {CHART_TABS[activeChart].label}: {Number(item[activeChart] || 0).toLocaleString()} visits
+                                            </p>
+                                        </div>
+                                    );
+                                }}
+                            />
+                            <Line
+                                dataKey={activeChart}
+                                type="monotone"
+                                stroke={CHART_TABS[activeChart].color}
+                                strokeWidth={2.5}
+                                dot={false}
+                                activeDot={{
+                                    r: 5,
+                                    fill: CHART_TABS[activeChart].color,
+                                    stroke: "#ffffff",
+                                    strokeWidth: 2,
+                                }}
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-stone-500 dark:text-stone-400">
+                    <span>Day of month</span>
+                    <span>{totals.total.toLocaleString()} visits recorded this month</span>
+                </div>
+            </div>
         </div>
     );
 }
