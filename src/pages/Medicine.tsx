@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import {
     Pill,
     Plus,
@@ -12,7 +12,15 @@ import {
     BarChart3,
     AlertOctagon,
     Calendar,
+    TrendingUp,
 } from "lucide-react";
+import {
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Tooltip,
+} from "recharts";
 import api from "../services/api";
 import FloatingToast from "../components/common/FloatingToast";
 import { MedicineModal } from "../components/medicine/MedicineModal";
@@ -59,6 +67,7 @@ function Medicine() {
     const [search, setSearch] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [loading, setLoading] = useState(true);
+    const [stockChartMode, setStockChartMode] = useState<"category" | "status">("category");
 
     const [showForm, setShowForm] = useState(false);
     const [editingMedicine, setEditingMedicine] = useState(null);
@@ -506,6 +515,46 @@ function Medicine() {
         )`,
     };
 
+    const categoryChartColors = [
+        "#3b82f6", // blue-500
+        "#60a5fa", // blue-400
+        "#2563eb", // blue-600
+        "#93c5fd", // blue-300
+        "#1d4ed8", // blue-700
+        "#38bdf8", // sky-400
+    ];
+
+    const categoryChartData = useMemo(() => {
+        const totalsByCategory: Record<string, number> = {};
+        if (Array.isArray(medicines)) {
+            medicines.forEach((m: any) => {
+                const category = m.treatment_type || "Medication";
+                totalsByCategory[category] = (totalsByCategory[category] || 0) + Number(m.stock || 0);
+            });
+        }
+
+        const entries = Object.entries(totalsByCategory);
+        if (entries.length === 0) {
+            return [{ name: "In Stock", value: totalStock || 1, fill: "#3b82f6" }];
+        }
+
+        return entries.map(([name, value], i) => ({
+            name,
+            value,
+            fill: categoryChartColors[i % categoryChartColors.length],
+        }));
+    }, [medicines, totalStock]);
+
+    const statusChartData = useMemo(() => {
+        return [
+            { name: "In Stock", value: inStockCount, fill: "#27a866" },
+            { name: "Low Stock", value: lowStockCount, fill: "#f5ae22" },
+            { name: "Out of Stock", value: outOfStockCount, fill: "#e63946" },
+        ].filter((item) => item.value > 0);
+    }, [inStockCount, lowStockCount, outOfStockCount]);
+
+    const activePieData = stockChartMode === "category" ? categoryChartData : statusChartData;
+
     const createMiniBars = (ratios = [0.38, 0.58, 0.78, 1.0]) => {
         return ratios.map((ratio, index) => (
             <div
@@ -772,93 +821,105 @@ function Medicine() {
 
                 <section className="mb-4 grid grid-cols-1 gap-3 xl:grid-cols-2">
 
-                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-4 shadow-sm">
-                        <div className="mb-3 flex items-center gap-2">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3ebdf] text-[#8a6f50]">
-                                <Pill size={16} />
+                    <div className="flex flex-col justify-between rounded-xl border border-[#e8dfd4] bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md dark:border-[#382f25] dark:bg-[#251f19]">
+                        {/* Card Header matching Image 2 & theme */}
+                        <div className="mb-2 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3ebdf] text-[#8a6f50] dark:bg-[#342a22] dark:text-[#d4b996]">
+                                    <Pill size={16} />
+                                </div>
+
+                                <div>
+                                    <h2 className="text-sm font-bold text-stone-900 dark:text-[#f4ecdf]">
+                                        Stock Overview
+                                    </h2>
+
+                                    <p className="text-[10px] text-stone-500 dark:text-stone-400">
+                                        Medicine inventory status
+                                    </p>
+                                </div>
                             </div>
 
-                            <div>
-                                <h2 className="text-sm font-bold">
-                                    Stock Overview
-                                </h2>
-
-                                <p className="text-[10px] text-[#887d70]">
-                                    Medicine inventory status
-                                </p>
+                            {/* View Mode Switcher */}
+                            <div className="flex rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] p-0.5 text-[10px] font-semibold dark:border-[#382f25] dark:bg-[#201a15]">
+                                <button
+                                    type="button"
+                                    onClick={() => setStockChartMode("category")}
+                                    className={`rounded-md px-2 py-0.5 transition ${
+                                        stockChartMode === "category"
+                                            ? "bg-[#8a6f50] text-white shadow-xs"
+                                            : "text-stone-500 hover:text-stone-800 dark:text-stone-400"
+                                    }`}
+                                >
+                                    By Category
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setStockChartMode("status")}
+                                    className={`rounded-md px-2 py-0.5 transition ${
+                                        stockChartMode === "status"
+                                            ? "bg-[#8a6f50] text-white shadow-xs"
+                                            : "text-stone-500 hover:text-stone-800 dark:text-stone-400"
+                                    }`}
+                                >
+                                    By Status
+                                </button>
                             </div>
                         </div>
 
-                        <div className="flex min-h-[145px] items-center justify-center gap-8">
+                        {/* Recharts Pie Chart Canvas matching Image 2 */}
+                        <div className="my-auto flex h-[190px] w-full items-center justify-center">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Tooltip
+                                        content={({ active, payload }) => {
+                                            if (!active || !payload || !payload.length) return null;
+                                            const item = payload[0];
+                                            const totalVal = activePieData.reduce((acc, curr) => acc + curr.value, 0) || 1;
+                                            const percent = Math.round((Number(item.value) / totalVal) * 100);
+                                            return (
+                                                <div className="rounded-xl border border-[#e8dfd4] bg-white px-3 py-2 text-xs shadow-lg dark:border-[#382f25] dark:bg-[#251f19]">
+                                                    <p className="font-semibold text-stone-800 dark:text-stone-200">
+                                                        {item.name}
+                                                    </p>
+                                                    <p className="mt-0.5 font-bold text-sky-600 dark:text-sky-400">
+                                                        {Number(item.value).toLocaleString()} {stockChartMode === "category" ? "units" : "medicines"} ({percent}%)
+                                                    </p>
+                                                </div>
+                                            );
+                                        }}
+                                    />
+                                    <Pie
+                                        data={activePieData}
+                                        dataKey="value"
+                                        nameKey="name"
+                                        cx="50%"
+                                        cy="50%"
+                                        outerRadius={75}
+                                        stroke="#ffffff"
+                                        strokeWidth={2}
+                                        isAnimationActive={true}
+                                    >
+                                        {activePieData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
 
-                            <div
-                                className="relative flex h-32 w-32 shrink-0 items-center justify-center rounded-full"
-                                style={donutStyle}
-                            >
-                                <div className="flex h-[88px] w-[88px] flex-col items-center justify-center rounded-full bg-white">
-                                    <span className="text-xl font-bold">
-                                        {totalStock}
-                                    </span>
-
-                                    <span className="text-[9px] text-[#887d70]">
-                                        Total Stock
-                                    </span>
-                                </div>
+                        {/* Card Footer matching Image 2 */}
+                        <div className="mt-2 flex flex-col items-center gap-1 border-t border-[#e8dfd4] pt-2.5 text-center dark:border-[#382f25]">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-stone-800 dark:text-stone-200">
+                                <span>
+                                    {lowStockCount === 0 && outOfStockCount === 0
+                                        ? "Inventory fully stocked (100%)"
+                                        : `${lowStockCount} low stock · ${outOfStockCount} out of stock`}
+                                </span>
+                                <TrendingUp className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                             </div>
-
-                            <div className="min-w-[190px] space-y-3">
-
-                                <div className="flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2.5 w-2.5 rounded-full bg-[#27a866]" />
-                                        <span className="text-xs text-[#766959]">
-                                            In Stock
-                                        </span>
-                                    </div>
-
-                                    <span className="text-xs font-bold">
-                                        {inStockCount}
-                                    </span>
-
-                                    <span className="w-9 text-right text-[10px] text-[#887d70]">
-                                        {Math.round(inStockPercent)}%
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2.5 w-2.5 rounded-full bg-[#f5ae22]" />
-                                        <span className="text-xs text-[#766959]">
-                                            Low Stock
-                                        </span>
-                                    </div>
-
-                                    <span className="text-xs font-bold">
-                                        {lowStockCount}
-                                    </span>
-
-                                    <span className="w-9 text-right text-[10px] text-[#887d70]">
-                                        {Math.round(lowStockPercent)}%
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center justify-between gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-2.5 w-2.5 rounded-full bg-[#e63946]" />
-                                        <span className="text-xs text-[#766959]">
-                                            Out of Stock
-                                        </span>
-                                    </div>
-
-                                    <span className="text-xs font-bold">
-                                        {outOfStockCount}
-                                    </span>
-
-                                    <span className="w-9 text-right text-[10px] text-[#887d70]">
-                                        {Math.round(outOfStockPercent)}%
-                                    </span>
-                                </div>
-
+                            <div className="text-[10px] text-stone-500 dark:text-stone-400">
+                                Showing {Number(totalStock).toLocaleString()} total units across {totalMedicines} medicines
                             </div>
                         </div>
                     </div>
