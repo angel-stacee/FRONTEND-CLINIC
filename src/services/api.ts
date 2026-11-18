@@ -20,6 +20,10 @@ export const getApiOrigin = (): string => {
             return "http://127.0.0.1:8000";
         }
 
+        if (host.includes("railway.app")) {
+            return "https://backend-clinic-production-f6503b5a.up.railway.app";
+        }
+
         return window.location.origin;
     }
 
