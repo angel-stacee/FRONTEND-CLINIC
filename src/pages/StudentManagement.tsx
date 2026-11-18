@@ -1542,7 +1542,7 @@ function StudentManagement() {
                                 openStudentForm();
                             }
                         }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#8a6f50] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#735a40] focus:outline-none focus:ring-2 focus:ring-[#8a6f50]/40"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505] focus:outline-none focus:ring-2 focus:ring-[#70091f]/40"
                     >
                         <span>+ Add Patient</span>
                     </button>
@@ -2355,7 +2355,7 @@ function StudentManagement() {
                                     <button
                                         type="button"
                                         onClick={resetAllFilters}
-                                        className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#8a6f50] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#735a40]"
+                                        className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#8b1505]"
                                     >
                                         <RotateCcw size={15} />
                                         <span>Reset Filters</span>

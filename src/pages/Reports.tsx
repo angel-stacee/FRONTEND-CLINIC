@@ -201,7 +201,7 @@ function Reports() {
                     <button
                         onClick={handlePrint}
                         disabled={!report}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#8a6f50] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#735a40] disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 hover:bg-[#8b1505] disabled:opacity-50"
                     >
                         <Printer size={17} />
 
@@ -278,7 +278,7 @@ function Reports() {
                         <button
                             onClick={() => generateReport(month, year, true)}
                             disabled={loading}
-                            className="rounded-xl bg-[#8a6f50] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#735a40] disabled:opacity-50"
+                            className="rounded-xl bg-[#70091f] px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505] disabled:opacity-50"
                         >
                             {loading
                                 ? "Generating..."

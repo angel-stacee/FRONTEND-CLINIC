@@ -600,7 +600,7 @@ function Medicine() {
 
                     <button
                         onClick={openAddForm}
-                        className="flex items-center justify-center gap-2 rounded-xl bg-[#8a6f50] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#735a40]"
+                        className="flex items-center justify-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505]"
                     >
                         <Plus size={17} />
                         Add Medicine
