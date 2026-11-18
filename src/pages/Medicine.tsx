@@ -1113,7 +1113,7 @@ function Medicine() {
                                         }}
                                         className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition ${
                                             isSelected
-                                                ? "bg-[#8a6f50] text-white shadow-sm"
+                                                ? "bg-[#70091f] text-white shadow-sm shadow-[#70091f]/20"
                                                 : "border border-[#e8dfd4] bg-white text-[#675948] hover:bg-[#f6f0e6]"
                                         }`}
                                     >
@@ -1146,7 +1146,7 @@ function Medicine() {
                                                 ? "bg-red-600 text-white shadow-sm"
                                                 : tab.isWarning
                                                 ? "bg-amber-600 text-white shadow-sm"
-                                                : "bg-[#8a6f50] text-white shadow-sm"
+                                                : "bg-[#70091f] text-white shadow-sm shadow-[#70091f]/20"
                                             : tab.isDanger
                                             ? "border border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
                                             : tab.isWarning

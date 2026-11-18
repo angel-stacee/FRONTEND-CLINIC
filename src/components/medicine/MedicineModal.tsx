@@ -115,7 +115,7 @@ export function MedicineModal({
                 {/* Modal Header */}
                 <div className="sticky top-0 z-20 flex items-center justify-between border-b border-stone-200 bg-white px-6 py-4 dark:border-stone-800 dark:bg-stone-900">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-[#d96502] dark:bg-amber-950/40 dark:text-amber-400">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#70091f]/10 text-[#70091f] dark:bg-[#70091f]/20 dark:text-[#dc667a]">
                             <Pill size={20} />
                         </div>
                         <div>
@@ -382,7 +382,7 @@ export function MedicineModal({
                         <button
                             type="submit"
                             disabled={saving}
-                            className="flex items-center gap-2 rounded-lg bg-[#d96502] px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#b85400] disabled:cursor-not-allowed disabled:opacity-50"
+                            className="flex items-center gap-2 rounded-lg bg-[#70091f] px-5 py-2 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505] disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {saving
                                 ? "Saving..."
