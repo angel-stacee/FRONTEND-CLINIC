@@ -57,11 +57,11 @@ export function exportMonthlyReportPDF(reportData: {
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
-    doc.text("TAGOLOAN COMMUNITY COLLEGE CLINIC", 14, 11);
+    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 11);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text("HEALTH SERVICES & CAMPUS CLINIC MANAGEMENT SYSTEM", 14, 18);
+    doc.text("HEALTH SERVICES CLINIC — CAMPUS CLINIC MANAGEMENT SYSTEM", 14, 18);
 
     // Period & Report Title
     const periodText = reportData.report?.period || `${reportData.report?.month_name || "Monthly"} ${reportData.report?.year || ""}`;
@@ -296,11 +296,11 @@ export function exportStudentMedicalReportPDF(
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
-    doc.text("TAGOLOAN COMMUNITY COLLEGE CLINIC", 14, 11);
+    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 11);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text("HEALTH SERVICES & CAMPUS CLINIC — STUDENT MEDICAL RECORD", 14, 18);
+    doc.text("HEALTH SERVICES CLINIC — STUDENT MEDICAL RECORD", 14, 18);
 
     doc.setFontSize(8);
     doc.text("CONFIDENTIAL MEDICAL HISTORY", pageWidth - 14, 18, { align: "right" });
