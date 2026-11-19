@@ -7,7 +7,7 @@ import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components
 import { StudentForms, validateContactNumber, type StudentFormValues, type StaffFormValues, type FacultyFormValues } from "../components/student-management/StudentForms";
 import FloatingToast from "../components/common/FloatingToast";
 import { addClinicNotification } from "../services/notifications";
-import { exportMedicalCertificatePDF } from "../utils/pdfExport";
+import { exportMedicalCertificatePDF, exportPatientMedicalReportPDF } from "../utils/pdfExport";
 import { formatNA, formatTemperature, formatDate, mapCourseToDepartment } from "../utils/formatters";
 import { ReasonBadge } from "../utils/reasonColors";
 
@@ -203,6 +203,7 @@ function StudentManagement() {
     const [medicalReportStudent, setMedicalReportStudent] = useState<any | null>(null);
     const [medicalReportData, setMedicalReportData] = useState<any | null>(null);
     const [loadingMedicalReport, setLoadingMedicalReport] = useState(false);
+    const [medicalReportType, setMedicalReportType] = useState<"student" | "faculty" | "staff">("student");
 
 
 
@@ -730,22 +731,34 @@ function StudentManagement() {
         }, { replace: true });
     };
 
-    const openMedicalReport = async (student: any) => {
-        setMedicalReportStudent(student);
+    const openMedicalReport = async (item: any, type: "student" | "faculty" | "staff" = "student") => {
+        setMedicalReportStudent(item);
+        setMedicalReportType(type);
         setLoadingMedicalReport(true);
         try {
-            const res = await api.get(`/students/${student.id}/medical-history`);
+            let endpoint = `/students/${item.id}/medical-history`;
+            if (type === "faculty") endpoint = `/faculties/${item.id}/medical-history`;
+            else if (type === "staff") endpoint = `/staff/${item.id}/medical-history`;
+
+            const res = await api.get(endpoint);
             setMedicalReportData(res.data);
         } catch (err) {
             console.error("Failed to load medical history:", err);
+            const fullName = getFullName(item);
+            const dept = type === "student" ? (item.department || mapCourseToDepartment(item.course)) : (item.department || "N/A");
+            const fallbackPatient = {
+                ...item,
+                full_name: fullName,
+                department: dept,
+            };
             setMedicalReportData({
-                student: {
-                    ...student,
-                    full_name: getFullName(student),
-                    department: mapCourseToDepartment(student.course),
-                },
-                total_visits: student.clinic_visits?.length || 0,
-                visits: student.clinic_visits || [],
+                patient_type: type,
+                patient: fallbackPatient,
+                student: fallbackPatient,
+                faculty: fallbackPatient,
+                staff: fallbackPatient,
+                total_visits: item.clinic_visits?.length || 0,
+                visits: item.clinic_visits || [],
             });
         } finally {
             setLoadingMedicalReport(false);
@@ -755,22 +768,30 @@ function StudentManagement() {
     const closeMedicalReport = () => {
         setMedicalReportStudent(null);
         setMedicalReportData(null);
+        setMedicalReportType("student");
     };
 
     const handleDownloadCertificate = (specificVisit?: any) => {
         if (!medicalReportStudent) return;
-        const studentInfo = medicalReportData?.student || {
+        const patientInfo = medicalReportData?.patient || medicalReportData?.student || medicalReportData?.faculty || medicalReportData?.staff || {
             ...medicalReportStudent,
             full_name: getFullName(medicalReportStudent),
-            department: mapCourseToDepartment(medicalReportStudent.course),
+            department: medicalReportStudent.department || mapCourseToDepartment(medicalReportStudent.course),
         };
         const visits = medicalReportData?.visits || medicalReportStudent.clinic_visits || [];
         const visit = specificVisit || visits[0] || {};
+
+        const roleLabel = medicalReportType === "faculty"
+            ? `Faculty (${patientInfo.position || "Instructor"} - ${patientInfo.department || "Faculty"})`
+            : medicalReportType === "staff"
+            ? `Staff (${patientInfo.position || "Staff"} - ${patientInfo.department || "Office"})`
+            : `Student (${patientInfo.course || ""})`;
+
         exportMedicalCertificatePDF({
-            patient_name: studentInfo.full_name || getFullName(studentInfo),
-            student_id: studentInfo.student_id,
-            role_label: `Student (${studentInfo.course || ""})`,
-            address: studentInfo.address,
+            patient_name: patientInfo.full_name || getFullName(patientInfo),
+            student_id: patientInfo.student_id || patientInfo.employee_id || patientInfo.staff_id,
+            role_label: roleLabel,
+            address: patientInfo.address,
             visit_date: visit.visit_date || new Date().toISOString(),
             diagnosis: visit.assessment || visit.symptoms || visit.reason || "Clinical Consultation & Treatment",
             reason: visit.reason,
@@ -779,8 +800,35 @@ function StudentManagement() {
             blood_pressure: visit.blood_pressure,
             treatment: visit.treatment,
             remarks: visit.remarks,
-            attending_nurse: visit.nurse?.name || visit.nurse_name || "Angel Stacee Sabandal",
+            attending_nurse: visit.nurse?.name || visit.nurse_name || (typeof visit.nurse === "string" ? visit.nurse : "Angel Stacee Sabandal"),
         });
+    };
+
+    const handleDownloadMedicalReport = () => {
+        if (!medicalReportStudent) return;
+        const patientInfo = medicalReportData?.patient || medicalReportData?.student || medicalReportData?.faculty || medicalReportData?.staff || {
+            ...medicalReportStudent,
+            full_name: getFullName(medicalReportStudent),
+            department: medicalReportStudent.department || mapCourseToDepartment(medicalReportStudent.course),
+        };
+        const visits = (medicalReportData?.visits || medicalReportStudent.clinic_visits || []).map((v: any) => ({
+            id: v.id,
+            visit_date: v.visit_date,
+            reason: v.reason,
+            symptoms: v.symptoms,
+            temperature: v.temperature,
+            blood_pressure: v.blood_pressure,
+            assessment: v.assessment,
+            treatment: v.treatment,
+            medicine_name: v.medicine?.name || v.medicine_name,
+            medicine_quantity: v.quantity || v.medicine_quantity,
+            nurse_name: v.nurse?.name || (typeof v.nurse === "string" ? v.nurse : v.nurse_name),
+            remarks: v.remarks,
+            department: v.department || patientInfo.department,
+        }));
+        const totalCount = medicalReportData?.total_visits ?? visits.length;
+
+        exportPatientMedicalReportPDF(patientInfo, visits, totalCount, medicalReportType);
     };
 
     useEffect(() => {
@@ -2197,6 +2245,21 @@ function StudentManagement() {
                                                                     <button
                                                                         type="button"
                                                                         onClick={() =>
+                                                                            openMedicalReport(
+                                                                                person,
+                                                                                "staff"
+                                                                            )
+                                                                        }
+                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
+                                                                        title="Individual Staff Medical Report"
+                                                                    >
+                                                                        <FileText size={13} />
+                                                                        Medical Report
+                                                                    </button>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
                                                                             viewStaffRecord(
                                                                                 person
                                                                             )
@@ -2347,6 +2410,21 @@ function StudentManagement() {
 
                                                             <td className="px-5 py-4">
                                                                 <div className="flex justify-end gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            openMedicalReport(
+                                                                                faculty,
+                                                                                "faculty"
+                                                                            )
+                                                                        }
+                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
+                                                                        title="Individual Faculty Medical Report"
+                                                                    >
+                                                                        <FileText size={13} />
+                                                                        Medical Report
+                                                                    </button>
+
                                                                     <button
                                                                         type="button"
                                                                         onClick={() =>
@@ -2670,6 +2748,21 @@ function StudentManagement() {
                                 </div>
                             )}
                         </RecordSection>
+
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const s = viewingStudent;
+                                    setViewingStudent(null);
+                                    openMedicalReport(s, "student");
+                                }}
+                                className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 cursor-pointer"
+                            >
+                                <FileText size={16} />
+                                View Full Medical Records &amp; History
+                            </button>
+                        </div>
                     </div>
                 </Modal>
             )}
@@ -2783,6 +2876,21 @@ function StudentManagement() {
                                 />
                             </div>
                         </RecordSection>
+
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const st = viewingStaff;
+                                    setViewingStaff(null);
+                                    openMedicalReport(st, "staff");
+                                }}
+                                className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 cursor-pointer"
+                            >
+                                <FileText size={16} />
+                                View Full Medical Records &amp; History
+                            </button>
+                        </div>
                     </div>
                 </Modal>
             )}
@@ -2896,14 +3004,29 @@ function StudentManagement() {
                                 />
                             </div>
                         </RecordSection>
+
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const fac = viewingFaculty;
+                                    setViewingFaculty(null);
+                                    openMedicalReport(fac, "faculty");
+                                }}
+                                className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 cursor-pointer"
+                            >
+                                <FileText size={16} />
+                                View Full Medical Records &amp; History
+                            </button>
+                        </div>
                     </div>
                 </Modal>
             )}
 
-            {/* Individual Student Medical Report Modal */}
+            {/* Individual Patient Medical Report Modal */}
             {medicalReportStudent && (
                 <Modal
-                    title="Individual Student Medical Report"
+                    title={`Individual ${medicalReportType === "faculty" ? "Faculty" : medicalReportType === "staff" ? "Staff" : "Student"} Medical Report`}
                     onClose={closeMedicalReport}
                     maxWidth="max-w-5xl"
                 >
@@ -2919,58 +3042,93 @@ function StudentManagement() {
                                         {formatNA(getFullName(medicalReportStudent))}
                                     </h3>
                                     <p className="text-xs text-[#70091f] dark:text-[#f8a598] font-medium">
-                                        Student ID: {formatNA(medicalReportStudent.student_id)} · {formatNA(medicalReportStudent.course)} {medicalReportStudent.year_level ? `- ${medicalReportStudent.year_level}` : ""}
+                                        {medicalReportType === "faculty"
+                                            ? `Faculty ID: ${formatNA(medicalReportStudent.employee_id || medicalReportStudent.student_id)} · ${formatNA(medicalReportStudent.position)} · ${formatNA(medicalReportStudent.department)}`
+                                            : medicalReportType === "staff"
+                                            ? `Staff ID: ${formatNA(medicalReportStudent.staff_id || medicalReportStudent.student_id)} · ${formatNA(medicalReportStudent.position)} · ${formatNA(medicalReportStudent.department)}`
+                                            : `Student ID: ${formatNA(medicalReportStudent.student_id)} · ${formatNA(medicalReportStudent.course)} ${medicalReportStudent.year_level ? `- ${medicalReportStudent.year_level}` : ""}`}
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={() => handleDownloadCertificate()}
                                     disabled={loadingMedicalReport}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 disabled:opacity-50 cursor-pointer"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 disabled:opacity-50 cursor-pointer"
                                     title="Download Official Medical Certificate"
                                 >
                                     <FileText size={16} />
                                     Download Medical Certificate
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDownloadMedicalReport()}
+                                    disabled={loadingMedicalReport}
+                                    className="inline-flex items-center gap-2 rounded-xl border border-[#70091f]/40 bg-white px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#70091f] shadow-sm transition hover:bg-[#70091f]/5 active:scale-95 disabled:opacity-50 cursor-pointer dark:border-[#70091f]/60 dark:bg-[#2c231a] dark:text-[#f8a598]"
+                                    title="Export Official Medical Report (PDF)"
+                                >
+                                    <Download size={16} />
+                                    Export Medical Report
+                                </button>
                             </div>
                         </div>
 
-                        {/* Student Demographics Profile */}
+                        {/* Patient Demographics Profile */}
                         <div className="mb-6 rounded-2xl border border-[#e8dfd4] bg-[#fcfaf6] p-5 dark:border-[#4e4234] dark:bg-[#211c17]">
                             <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#70091f] dark:text-[#f8a598]">
-                                Student Profile &amp; Demographics
+                                {medicalReportType === "faculty" ? "Faculty" : medicalReportType === "staff" ? "Staff" : "Student"} Profile &amp; Demographics
                             </h4>
                             <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 text-xs sm:text-sm">
                                 <div>
-                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Student ID</span>
-                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.student_id)}</span>
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">
+                                        {medicalReportType === "faculty" ? "Faculty ID" : medicalReportType === "staff" ? "Staff ID" : "Student ID"}
+                                    </span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
+                                        {formatNA(medicalReportStudent.employee_id || medicalReportStudent.staff_id || medicalReportStudent.student_id)}
+                                    </span>
                                 </div>
                                 <div>
                                     <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Full Name</span>
                                     <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(getFullName(medicalReportStudent))}</span>
                                 </div>
-                                <div>
-                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Course</span>
-                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.course)}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Year &amp; Section</span>
-                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
-                                        {formatNA(
-                                            medicalReportStudent.year_level && medicalReportStudent.section
-                                                ? `${medicalReportStudent.year_level} - ${medicalReportStudent.section}`
-                                                : medicalReportStudent.year_level || medicalReportStudent.section
-                                        )}
-                                    </span>
-                                </div>
-                                <div className="col-span-2">
-                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Department / College</span>
-                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
-                                        {formatNA(medicalReportData?.student?.department || medicalReportStudent.department || mapCourseToDepartment(medicalReportStudent.course))}
-                                    </span>
-                                </div>
+                                {medicalReportType === "student" ? (
+                                    <>
+                                        <div>
+                                            <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Course</span>
+                                            <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.course)}</span>
+                                        </div>
+                                        <div>
+                                            <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Year &amp; Section</span>
+                                            <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
+                                                {formatNA(
+                                                    medicalReportStudent.year_level && medicalReportStudent.section
+                                                        ? `${medicalReportStudent.year_level} - ${medicalReportStudent.section}`
+                                                        : medicalReportStudent.year_level || medicalReportStudent.section
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Department / College</span>
+                                            <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
+                                                {formatNA(medicalReportData?.student?.department || medicalReportData?.patient?.department || medicalReportStudent.department || mapCourseToDepartment(medicalReportStudent.course))}
+                                            </span>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div>
+                                            <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Position</span>
+                                            <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.position)}</span>
+                                        </div>
+                                        <div className="col-span-2">
+                                            <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Department</span>
+                                            <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
+                                                {formatNA(medicalReportData?.patient?.department || medicalReportStudent.department)}
+                                            </span>
+                                        </div>
+                                    </>
+                                )}
                                 <div>
                                     <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Sex</span>
                                     <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.sex)}</span>
@@ -2983,7 +3141,7 @@ function StudentManagement() {
                                     <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Contact Number</span>
                                     <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.contact_number)}</span>
                                 </div>
-                                <div className="col-span-3">
+                                <div className={medicalReportType === "student" ? "col-span-3" : "col-span-4 sm:col-span-2"}>
                                     <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Address</span>
                                     <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.address)}</span>
                                 </div>
@@ -3011,7 +3169,7 @@ function StudentManagement() {
                             ) : (medicalReportData?.visits || medicalReportStudent.clinic_visits || []).length === 0 ? (
                                 <div className="rounded-xl border border-dashed border-[#d9cebf] bg-[#fcfaf6] p-8 text-center dark:border-[#4e4234] dark:bg-[#211c17]">
                                     <p className="text-sm font-medium text-[#766959] dark:text-[#c4b5a5]">
-                                        No clinic visits on record for this student.
+                                        No clinic visits on record for this {medicalReportType === "faculty" ? "faculty member" : medicalReportType === "staff" ? "staff member" : "student"}.
                                     </p>
                                 </div>
                             ) : (

@@ -513,25 +513,32 @@ export async function exportMonthlyReportPDF(reportData: {
     doc.save(safeFilename);
 }
 
+export interface PatientMedicalRecordProfile {
+    student_id?: string;
+    employee_id?: string;
+    staff_id?: string;
+    patient_id?: string;
+    full_name?: string;
+    first_name?: string;
+    middle_name?: string;
+    last_name?: string;
+    course?: string;
+    year_level?: string;
+    section?: string;
+    department?: string;
+    position?: string;
+    sex?: string;
+    birth_date?: string;
+    contact_number?: string;
+    address?: string;
+    patient_type?: "student" | "faculty" | "staff" | string;
+}
+
 /**
- * Export Individual Student Medical Report as a professional PDF
+ * Export Individual Patient (Student, Faculty, or Staff) Medical Report as a professional PDF
  */
-export async function exportStudentMedicalReportPDF(
-    student: {
-        student_id: string;
-        full_name?: string;
-        first_name: string;
-        middle_name?: string;
-        last_name: string;
-        course: string;
-        year_level: string;
-        section?: string;
-        department?: string;
-        sex?: string;
-        birth_date?: string;
-        contact_number?: string;
-        address?: string;
-    },
+export async function exportPatientMedicalReportPDF(
+    patient: PatientMedicalRecordProfile,
     visits: Array<{
         id: number;
         visit_date: string;
@@ -547,11 +554,17 @@ export async function exportStudentMedicalReportPDF(
         remarks?: string;
         department?: string;
     }>,
-    totalVisitsCount: number
+    totalVisitsCount: number,
+    patientType: "student" | "faculty" | "staff" = "student"
 ) {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoData = await loadLogoDataUrl();
+
+    const isFaculty = patientType === "faculty";
+    const isStaff = patientType === "staff";
+    const patientKindLabel = isFaculty ? "FACULTY" : isStaff ? "STAFF" : "STUDENT";
+    const patientKindTitle = isFaculty ? "Faculty" : isStaff ? "Staff" : "Student";
 
     // Burgundy Header Banner (Height 26mm)
     doc.setFillColor(112, 9, 31);
@@ -569,7 +582,7 @@ export async function exportStudentMedicalReportPDF(
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.text("HEALTH SERVICES CLINIC — STUDENT MEDICAL RECORD", 14, 16);
+    doc.text(`HEALTH SERVICES CLINIC — ${patientKindLabel} MEDICAL RECORD`, 14, 16);
 
     doc.setFontSize(7);
     doc.text("Baluarte, Tagoloan, Misamis Oriental · clinic@tcc.edu.ph", 14, 21);
@@ -583,7 +596,7 @@ export async function exportStudentMedicalReportPDF(
     doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
-    doc.text("INDIVIDUAL STUDENT MEDICAL REPORT", 14, currentY);
+    doc.text(`INDIVIDUAL ${patientKindLabel} MEDICAL REPORT`, 14, currentY);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
@@ -593,18 +606,25 @@ export async function exportStudentMedicalReportPDF(
 
     currentY += 12;
 
-    // Student Profile Table
-    const fullName = student.full_name || [student.first_name, student.middle_name, student.last_name].filter(Boolean).join(" ");
-    const academicInfo = `${student.course || "N/A"} - ${student.year_level || "N/A"}${student.section ? ` (${student.section})` : ""}`;
-    const department = student.department || "N/A";
+    // Patient Profile Table
+    const fullName = patient.full_name || [patient.first_name, patient.middle_name, patient.last_name].filter(Boolean).join(" ");
+    const patientIdNumber = patient.student_id || patient.employee_id || patient.staff_id || patient.patient_id || "N/A";
+    const idLabel = isFaculty ? "Faculty ID" : isStaff ? "Staff ID" : "Student ID";
+
+    const leftCol = `${idLabel}: ${formatNA(patientIdNumber)}\nFull Name: ${fullName}\nSex: ${formatNA(patient.sex)}\nDate of Birth: ${formatDate(patient.birth_date)}`;
+    
+    let rightCol = "";
+    if (isFaculty || isStaff) {
+        rightCol = `Position: ${formatNA(patient.position)}\nDepartment: ${formatNA(patient.department)}\nContact Number: ${formatNA(patient.contact_number)}\nAddress: ${formatNA(patient.address)}`;
+    } else {
+        const academicInfo = `${patient.course || "N/A"} - ${patient.year_level || "N/A"}${patient.section ? ` (${patient.section})` : ""}`;
+        rightCol = `Course & Year: ${academicInfo}\nDepartment: ${formatNA(patient.department)}\nContact Number: ${formatNA(patient.contact_number)}\nAddress: ${formatNA(patient.address)}`;
+    }
 
     autoTable(doc, {
         startY: currentY,
-        head: [["Student Profile Information", "Academic & Contact Details"]],
-        body: [
-            [`Student ID: ${formatNA(student.student_id)}\nFull Name: ${fullName}\nSex: ${formatNA(student.sex)}\nDate of Birth: ${formatDate(student.birth_date)}`,
-             `Course & Year: ${academicInfo}\nDepartment: ${department}\nContact Number: ${formatNA(student.contact_number)}\nAddress: ${formatNA(student.address)}`]
-        ],
+        head: [[`${patientKindTitle} Profile Information`, isFaculty || isStaff ? "Work & Contact Details" : "Academic & Contact Details"]],
+        body: [[leftCol, rightCol]],
         theme: "plain",
         headStyles: {
             fillColor: BRAND_BURGUNDY,
@@ -644,7 +664,7 @@ export async function exportStudentMedicalReportPDF(
             v.medicine_name ? `${v.medicine_name} (${v.medicine_quantity || 1})` : "None",
             formatNA(v.nurse_name),
             formatNA(v.remarks),
-        ]) : [["No clinic visits recorded for this student", "-", "-", "-", "-", "-", "-", "-"]],
+        ]) : [[`No clinic visits recorded for this ${patientKindTitle.toLowerCase()}`, "-", "-", "-", "-", "-", "-", "-"]],
         theme: "grid",
         headStyles: {
             fillColor: BRAND_BURGUNDY,
@@ -673,7 +693,7 @@ export async function exportStudentMedicalReportPDF(
             const pageNum = doc.getNumberOfPages();
             doc.setFontSize(7.5);
             doc.setTextColor(130, 130, 130);
-            doc.text("Tagoloan Community College — Health Services Clinic — Confidential Student Medical History Record", 14, doc.internal.pageSize.getHeight() - 8);
+            doc.text(`Tagoloan Community College — Health Services Clinic — Confidential ${patientKindTitle} Medical History Record`, 14, doc.internal.pageSize.getHeight() - 8);
             doc.text(`Page ${data.pageNumber} of ${pageNum}`, doc.internal.pageSize.getWidth() - 14, doc.internal.pageSize.getHeight() - 8, { align: "right" });
         },
     });
@@ -697,8 +717,19 @@ export async function exportStudentMedicalReportPDF(
     doc.setTextColor(110, 110, 110);
     doc.text("Health Services Clinic · Tagoloan Community College", 14, finalY + 20);
 
-    const safeId = (student.student_id || "Student").replace(/[^a-zA-Z0-9]/g, "_");
-    doc.save(`TCC_Medical_Report_${safeId}.pdf`);
+    const safeId = String(patientIdNumber).replace(/[^a-zA-Z0-9]/g, "_");
+    doc.save(`TCC_${patientKindTitle}_Medical_Report_${safeId}.pdf`);
+}
+
+/**
+ * Backward compatibility alias for Student Medical Report
+ */
+export async function exportStudentMedicalReportPDF(
+    student: any,
+    visits: any[],
+    totalVisitsCount: number
+) {
+    return exportPatientMedicalReportPDF(student, visits, totalVisitsCount, "student");
 }
 
 export interface MedicalCertificateData {
