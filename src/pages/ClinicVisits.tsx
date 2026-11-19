@@ -350,7 +350,8 @@ function ClinicVisits() {
                 label: "Student",
                 identifier: student.student_id || "",
                 name: getFullName(student),
-                department: mapCourseToDepartment(student.course),
+                course: student.course || "",
+                department: student.department || (student.course ? mapCourseToDepartment(student.course) : ""),
             })),
 
             ...faculties.map((faculty) => ({
@@ -399,6 +400,13 @@ function ClinicVisits() {
     }, [patientOptions, patientSearch]);
 
     const selectPatient = (patient) => {
+        const autoDepartment =
+            patient.department && patient.department !== "N/A"
+                ? patient.department
+                : patient.course
+                  ? mapCourseToDepartment(patient.course)
+                  : "";
+
         setFormData((previous) => ({
             ...previous,
 
@@ -418,7 +426,7 @@ function ClinicVisits() {
                     : "",
 
             department:
-                patient.department || previous.department || "",
+                autoDepartment || previous.department || "",
         }));
 
         setPatientSearch(
@@ -427,6 +435,32 @@ function ClinicVisits() {
 
         setShowPatientDropdown(false);
     };
+
+    // Automatically fill department from registered student/faculty/staff record
+    useEffect(() => {
+        if (!formData.department) {
+            let matched = null;
+            if (formData.student_id) {
+                matched = patientOptions.find(
+                    (p) => p.type === "student" && String(p.id) === String(formData.student_id)
+                );
+            } else if (formData.faculty_id) {
+                matched = patientOptions.find(
+                    (p) => p.type === "faculty" && String(p.id) === String(formData.faculty_id)
+                );
+            } else if (formData.staff_id) {
+                matched = patientOptions.find(
+                    (p) => p.type === "staff" && String(p.id) === String(formData.staff_id)
+                );
+            }
+            if (matched?.department && matched.department !== "N/A") {
+                setFormData((prev) => ({
+                    ...prev,
+                    department: matched.department,
+                }));
+            }
+        }
+    }, [formData.student_id, formData.faculty_id, formData.staff_id, patientOptions, formData.department]);
 
 
 
