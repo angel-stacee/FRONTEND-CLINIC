@@ -310,7 +310,7 @@ export function Modal({
 }: ModalProps) {
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-3 sm:p-4 md:p-6 backdrop-blur-[2px] overflow-y-auto"
             onMouseDown={(e) => {
                 if (e.target === e.currentTarget && onClose) {
                     onClose();
@@ -318,17 +318,17 @@ export function Modal({
             }}
         >
             <div
-                className={`max-h-[90vh] w-full ${maxWidth} overflow-y-auto rounded-2xl bg-white shadow-xl`}
+                className={`my-auto max-h-[92vh] w-full ${maxWidth} overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-[#1f1915]`}
             >
-                <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-6 py-4">
-                    <h2 className="text-lg font-semibold text-stone-800">
+                <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e8dfd4] bg-white/95 px-6 py-4 backdrop-blur-sm dark:border-[#382f25] dark:bg-[#1f1915]/95">
+                    <h2 className="text-lg font-bold text-stone-800 dark:text-stone-100">
                         {title}
                     </h2>
 
                     <button
                         type="button"
                         onClick={onClose}
-                        className="rounded-lg px-3 py-1 text-xl text-stone-500 hover:bg-stone-100 hover:text-stone-700"
+                        className="rounded-lg px-3 py-1 text-xl font-bold text-stone-400 hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-[#2c221a] dark:hover:text-stone-200 cursor-pointer"
                     >
                         ×
                     </button>
