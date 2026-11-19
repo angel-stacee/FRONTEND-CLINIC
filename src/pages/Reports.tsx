@@ -347,31 +347,47 @@ function Reports() {
             {report && (
                 <div id="report-print-area" className="report-paper space-y-5">
                     <header className="report-letterhead rounded-2xl border border-[#e8dfd4] bg-white p-5 shadow-sm sm:p-7">
-                        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-center gap-4">
-                                <img src="/tcc-logo.jpg" alt="TCC logo" className="h-14 w-14 rounded-full border border-[#e8dfd4] bg-white object-contain p-1" />
-                                <div>
-                                    <div className="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#8a6f50]">
-                                        <Building2 size={14} aria-hidden="true" />
-                                        TCC Clinic Management System
-                                    </div>
-                                    <h1 className="text-2xl font-bold tracking-tight text-stone-900 sm:text-3xl">Monthly Clinic Report</h1>
-                                    <p className="mt-1 text-sm text-stone-500">Clinic visit activity and services summary</p>
+                        <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="space-y-1">
+                                <div className="text-sm font-black uppercase tracking-wider text-[#70091f]">
+                                    TAGOLOAN COMMUNITY COLLEGE
                                 </div>
+                                <div className="text-xs font-bold uppercase tracking-wide text-stone-600">
+                                    HEALTH SERVICES CLINIC — CAMPUS CLINIC MANAGEMENT SYSTEM
+                                </div>
+                                <div className="text-[11px] text-stone-400">
+                                    Baluarte, Tagoloan, Misamis Oriental · clinic@tcc.edu.ph
+                                </div>
+                                <h1 className="pt-2 text-2xl font-black tracking-tight text-stone-900 sm:text-3xl">
+                                    MONTHLY CLINIC ACTIVITY & HEALTH REPORT
+                                </h1>
+                                <p className="text-xs font-medium text-stone-500">
+                                    Report Period:{" "}
+                                    <span className="font-bold text-[#70091f] uppercase">
+                                        {report.report?.period || `${monthNames[month - 1]} ${year}`}
+                                    </span>
+                                </p>
                             </div>
 
-                            <div className="report-period-box rounded-xl border border-[#e8dfd4] bg-[#fcfaf6] px-5 py-3 sm:min-w-52 sm:text-right">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-stone-500">Reporting period</p>
-                                <p className="mt-1 text-lg font-bold text-[#8a6f50]">
-                                    {report.report?.period || `${monthNames[month - 1]} ${year}`}
-                                </p>
+                            <div className="flex items-center gap-3 self-end sm:self-start">
+                                <div className="report-period-box hidden rounded-xl border border-[#e8dfd4] bg-[#fcfaf6] px-4 py-2.5 text-right sm:block">
+                                    <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-stone-500">Reporting Period</p>
+                                    <p className="text-sm font-bold text-[#70091f] uppercase">
+                                        {report.report?.period || `${monthNames[month - 1]} ${year}`}
+                                    </p>
+                                </div>
+                                <img
+                                    src="/tcc-logo.jpg"
+                                    alt="Tagoloan Community College Logo"
+                                    className="h-16 w-16 rounded-full border border-stone-200 bg-white object-contain p-1 shadow-sm sm:h-20 sm:w-20"
+                                />
                             </div>
                         </div>
 
                         <div className="mt-5 flex flex-wrap gap-x-8 gap-y-2 border-t border-[#e8dfd4] pt-4 text-xs text-stone-500">
                             <p><span className="font-semibold text-stone-700">Generated:</span>{" "}{formatGeneratedAt(report.report?.generated_at)}</p>
-                            <p><span className="font-semibold text-stone-700">Visit records:</span>{" "}{Number(visits.length).toLocaleString()}</p>
-                            <p className="print:hidden"><span className="font-semibold text-stone-700">Scope:</span>{" "}All clinic visits recorded for the selected month</p>
+                            <p><span className="font-semibold text-stone-700">Total Visits:</span>{" "}{Number(visits.length).toLocaleString()}</p>
+                            <p className="print:hidden"><span className="font-semibold text-stone-700">Scope:</span>{" "}All clinic visits recorded for {report.report?.period || `${monthNames[month - 1]} ${year}`}</p>
                         </div>
                     </header>
 
@@ -545,12 +561,27 @@ function Reports() {
                         </div>
                     </section>
 
-                    <footer className="report-signatures hidden border-t border-stone-300 pt-8 print:grid print:grid-cols-2 print:gap-16">
-                        <div className="border-t border-stone-500 pt-2 text-xs text-stone-600">Prepared by</div>
-                        <div className="border-t border-stone-500 pt-2 text-xs text-stone-600">Reviewed by</div>
+                    <footer className="report-signatures mt-8 rounded-2xl border border-[#e8dfd4] bg-white p-6 shadow-sm print:rounded-none print:border-0 print:border-t-2 print:border-stone-400 print:p-0 print:pt-6 print:shadow-none">
+                        <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.14em] text-[#70091f]">
+                            Official Endorsement & Signatures
+                        </p>
+                        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 print:grid-cols-2 print:gap-12 text-xs">
+                            <div className="space-y-1">
+                                <p className="font-medium text-stone-500">Prepared by:</p>
+                                <div className="w-56 border-b border-stone-400 pt-10" />
+                                <p className="pt-1 font-bold text-stone-800">Clinic Staff / Attending Nurse</p>
+                                <p className="text-[11px] text-stone-500">Health Services Clinic · Tagoloan Community College</p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="font-medium text-stone-500">Noted by:</p>
+                                <div className="w-56 border-b border-stone-400 pt-10" />
+                                <p className="pt-1 font-bold text-stone-800">College Administration</p>
+                                <p className="text-[11px] text-stone-500">Tagoloan Community College</p>
+                            </div>
+                        </div>
                     </footer>
-                    <p className="hidden text-center text-[9px] text-stone-500 print:block">
-                        TCC Clinic Management System · Monthly Clinic Report · {report.report?.period}
+                    <p className="mt-4 hidden text-center text-[9px] text-stone-500 print:block">
+                        Tagoloan Community College · Health Services Clinic · Campus Clinic Management System · {report.report?.period}
                     </p>
                 </div>
             )}

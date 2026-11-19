@@ -92,15 +92,19 @@ export async function exportMonthlyReportPDF(reportData: {
     // Clinic Title & Subtitle
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 11);
+    doc.setFontSize(13.5);
+    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 10.5);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.text("HEALTH SERVICES CLINIC — CAMPUS CLINIC MANAGEMENT SYSTEM", 14, 17);
+    doc.setFontSize(8);
+    doc.text("HEALTH SERVICES CLINIC — CAMPUS CLINIC MANAGEMENT SYSTEM", 14, 16);
+
+    doc.setFontSize(7);
+    doc.text("Baluarte, Tagoloan, Misamis Oriental · clinic@tcc.edu.ph", 14, 21);
 
     // Period & Report Title
     const periodText = reportData.report?.period || `${reportData.report?.month_name || "Monthly"} ${reportData.report?.year || ""}`;
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.text(`REPORT PERIOD: ${periodText.toUpperCase()}`, pageWidth - 36, 17, { align: "right" });
 
@@ -108,11 +112,11 @@ export async function exportMonthlyReportPDF(reportData: {
     let currentY = 32;
     doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13);
+    doc.setFontSize(12.5);
     doc.text("MONTHLY CLINIC ACTIVITY & HEALTH REPORT", 14, currentY);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
     const genDate = reportData.report?.generated_at
         ? new Date(reportData.report.generated_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
@@ -163,7 +167,7 @@ export async function exportMonthlyReportPDF(reportData: {
 
     currentY = (doc as any).lastAutoTable.finalY + 8;
 
-    // Common Reasons & Common Illnesses Tables side by side
+    // Common Reasons & Common Illnesses Tables
     const reasons = (reportData.reasons || []).slice(0, 5);
     const illnesses = (reportData.common_illnesses || []).slice(0, 5);
 
@@ -196,6 +200,38 @@ export async function exportMonthlyReportPDF(reportData: {
     });
 
     currentY = (doc as any).lastAutoTable.finalY + 7;
+
+    // Common Illnesses Table (matches on-screen & print report)
+    if (illnesses.length > 0) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(112, 9, 31);
+        doc.text("COMMON ILLNESSES & SYMPTOMS", 14, currentY);
+
+        autoTable(doc, {
+            startY: currentY + 3,
+            head: [["Illness / Reported Symptom", "Reported Cases", "% of Visits"]],
+            body: illnesses.map(i => [
+                formatNA(i.illness),
+                String(i.count),
+                totalVisits > 0 ? `${Math.round((i.count / totalVisits) * 100)}%` : "0%",
+            ]),
+            theme: "striped",
+            headStyles: {
+                fillColor: [140, 40, 60],
+                textColor: [255, 255, 255],
+                fontSize: 8.5,
+            },
+            bodyStyles: {
+                fontSize: 8,
+                textColor: TEXT_DARK,
+            },
+            styles: { cellPadding: 2.5 },
+            margin: { left: 14, right: 14 },
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 7;
+    }
 
     // Medicines Given Table
     const meds = (reportData.medicine_usage || []).slice(0, 6);
@@ -237,7 +273,7 @@ export async function exportMonthlyReportPDF(reportData: {
 
     autoTable(doc, {
         startY: currentY + 3,
-        head: [["Date", "Patient Name", "Category", "Department", "Reason / Symptoms", "Temp", "BP", "Medication"]],
+        head: [["Date", "Patient Name", "Category", "Department", "Reason / Symptoms", "Temp", "BP", "Medication", "Nurse"]],
         body: visits.length > 0 ? visits.map(v => [
             formatDate(v.date),
             formatNA(v.person),
@@ -247,40 +283,76 @@ export async function exportMonthlyReportPDF(reportData: {
             formatTemperature(v.temperature),
             formatNA(v.blood_pressure),
             v.medicine ? `${v.medicine} (${v.medicine_quantity || 1})` : "None",
-        ]) : [["No clinic visits recorded for this period", "-", "-", "-", "-", "-", "-", "-"]],
+            formatNA(v.nurse),
+        ]) : [["No clinic visits recorded for this period", "-", "-", "-", "-", "-", "-", "-", "-"]],
         theme: "grid",
         headStyles: {
             fillColor: BRAND_BURGUNDY,
             textColor: [255, 255, 255],
-            fontSize: 8,
+            fontSize: 7.5,
             halign: "center",
         },
         bodyStyles: {
-            fontSize: 7.5,
+            fontSize: 7,
             textColor: TEXT_DARK,
             valign: "middle",
         },
         columnStyles: {
-            0: { cellWidth: 20 },
-            1: { cellWidth: 32 },
-            2: { cellWidth: 18 },
-            3: { cellWidth: 28 },
-            4: { cellWidth: 36 },
-            5: { cellWidth: 15, halign: "center" },
-            6: { cellWidth: 15, halign: "center" },
-            7: { cellWidth: 20 },
+            0: { cellWidth: 18 },
+            1: { cellWidth: 28 },
+            2: { cellWidth: 16 },
+            3: { cellWidth: 26 },
+            4: { cellWidth: 34 },
+            5: { cellWidth: 14, halign: "center" },
+            6: { cellWidth: 14, halign: "center" },
+            7: { cellWidth: 18 },
+            8: { cellWidth: 14 },
         },
         styles: { cellPadding: 2 },
         margin: { left: 14, right: 14, bottom: 15 },
         didDrawPage: (data) => {
             // Footer on each page
             const pageNum = doc.getNumberOfPages();
-            doc.setFontSize(8);
+            doc.setFontSize(7.5);
             doc.setTextColor(120, 120, 120);
-            doc.text("TCC Clinic Management System — Official Monthly Report", 14, doc.internal.pageSize.getHeight() - 8);
+            doc.text("Tagoloan Community College — Health Services Clinic — Official Monthly Report", 14, doc.internal.pageSize.getHeight() - 8);
             doc.text(`Page ${data.pageNumber} of ${pageNum}`, doc.internal.pageSize.getWidth() - 14, doc.internal.pageSize.getHeight() - 8, { align: "right" });
         },
     });
+
+    // Official Endorsement & Signatures
+    let finalY = (doc as any).lastAutoTable.finalY + 10;
+    if (finalY + 30 > doc.internal.pageSize.getHeight() - 15) {
+        doc.addPage();
+        finalY = 22;
+    }
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+
+    // Prepared by
+    doc.text("Prepared by:", 14, finalY);
+    doc.line(14, finalY + 12, 75, finalY + 12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Clinic Staff / Attending Nurse", 14, finalY + 16);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(110, 110, 110);
+    doc.text("Health Services Clinic · Tagoloan Community College", 14, finalY + 20);
+
+    // Noted by
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+    doc.text("Noted by:", pageWidth - 75, finalY);
+    doc.line(pageWidth - 75, finalY + 12, pageWidth - 14, finalY + 12);
+    doc.setFont("helvetica", "bold");
+    doc.text("College Administration", pageWidth - 75, finalY + 16);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(110, 110, 110);
+    doc.text("Tagoloan Community College", pageWidth - 75, finalY + 20);
 
     const safeFilename = `TCC_Clinic_Monthly_Report_${(reportData.report?.period || "report").replace(/\s+/g, "_")}.pdf`;
     doc.save(safeFilename);
@@ -337,13 +409,17 @@ export async function exportStudentMedicalReportPDF(
 
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 11);
+    doc.setFontSize(13.5);
+    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 10.5);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.text("HEALTH SERVICES CLINIC — STUDENT MEDICAL RECORD", 14, 17);
+    doc.setFontSize(8);
+    doc.text("HEALTH SERVICES CLINIC — STUDENT MEDICAL RECORD", 14, 16);
 
+    doc.setFontSize(7);
+    doc.text("Baluarte, Tagoloan, Misamis Oriental · clinic@tcc.edu.ph", 14, 21);
+
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.text("CONFIDENTIAL MEDICAL HISTORY", pageWidth - 36, 17, { align: "right" });
 
@@ -442,10 +518,29 @@ export async function exportStudentMedicalReportPDF(
             const pageNum = doc.getNumberOfPages();
             doc.setFontSize(7.5);
             doc.setTextColor(130, 130, 130);
-            doc.text("TCC Clinic — Confidential Student Medical History Record", 14, doc.internal.pageSize.getHeight() - 8);
+            doc.text("Tagoloan Community College — Health Services Clinic — Confidential Student Medical History Record", 14, doc.internal.pageSize.getHeight() - 8);
             doc.text(`Page ${data.pageNumber} of ${pageNum}`, doc.internal.pageSize.getWidth() - 14, doc.internal.pageSize.getHeight() - 8, { align: "right" });
         },
     });
+
+    // Verification & Endorsement Signature
+    let finalY = (doc as any).lastAutoTable.finalY + 10;
+    if (finalY + 30 > doc.internal.pageSize.getHeight() - 15) {
+        doc.addPage();
+        finalY = 22;
+    }
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+    doc.text("Certified True & Correct:", 14, finalY);
+    doc.line(14, finalY + 12, 75, finalY + 12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Attending Clinic Nurse / Physician", 14, finalY + 16);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(110, 110, 110);
+    doc.text("Health Services Clinic · Tagoloan Community College", 14, finalY + 20);
 
     const safeId = (student.student_id || "Student").replace(/[^a-zA-Z0-9]/g, "_");
     doc.save(`TCC_Medical_Report_${safeId}.pdf`);
