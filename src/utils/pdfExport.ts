@@ -118,7 +118,7 @@ async function loadLogoDataUrl(): Promise<string | null> {
 }
 
 /**
- * Export Monthly Clinic Report as a professional PDF
+ * Export Monthly Clinic Report as a professional PDF copying the exact layout of the Print Report
  */
 export async function exportMonthlyReportPDF(reportData: {
     report?: {
@@ -141,6 +141,11 @@ export async function exportMonthlyReportPDF(reportData: {
         unit: string;
         quantity_used: number;
     }>;
+    nurse_activity?: Array<{
+        nurse_id?: number | null;
+        name: string;
+        visits: number;
+    }>;
     visits?: Array<{
         id: number;
         date: string;
@@ -159,53 +164,76 @@ export async function exportMonthlyReportPDF(reportData: {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoData = await loadLogoDataUrl();
+    const periodText = reportData.report?.period || `${reportData.report?.month_name || "Monthly"} ${reportData.report?.year || ""}`;
 
-    // Header Background Accent (Height 26mm)
-    doc.setFillColor(112, 9, 31);
-    doc.rect(0, 0, pageWidth, 26, "F");
-
-    // TCC Logo on the Right Upper
+    // ── 1. OFFICIAL INSTITUTIONAL LETTERHEAD (White Background matching Print Report) ──
+    // Transparent TCC Logo on the Right Upper
     if (logoData) {
-        doc.addImage(logoData, "PNG", pageWidth - 14 - 18, 4, 18, 18);
+        doc.addImage(logoData, "PNG", pageWidth - 14 - 22, 11, 22, 22);
     }
 
-    // Clinic Title & Subtitle
-    doc.setTextColor(255, 255, 255);
+    // Header Titles
+    doc.setTextColor(112, 9, 31); // #70091f
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(13.5);
-    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 10.5);
+    doc.setFontSize(13);
+    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 15);
 
+    doc.setTextColor(70, 70, 70);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.text("HEALTH SERVICES CLINIC — CAMPUS CLINIC MANAGEMENT SYSTEM", 14, 20.5);
+
+    doc.setTextColor(120, 120, 120);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.text("HEALTH SERVICES CLINIC — CAMPUS CLINIC MANAGEMENT SYSTEM", 14, 16);
-
-    doc.setFontSize(7);
-    doc.text("Baluarte, Tagoloan, Misamis Oriental · clinic@tcc.edu.ph", 14, 21);
-
-    // Period & Report Title
-    const periodText = reportData.report?.period || `${reportData.report?.month_name || "Monthly"} ${reportData.report?.year || ""}`;
-    doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
-    doc.text(`REPORT PERIOD: ${periodText.toUpperCase()}`, pageWidth - 36, 17, { align: "right" });
+    doc.text("Baluarte, Tagoloan, Misamis Oriental · clinic@tcc.edu.ph", 14, 25);
 
-    // Document Meta
-    let currentY = 32;
-    doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+    // Document Title
+    doc.setTextColor(25, 25, 25);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12.5);
-    doc.text("MONTHLY CLINIC ACTIVITY & HEALTH REPORT", 14, currentY);
+    doc.setFontSize(13);
+    doc.text("MONTHLY CLINIC ACTIVITY & HEALTH REPORT", 14, 33);
 
+    // Reporting Period Label
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(100, 100, 100);
+    doc.text("Report Period: ", 14, 38);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(112, 9, 31);
+    doc.text(periodText.toUpperCase(), 34, 38);
+
+    // Reporting Period Box on the Upper Right (matching print view)
+    doc.setDrawColor(232, 223, 212);
+    doc.setFillColor(252, 250, 246);
+    doc.roundedRect(pageWidth - 14 - 40, 25, 40, 12, 1.5, 1.5, "FD");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.setTextColor(130, 130, 130);
+    doc.text("REPORTING PERIOD", pageWidth - 14 - 20, 29, { align: "center" });
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8.5);
+    doc.setTextColor(112, 9, 31);
+    doc.text(periodText.toUpperCase(), pageWidth - 14 - 20, 34, { align: "center" });
+
+    // Meta Divider Bar
+    doc.setDrawColor(220, 212, 202);
+    doc.setLineWidth(0.4);
+    doc.line(14, 42, pageWidth - 14, 42);
+
     const genDate = reportData.report?.generated_at
         ? new Date(reportData.report.generated_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })
         : new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-    doc.text(`Generated: ${genDate} | Scope: All recorded clinic visits for ${periodText}`, 14, currentY + 5);
 
-    currentY += 12;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(115, 115, 115);
+    const totalRecords = reportData.visits?.length || 0;
+    doc.text(`Generated: ${genDate}   |   Total Visits: ${totalRecords}   |   Scope: All clinic visits recorded for ${periodText}`, 14, 46);
 
-    // Summary Statistics Cards Table
+    let currentY = 50;
+
+    // ── 2. SUMMARY STATISTICS CARDS (5 Columns matching Print Report) ──
     const summary = reportData.summary || {};
     const totalVisits = Number(summary.total_visits || 0);
     const studentsTreated = Number(summary.students_treated ?? summary.student_visits ?? 0);
@@ -225,146 +253,190 @@ export async function exportMonthlyReportPDF(reportData: {
         ]],
         theme: "plain",
         headStyles: {
-            fillColor: [245, 240, 235],
+            fillColor: [248, 244, 238],
             textColor: [112, 9, 31],
             fontStyle: "bold",
-            fontSize: 9,
+            fontSize: 8,
             halign: "center",
         },
         bodyStyles: {
-            textColor: [40, 40, 40],
+            textColor: [30, 30, 30],
             fontSize: 12,
             fontStyle: "bold",
             halign: "center",
         },
         styles: {
-            cellPadding: 4,
-            lineColor: BORDER_COLOR,
-            lineWidth: 0.2,
+            cellPadding: 3,
+            lineColor: [225, 215, 205],
+            lineWidth: 0.25,
         },
         margin: { left: 14, right: 14 },
     });
 
     currentY = (doc as any).lastAutoTable.finalY + 8;
 
-    // Common Reasons & Common Illnesses Tables
+    // ── 3. 2x2 BREAKDOWN GRID (Visit Reasons, Common Illnesses, Medicine Usage, Nurse Activity) ──
     const reasons = (reportData.reasons || []).slice(0, 5);
     const illnesses = (reportData.common_illnesses || []).slice(0, 5);
+    const meds = (reportData.medicine_usage || []).slice(0, 5);
+    const nurses = (reportData.nurse_activity || []).slice(0, 5);
 
-    // Reasons Table
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(112, 9, 31);
-    doc.text("TOP REASONS FOR CONSULTATION", 14, currentY);
+    const halfTableWidth = 88;
+    const rightMarginLeft = pageWidth - 14 - halfTableWidth; // 108mm
+    const tableStartY = currentY;
 
+    // Left Column 1: Top Reasons for Consultation
     autoTable(doc, {
-        startY: currentY + 3,
-        head: [["Consultation Reason", "Count", "% of Visits"]],
+        startY: tableStartY,
+        head: [["Consultation Reason", "Count", "%"]],
         body: reasons.length > 0 ? reasons.map(r => [
             formatNA(r.reason),
             String(r.count),
             totalVisits > 0 ? `${Math.round((r.count / totalVisits) * 100)}%` : "0%",
-        ]) : [["No consultation records for this period", "-", "-"]],
+        ]) : [["No consultation records", "-", "-"]],
         theme: "striped",
         headStyles: {
             fillColor: BRAND_BURGUNDY,
             textColor: [255, 255, 255],
-            fontSize: 8.5,
+            fontSize: 7.5,
+            fontStyle: "bold",
         },
         bodyStyles: {
-            fontSize: 8,
+            fontSize: 7,
             textColor: TEXT_DARK,
         },
-        styles: { cellPadding: 2.5 },
-        margin: { left: 14, right: 14 },
+        columnStyles: {
+            0: { cellWidth: 50 },
+            1: { cellWidth: 18, halign: "center" },
+            2: { cellWidth: 20, halign: "center" },
+        },
+        styles: { cellPadding: 2 },
+        margin: { left: 14, right: pageWidth - 14 - halfTableWidth },
+        tableWidth: halfTableWidth,
     });
+    const leftFinalY1 = (doc as any).lastAutoTable.finalY;
 
-    currentY = (doc as any).lastAutoTable.finalY + 7;
-
-    // Common Illnesses Table (matches on-screen & print report)
-    if (illnesses.length > 0) {
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(10);
-        doc.setTextColor(112, 9, 31);
-        doc.text("COMMON ILLNESSES & SYMPTOMS", 14, currentY);
-
-        autoTable(doc, {
-            startY: currentY + 3,
-            head: [["Illness / Reported Symptom", "Reported Cases", "% of Visits"]],
-            body: illnesses.map(i => [
-                formatNA(i.illness),
-                String(i.count),
-                totalVisits > 0 ? `${Math.round((i.count / totalVisits) * 100)}%` : "0%",
-            ]),
-            theme: "striped",
-            headStyles: {
-                fillColor: [140, 40, 60],
-                textColor: [255, 255, 255],
-                fontSize: 8.5,
-            },
-            bodyStyles: {
-                fontSize: 8,
-                textColor: TEXT_DARK,
-            },
-            styles: { cellPadding: 2.5 },
-            margin: { left: 14, right: 14 },
-        });
-
-        currentY = (doc as any).lastAutoTable.finalY + 7;
-    }
-
-    // Medicines Given Table
-    const meds = (reportData.medicine_usage || []).slice(0, 6);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(112, 9, 31);
-    doc.text("MEDICINES DISPENSED & QUANTITIES", 14, currentY);
-
+    // Right Column 1: Common Illnesses & Symptoms
     autoTable(doc, {
-        startY: currentY + 3,
-        head: [["Medicine / Supply Name", "Quantity Given", "Unit"]],
+        startY: tableStartY,
+        head: [["Common Illness / Symptom", "Cases", "%"]],
+        body: illnesses.length > 0 ? illnesses.map(i => [
+            formatNA(i.illness),
+            String(i.count),
+            totalVisits > 0 ? `${Math.round((i.count / totalVisits) * 100)}%` : "0%",
+        ]) : [["No specific complaints", "-", "-"]],
+        theme: "striped",
+        headStyles: {
+            fillColor: [140, 40, 60],
+            textColor: [255, 255, 255],
+            fontSize: 7.5,
+            fontStyle: "bold",
+        },
+        bodyStyles: {
+            fontSize: 7,
+            textColor: TEXT_DARK,
+        },
+        columnStyles: {
+            0: { cellWidth: 50 },
+            1: { cellWidth: 18, halign: "center" },
+            2: { cellWidth: 20, halign: "center" },
+        },
+        styles: { cellPadding: 2 },
+        margin: { left: rightMarginLeft, right: 14 },
+        tableWidth: halfTableWidth,
+    });
+    const rightFinalY1 = (doc as any).lastAutoTable.finalY;
+
+    const row2StartY = Math.max(leftFinalY1, rightFinalY1) + 5;
+
+    // Left Column 2: Medicine Usage
+    autoTable(doc, {
+        startY: row2StartY,
+        head: [["Medicine Dispensed", "Qty", "Unit"]],
         body: meds.length > 0 ? meds.map(m => [
             formatNA(m.medicine_name),
             String(m.quantity_used),
             formatNA(m.unit),
-        ]) : [["No medicines were dispensed during this period", "-", "-"]],
+        ]) : [["No medicines dispensed", "-", "-"]],
         theme: "striped",
         headStyles: {
             fillColor: BRAND_GOLD,
             textColor: [255, 255, 255],
-            fontSize: 8.5,
+            fontSize: 7.5,
+            fontStyle: "bold",
         },
         bodyStyles: {
-            fontSize: 8,
+            fontSize: 7,
             textColor: TEXT_DARK,
         },
-        styles: { cellPadding: 2.5 },
-        margin: { left: 14, right: 14 },
+        columnStyles: {
+            0: { cellWidth: 50 },
+            1: { cellWidth: 18, halign: "center" },
+            2: { cellWidth: 20, halign: "center" },
+        },
+        styles: { cellPadding: 2 },
+        margin: { left: 14, right: pageWidth - 14 - halfTableWidth },
+        tableWidth: halfTableWidth,
     });
+    const leftFinalY2 = (doc as any).lastAutoTable.finalY;
 
-    currentY = (doc as any).lastAutoTable.finalY + 8;
+    // Right Column 2: Nurse Activity
+    autoTable(doc, {
+        startY: row2StartY,
+        head: [["Attending Nurse / Staff", "Visits Logged"]],
+        body: nurses.length > 0 ? nurses.map(n => [
+            formatNA(n.name),
+            String(n.visits),
+        ]) : [["No nurse records", "-"]],
+        theme: "striped",
+        headStyles: {
+            fillColor: [85, 65, 50],
+            textColor: [255, 255, 255],
+            fontSize: 7.5,
+            fontStyle: "bold",
+        },
+        bodyStyles: {
+            fontSize: 7,
+            textColor: TEXT_DARK,
+        },
+        columnStyles: {
+            0: { cellWidth: 58 },
+            1: { cellWidth: 30, halign: "center" },
+        },
+        styles: { cellPadding: 2 },
+        margin: { left: rightMarginLeft, right: 14 },
+        tableWidth: halfTableWidth,
+    });
+    const rightFinalY2 = (doc as any).lastAutoTable.finalY;
 
-    // Detailed Visits Log
+    currentY = Math.max(leftFinalY2, rightFinalY2) + 7;
+
+    // ── 4. DETAILED CLINIC VISITS REGISTER (Matching Print Report Table) ──
     const visits = reportData.visits || [];
+
+    // Header label matching print view
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(112, 9, 31);
-    doc.text(`CLINIC VISITS LOG (${visits.length} Records)`, 14, currentY);
+    doc.setFontSize(6.5);
+    doc.setTextColor(138, 111, 80); // #8a6f50
+    doc.text("SUPPORTING DETAIL", 14, currentY);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 30, 30);
+    doc.text(`CLINIC VISIT REGISTER (${visits.length} Records)`, 14, currentY + 4.5);
 
     autoTable(doc, {
-        startY: currentY + 3,
-        head: [["Date", "Patient Name", "Category", "Department", "Reason / Symptoms", "Temp", "BP", "Medication", "Nurse"]],
+        startY: currentY + 6.5,
+        head: [["Date", "Patient Name", "Type", "Department", "Reason / Symptoms", "Medicine", "Nurse"]],
         body: visits.length > 0 ? visits.map(v => [
             formatDate(v.date),
             formatNA(v.person),
             formatNA(v.person_type),
             formatNA(v.department),
             formatNA(v.reason) + (v.symptoms && v.symptoms !== v.reason ? `\n(${v.symptoms})` : ""),
-            formatTemperature(v.temperature),
-            formatNA(v.blood_pressure),
-            v.medicine ? `${v.medicine} (${v.medicine_quantity || 1})` : "None",
+            v.medicine ? `${v.medicine}${v.medicine_quantity ? ` (${v.medicine_quantity})` : ""}` : "None",
             formatNA(v.nurse),
-        ]) : [["No clinic visits recorded for this period", "-", "-", "-", "-", "-", "-", "-", "-"]],
+        ]) : [["No clinic visits recorded for this reporting period", "-", "-", "-", "-", "-", "-"]],
         theme: "grid",
         headStyles: {
             fillColor: BRAND_BURGUNDY,
@@ -378,35 +450,38 @@ export async function exportMonthlyReportPDF(reportData: {
             valign: "middle",
         },
         columnStyles: {
-            0: { cellWidth: 18 },
-            1: { cellWidth: 28 },
+            0: { cellWidth: 20 },
+            1: { cellWidth: 32 },
             2: { cellWidth: 16 },
-            3: { cellWidth: 26 },
-            4: { cellWidth: 34 },
-            5: { cellWidth: 14, halign: "center" },
-            6: { cellWidth: 14, halign: "center" },
-            7: { cellWidth: 18 },
-            8: { cellWidth: 14 },
+            3: { cellWidth: 30 },
+            4: { cellWidth: 38 },
+            5: { cellWidth: 24 },
+            6: { cellWidth: 22 },
         },
         styles: { cellPadding: 2 },
         margin: { left: 14, right: 14, bottom: 15 },
         didDrawPage: (data) => {
-            // Footer on each page
             const pageNum = doc.getNumberOfPages();
             doc.setFontSize(7.5);
             doc.setTextColor(120, 120, 120);
-            doc.text("Tagoloan Community College — Health Services Clinic — Official Monthly Report", 14, doc.internal.pageSize.getHeight() - 8);
+            doc.text("Tagoloan Community College · Health Services Clinic · Campus Clinic Management System · Official Monthly Report", 14, doc.internal.pageSize.getHeight() - 8);
             doc.text(`Page ${data.pageNumber} of ${pageNum}`, doc.internal.pageSize.getWidth() - 14, doc.internal.pageSize.getHeight() - 8, { align: "right" });
         },
     });
 
-    // Official Endorsement & Signatures
+    // ── 5. OFFICIAL ENDORSEMENT & SIGNATURES (Matching Print Report Footer) ──
     let finalY = (doc as any).lastAutoTable.finalY + 10;
     if (finalY + 30 > doc.internal.pageSize.getHeight() - 15) {
         doc.addPage();
         finalY = 22;
     }
 
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(112, 9, 31);
+    doc.text("OFFICIAL ENDORSEMENT & SIGNATURES", 14, finalY);
+
+    finalY += 4;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
