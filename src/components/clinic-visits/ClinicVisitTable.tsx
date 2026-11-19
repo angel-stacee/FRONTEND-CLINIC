@@ -298,20 +298,6 @@ export function ClinicVisitTable({
                                                             <button
                                                                 type="button"
                                                                 onClick={() =>
-                                                                    onDownloadCertificate?.(
-                                                                        visit
-                                                                    )
-                                                                }
-                                                                className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50/70 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300 cursor-pointer"
-                                                                title="Download Medical Certificate for this visit"
-                                                            >
-                                                                <FileText size={13} />
-                                                                <span className="whitespace-nowrap">Med Cert</span>
-                                                            </button>
-
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
                                                                     handleEdit(
                                                                         visit
                                                                     )
