@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/tcc-logo.jpg" />
+    <link rel="icon" type="image/png" href="/tcc-logo.png" />
+    <link rel="alternate icon" type="image/jpeg" href="/tcc-logo.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TCC Clinic Management System</title>
     <script>
@@ -90,7 +91,12 @@
       </style>
       <div class="tcc-boot-screen">
         <div class="tcc-boot-card">
-          <img src="/tcc-logo.jpg" alt="TCC Logo" class="tcc-boot-logo" />
+          <img 
+            src="/tcc-logo.png" 
+            alt="TCC Logo" 
+            class="tcc-boot-logo"
+            onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/tcc-logo.jpg';}"
+          />
           <h1 class="tcc-boot-title">Tagoloan Community College</h1>
           <p class="tcc-boot-sub">Clinic Management System</p>
           <div class="tcc-boot-bar"></div>

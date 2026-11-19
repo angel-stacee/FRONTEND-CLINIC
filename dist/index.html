@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/tcc-logo.jpg" />
+    <link rel="icon" type="image/png" href="/tcc-logo.png" />
+    <link rel="alternate icon" type="image/jpeg" href="/tcc-logo.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TCC Clinic Management System</title>
     <script>
@@ -29,7 +30,12 @@
       <style>.tcc-boot-screen{color:#3d3329;box-sizing:border-box;background:#f7f2eb;flex-direction:column;justify-content:center;align-items:center;min-height:100vh;margin:0;padding:24px;font-family:system-ui,-apple-system,sans-serif;display:flex}.tcc-boot-card{text-align:center;flex-direction:column;align-items:center;display:flex}.tcc-boot-logo{object-fit:cover;border-radius:16px;width:72px;height:72px;margin-bottom:16px;animation:1.8s ease-in-out infinite tcc-pulse;box-shadow:0 4px 12px #00000014}.tcc-boot-title{color:#3d3329;margin:0 0 6px;font-size:18px;font-weight:700}.tcc-boot-sub{color:#887d70;margin:0 0 20px;font-size:13px}.tcc-boot-bar{background:#e8dfd4;border-radius:999px;width:180px;height:5px;position:relative;overflow:hidden}.tcc-boot-bar:after{content:"";background:#8a6f50;border-radius:999px;width:50%;height:100%;animation:1.4s ease-in-out infinite tcc-shim;position:absolute;top:0;left:0}@keyframes tcc-shim{0%{transform:translate(-100%)}to{transform:translate(250%)}}@keyframes tcc-pulse{0%,to{opacity:1;transform:scale(1)}50%{opacity:.9;transform:scale(1.05)}}</style>
       <div class="tcc-boot-screen">
         <div class="tcc-boot-card">
-          <img src="/tcc-logo.jpg" alt="TCC Logo" class="tcc-boot-logo" />
+          <img 
+            src="/tcc-logo.png" 
+            alt="TCC Logo" 
+            class="tcc-boot-logo"
+            onerror="if(!this.dataset.retried){this.dataset.retried='1';this.src='/tcc-logo.jpg';}"
+          />
           <h1 class="tcc-boot-title">Tagoloan Community College</h1>
           <p class="tcc-boot-sub">Clinic Management System</p>
           <div class="tcc-boot-bar"></div>
