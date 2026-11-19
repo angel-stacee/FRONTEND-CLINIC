@@ -57,7 +57,7 @@ export function exportMonthlyReportPDF(reportData: {
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
-    doc.text("TAGUIG CITY COLLEGE CLINIC", 14, 11);
+    doc.text("TAGOLOAN COMMUNITY COLLEGE CLINIC", 14, 11);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
@@ -296,7 +296,7 @@ export function exportStudentMedicalReportPDF(
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(15);
-    doc.text("TAGUIG CITY COLLEGE CLINIC", 14, 11);
+    doc.text("TAGOLOAN COMMUNITY COLLEGE CLINIC", 14, 11);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
