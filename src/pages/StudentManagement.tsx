@@ -7,7 +7,7 @@ import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components
 import { StudentForms, validateContactNumber, type StudentFormValues, type StaffFormValues, type FacultyFormValues } from "../components/student-management/StudentForms";
 import FloatingToast from "../components/common/FloatingToast";
 import { addClinicNotification } from "../services/notifications";
-import { exportStudentMedicalReportPDF, exportMedicalCertificatePDF } from "../utils/pdfExport";
+import { exportStudentMedicalReportPDF } from "../utils/pdfExport";
 import { formatNA, formatTemperature, formatDate, mapCourseToDepartment } from "../utils/formatters";
 import { ReasonBadge } from "../utils/reasonColors";
 
@@ -2912,46 +2912,12 @@ function StudentManagement() {
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    onClick={() => {
-                                        const studentInfo = medicalReportData?.student || {
-                                            ...medicalReportStudent,
-                                            full_name: getFullName(medicalReportStudent),
-                                            department: mapCourseToDepartment(medicalReportStudent.course),
-                                        };
-                                        const visits = medicalReportData?.visits || medicalReportStudent.clinic_visits || [];
-                                        const latest = visits[0] || {};
-                                        exportMedicalCertificatePDF({
-                                            patient_name: studentInfo.full_name || getFullName(studentInfo),
-                                            student_id: studentInfo.student_id,
-                                            role_label: `Student (${studentInfo.course || ""})`,
-                                            address: studentInfo.address,
-                                            visit_date: latest.visit_date || new Date().toISOString(),
-                                            diagnosis: latest.assessment || latest.symptoms || latest.reason,
-                                            reason: latest.reason,
-                                            symptoms: latest.symptoms,
-                                            temperature: latest.temperature,
-                                            blood_pressure: latest.blood_pressure,
-                                            treatment: latest.treatment,
-                                            remarks: latest.remarks,
-                                            attending_nurse: latest.nurse?.name,
-                                        });
-                                    }}
-                                    disabled={loadingMedicalReport}
-                                    className="inline-flex items-center gap-2 rounded-xl border border-[#70091f] bg-white px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#70091f] shadow-xs transition hover:bg-[#70091f] hover:text-white active:scale-95 disabled:opacity-50 cursor-pointer"
-                                    title="Download Official Medical Certificate"
-                                >
-                                    <FileText size={16} />
-                                    Medical Certificate
-                                </button>
-
-                                <button
-                                    type="button"
                                     onClick={handleDownloadStudentPDF}
                                     disabled={loadingMedicalReport}
                                     className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 disabled:opacity-50 cursor-pointer"
                                 >
                                     <Download size={16} />
-                                    Full Medical Report
+                                    Download PDF
                                 </button>
                             </div>
                         </div>
@@ -3047,7 +3013,6 @@ function StudentManagement() {
                                                 <th className="px-4 py-3">Medicine</th>
                                                 <th className="px-4 py-3">Nurse</th>
                                                 <th className="px-4 py-3">Remarks</th>
-                                                <th className="px-4 py-3 text-right">Certificate</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-[#eee7de] dark:divide-[#382f25]">
@@ -3094,38 +3059,6 @@ function StudentManagement() {
                                                     </td>
                                                     <td className="px-4 py-3 max-w-[120px] truncate text-[#887d70] dark:text-[#a99d8f]" title={v.remarks || ""}>
                                                         {formatNA(v.remarks)}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                const studentInfo = medicalReportData?.student || {
-                                                                    ...medicalReportStudent,
-                                                                    full_name: getFullName(medicalReportStudent),
-                                                                    department: mapCourseToDepartment(medicalReportStudent.course),
-                                                                };
-                                                                exportMedicalCertificatePDF({
-                                                                    patient_name: studentInfo.full_name || getFullName(studentInfo),
-                                                                    student_id: studentInfo.student_id,
-                                                                    role_label: `Student (${studentInfo.course || ""})`,
-                                                                    address: studentInfo.address,
-                                                                    visit_date: v.visit_date,
-                                                                    diagnosis: v.assessment || v.symptoms || v.reason,
-                                                                    reason: v.reason,
-                                                                    symptoms: v.symptoms,
-                                                                    temperature: v.temperature,
-                                                                    blood_pressure: v.blood_pressure,
-                                                                    treatment: v.treatment,
-                                                                    remarks: v.remarks,
-                                                                    attending_nurse: v.nurse?.name,
-                                                                });
-                                                            }}
-                                                            className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white"
-                                                            title="Download Official Medical Certificate"
-                                                        >
-                                                            <FileText size={12} />
-                                                            Med Cert
-                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
