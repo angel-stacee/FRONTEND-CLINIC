@@ -1,7 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Pencil, Search, Stethoscope, Trash2, X } from "lucide-react";
+import { FileText, Pencil, Search, Stethoscope, Trash2, X } from "lucide-react";
 import { ReasonBadge } from "../../utils/reasonColors";
 import { formatNA, formatTemperature, mapCourseToDepartment } from "../../utils/formatters";
+import { exportMedicalCertificatePDF } from "../../utils/pdfExport";
 
 export interface VisitRecord { id: number | string; visit_date?: string | null; reason?: string | null; department?: string | null; [key: string]: any; }
 interface VisitPagination { current_page: number; last_page: number; total: number; per_page: number; }
@@ -242,6 +243,33 @@ export function ClinicVisitTable({ search, setSearch, loading, pageLoading, filt
                                                     <td className="px-5 py-3.5">
 
                                                         <div className="flex justify-end gap-2">
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const patient = visit.student || visit.faculty || visit.staff || {};
+                                                                    const pName = getPatientName(visit).name;
+                                                                    exportMedicalCertificatePDF({
+                                                                        patient_name: pName,
+                                                                        student_id: patient.student_id || patient.employee_id || patient.staff_id,
+                                                                        role_label: getPatientName(visit).type || "Student",
+                                                                        address: patient.address,
+                                                                        visit_date: visit.visit_date || new Date().toISOString(),
+                                                                        diagnosis: visit.assessment || visit.symptoms || visit.reason || "",
+                                                                        reason: visit.reason || "",
+                                                                        symptoms: visit.symptoms || "",
+                                                                        temperature: visit.temperature || "",
+                                                                        blood_pressure: visit.blood_pressure || "",
+                                                                        treatment: visit.treatment || "",
+                                                                        remarks: visit.remarks || "",
+                                                                        attending_nurse: getNurseName(visit.nurse),
+                                                                    });
+                                                                }}
+                                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#70091f]/30 text-[#70091f] transition hover:bg-[#70091f] hover:text-white"
+                                                                title="Download Official Medical Certificate"
+                                                            >
+                                                                <FileText size={14} />
+                                                            </button>
 
                                                             <button
                                                                 type="button"

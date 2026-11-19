@@ -8,9 +8,39 @@ const TEXT_DARK: [number, number, number] = [40, 40, 40];
 const BORDER_COLOR: [number, number, number] = [232, 223, 212];
 
 /**
+ * Helper to dynamically load the official TCC logo as a compressed data URL
+ */
+async function loadLogoDataUrl(): Promise<string | null> {
+    if (typeof window === "undefined") return null;
+    return new Promise((resolve) => {
+        try {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => {
+                try {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = 160;
+                    canvas.height = 160;
+                    const ctx = canvas.getContext("2d");
+                    if (!ctx) return resolve(null);
+                    ctx.drawImage(img, 0, 0, 160, 160);
+                    resolve(canvas.toDataURL("image/jpeg", 0.92));
+                } catch {
+                    resolve(null);
+                }
+            };
+            img.onerror = () => resolve(null);
+            img.src = "/tcc-logo.jpg";
+        } catch {
+            resolve(null);
+        }
+    });
+}
+
+/**
  * Export Monthly Clinic Report as a professional PDF
  */
-export function exportMonthlyReportPDF(reportData: {
+export async function exportMonthlyReportPDF(reportData: {
     report?: {
         period?: string;
         month_name?: string;
@@ -48,25 +78,31 @@ export function exportMonthlyReportPDF(reportData: {
 }) {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
+    const logoData = await loadLogoDataUrl();
 
-    // Header Background Accent
+    // Header Background Accent (Height 26mm)
     doc.setFillColor(112, 9, 31);
-    doc.rect(0, 0, pageWidth, 24, "F");
+    doc.rect(0, 0, pageWidth, 26, "F");
+
+    // TCC Logo on the Right Upper
+    if (logoData) {
+        doc.addImage(logoData, "JPEG", pageWidth - 14 - 18, 4, 18, 18);
+    }
 
     // Clinic Title & Subtitle
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
+    doc.setFontSize(14);
     doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 11);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("HEALTH SERVICES CLINIC — CAMPUS CLINIC MANAGEMENT SYSTEM", 14, 18);
+    doc.setFontSize(8.5);
+    doc.text("HEALTH SERVICES CLINIC — CAMPUS CLINIC MANAGEMENT SYSTEM", 14, 17);
 
     // Period & Report Title
     const periodText = reportData.report?.period || `${reportData.report?.month_name || "Monthly"} ${reportData.report?.year || ""}`;
-    doc.setFontSize(8);
-    doc.text(`REPORT PERIOD: ${periodText.toUpperCase()}`, pageWidth - 14, 18, { align: "right" });
+    doc.setFontSize(7.5);
+    doc.text(`REPORT PERIOD: ${periodText.toUpperCase()}`, pageWidth - 36, 17, { align: "right" });
 
     // Document Meta
     let currentY = 32;
@@ -253,7 +289,7 @@ export function exportMonthlyReportPDF(reportData: {
 /**
  * Export Individual Student Medical Report as a professional PDF
  */
-export function exportStudentMedicalReportPDF(
+export async function exportStudentMedicalReportPDF(
     student: {
         student_id: string;
         full_name?: string;
@@ -288,22 +324,28 @@ export function exportStudentMedicalReportPDF(
 ) {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
+    const logoData = await loadLogoDataUrl();
 
-    // Burgundy Header Banner
+    // Burgundy Header Banner (Height 26mm)
     doc.setFillColor(112, 9, 31);
-    doc.rect(0, 0, pageWidth, 24, "F");
+    doc.rect(0, 0, pageWidth, 26, "F");
+
+    // TCC Logo on the Right Upper
+    if (logoData) {
+        doc.addImage(logoData, "JPEG", pageWidth - 14 - 18, 4, 18, 18);
+    }
 
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(15);
+    doc.setFontSize(14);
     doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 11);
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text("HEALTH SERVICES CLINIC — STUDENT MEDICAL RECORD", 14, 18);
+    doc.setFontSize(8.5);
+    doc.text("HEALTH SERVICES CLINIC — STUDENT MEDICAL RECORD", 14, 17);
 
-    doc.setFontSize(8);
-    doc.text("CONFIDENTIAL MEDICAL HISTORY", pageWidth - 14, 18, { align: "right" });
+    doc.setFontSize(7.5);
+    doc.text("CONFIDENTIAL MEDICAL HISTORY", pageWidth - 36, 17, { align: "right" });
 
     // Document Subheading
     let currentY = 32;
@@ -407,4 +449,184 @@ export function exportStudentMedicalReportPDF(
 
     const safeId = (student.student_id || "Student").replace(/[^a-zA-Z0-9]/g, "_");
     doc.save(`TCC_Medical_Report_${safeId}.pdf`);
+}
+
+export interface MedicalCertificateData {
+    patient_name: string;
+    student_id?: string;
+    role_label?: string;
+    address?: string;
+    visit_date: string;
+    diagnosis?: string;
+    reason?: string;
+    symptoms?: string;
+    temperature?: string | number;
+    blood_pressure?: string;
+    treatment?: string;
+    rest_days?: string | number;
+    remarks?: string;
+    attending_nurse?: string;
+}
+
+/**
+ * Export official Medical Certificate matching Philippine clinic standards
+ * with official TCC logo in the upper right.
+ */
+export async function exportMedicalCertificatePDF(cert: MedicalCertificateData) {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const logoData = await loadLogoDataUrl();
+
+    // 1. Official Header with Logo on the Right Upper
+    if (logoData) {
+        doc.addImage(logoData, "JPEG", pageWidth - 14 - 24, 12, 24, 24);
+    }
+
+    doc.setTextColor(50, 50, 50);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.text("Republic of the Philippines", 14, 16);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(14);
+    doc.setTextColor(112, 9, 31); // TCC Burgundy
+    doc.text("TAGOLOAN COMMUNITY COLLEGE", 14, 23);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+    doc.text("HEALTH SERVICES & CAMPUS CLINIC", 14, 29);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(110, 110, 110);
+    doc.text("Baluarte, Tagoloan, Misamis Oriental · clinic@tcc.edu.ph", 14, 34);
+
+    // Decorative Burgundy Accent Line
+    doc.setDrawColor(112, 9, 31);
+    doc.setLineWidth(1.2);
+    doc.line(14, 42, pageWidth - 14, 42);
+    doc.setDrawColor(210, 210, 210);
+    doc.setLineWidth(0.4);
+    doc.line(14, 43.5, pageWidth - 14, 43.5);
+
+    // 2. Document Title (Centered & Bold)
+    let y = 60;
+    doc.setTextColor(20, 20, 20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(17);
+    doc.text("MEDICAL CERTIFICATE", pageWidth / 2, y, { align: "center" });
+
+    // 3. Date (Upper Right)
+    y = 74;
+    const issueDate = cert.visit_date ? formatDate(cert.visit_date) : new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(50, 50, 50);
+    doc.text(`Date: ${issueDate}`, pageWidth - 14, y, { align: "right" });
+
+    // 4. Salutation
+    y = 90;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(20, 20, 20);
+    doc.text("To Whom It May Concern:", 14, y);
+
+    // 5. Certification Paragraph matching user's reference
+    y = 104;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+
+    const patientName = cert.patient_name || "the patient named herein";
+    const patientAddress = cert.address && cert.address !== "N/A" ? cert.address : "Tagoloan, Misamis Oriental";
+    const visitDateStr = cert.visit_date ? formatDate(cert.visit_date) : "the indicated consultation date";
+
+    const p1 = `THIS IS TO CERTIFY that ${patientName} of ${patientAddress} was examined and treated at the Tagoloan Community College Health Services Clinic on ${visitDateStr} with the following diagnosis:`;
+    
+    const linesP1 = doc.splitTextToSize(p1, pageWidth - 28);
+    doc.text(linesP1, 14, y);
+    y += (linesP1.length * 6.5) + 10;
+
+    // 6. Clinical Diagnosis Card / Underlined box
+    const diagnosisText = cert.diagnosis || cert.symptoms || cert.reason || "Clinical Consultation & Treatment";
+    const vitalsText = `Vital Signs: Temperature: ${formatTemperature(cert.temperature)}  |  Blood Pressure: ${formatNA(cert.blood_pressure)}`;
+
+    doc.setFillColor(252, 250, 248);
+    doc.setDrawColor(180, 150, 140);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(14, y, pageWidth - 28, 28, 2, 2, "FD");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(112, 9, 31);
+    doc.text("DIAGNOSIS / FINDINGS:", 19, y + 8);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(20, 20, 20);
+    doc.text(diagnosisText, 19, y + 16);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(90, 90, 90);
+    doc.text(vitalsText, 19, y + 23);
+
+    y += 40;
+
+    // 7. Rest Period / Medical Attention Recommendation
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+
+    const restDays = cert.rest_days ? `${cert.rest_days} day(s)` : (cert.remarks || "one (1) day");
+    const recommendation = `And would need medical attention / rest for ${restDays} barring complication.`;
+    const linesRec = doc.splitTextToSize(recommendation, pageWidth - 28);
+    doc.text(linesRec, 14, y);
+    y += (linesRec.length * 6.5) + 6;
+
+    if (cert.treatment && cert.treatment !== "N/A" && cert.treatment !== "-") {
+        const treatText = `Treatment Provided: ${cert.treatment}`;
+        const linesTreat = doc.splitTextToSize(treatText, pageWidth - 28);
+        doc.text(linesTreat, 14, y);
+        y += (linesTreat.length * 6.5) + 6;
+    }
+
+    // 8. Purpose Note
+    y += 10;
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(8.5);
+    doc.setTextColor(110, 110, 110);
+    doc.text("Note: This certificate is issued upon the request of the patient for institutional / academic validation purposes only.", 14, y);
+
+    // 9. Attending Nurse / Healthcare Officer Signature Block on the Bottom Right
+    const sigY = pageHeight - 65;
+    const sigX = pageWidth - 80;
+
+    doc.setDrawColor(60, 60, 60);
+    doc.setLineWidth(0.6);
+    doc.line(sigX, sigY, pageWidth - 14, sigY);
+
+    const nurseName = cert.attending_nurse || "Angel Stacee Sabandal";
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(20, 20, 20);
+    doc.text(nurseName, sigX + ((pageWidth - 14 - sigX) / 2), sigY + 5.5, { align: "center" });
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(80, 80, 80);
+    doc.text("Attending Clinic Nurse", sigX + ((pageWidth - 14 - sigX) / 2), sigY + 10.5, { align: "center" });
+    doc.text("Tagoloan Community College Clinic", sigX + ((pageWidth - 14 - sigX) / 2), sigY + 14.5, { align: "center" });
+
+    // 10. Official Footer
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(150, 150, 150);
+    doc.text("TCC Health Services Clinic · Baluarte, Tagoloan, Misamis Oriental · Est. 2003", 14, pageHeight - 10);
+    doc.text("Valid with Official Clinic Stamp", pageWidth - 14, pageHeight - 10, { align: "right" });
+
+    const safeId = (cert.student_id || cert.patient_name || "Patient").replace(/[^a-zA-Z0-9]/g, "_");
+    doc.save(`TCC_Medical_Certificate_${safeId}.pdf`);
 }
