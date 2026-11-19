@@ -1833,10 +1833,10 @@ function ClinicVisits() {
                     onDownloadCertificate={handleDownloadCertificateForVisit}
                 />
 
-                {/* Individual Patient Medical Report Modal */}
+                {/* Individual Patient Medical Certificate Modal */}
                 {medicalReportTarget && (
                     <Modal
-                        title={`Individual ${medicalReportTarget.type === "faculty" ? "Faculty" : medicalReportTarget.type === "staff" ? "Staff" : "Student"} Medical Report`}
+                        title={`Individual ${medicalReportTarget.type === "faculty" ? "Faculty" : medicalReportTarget.type === "staff" ? "Staff" : "Student"} Medical Certificate`}
                         onClose={closeMedicalReport}
                         maxWidth="max-w-5xl"
                     >

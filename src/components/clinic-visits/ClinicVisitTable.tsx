@@ -289,10 +289,10 @@ export function ClinicVisitTable({
                                                                     )
                                                                 }
                                                                 className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
-                                                                title="View Full Medical Record & History"
+                                                                title="View Patient Medical Certificate & History"
                                                             >
                                                                 <FileText size={13} />
-                                                                <span className="whitespace-nowrap">Medical Record</span>
+                                                                <span className="whitespace-nowrap">Medical Certificate</span>
                                                             </button>
 
                                                             <button

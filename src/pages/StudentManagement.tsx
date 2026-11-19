@@ -2056,11 +2056,11 @@ function StudentManagement() {
                                                                                 student
                                                                             )
                                                                         }
-                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
-                                                                        title="Individual Student Medical Report"
+                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                                                        title="Individual Student Medical Certificate"
                                                                     >
                                                                         <FileText size={13} />
-                                                                        Medical Report
+                                                                        Medical Certificate
                                                                     </button>
 
                                                                     <button
@@ -2250,11 +2250,11 @@ function StudentManagement() {
                                                                                 "staff"
                                                                             )
                                                                         }
-                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
-                                                                        title="Individual Staff Medical Report"
+                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                                                        title="Individual Staff Medical Certificate"
                                                                     >
                                                                         <FileText size={13} />
-                                                                        Medical Report
+                                                                        Medical Certificate
                                                                     </button>
 
                                                                     <button
@@ -2418,11 +2418,11 @@ function StudentManagement() {
                                                                                 "faculty"
                                                                             )
                                                                         }
-                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
-                                                                        title="Individual Faculty Medical Report"
+                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                                                        title="Individual Faculty Medical Certificate"
                                                                     >
                                                                         <FileText size={13} />
-                                                                        Medical Report
+                                                                        Medical Certificate
                                                                     </button>
 
                                                                     <button
@@ -2581,10 +2581,10 @@ function StudentManagement() {
                                         setViewingStudent(null);
                                         openMedicalReport(s);
                                     }}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#70091f] px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-[#8b1505]"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#70091f] px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-[#8b1505] cursor-pointer"
                                 >
                                     <FileText size={14} />
-                                    Medical Report
+                                    Medical Certificate
                                 </button>
                                 <span className="inline-flex w-fit items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
                                     ID:{" "}
@@ -3023,10 +3023,10 @@ function StudentManagement() {
                 </Modal>
             )}
 
-            {/* Individual Patient Medical Report Modal */}
+            {/* Individual Patient Medical Certificate Modal */}
             {medicalReportStudent && (
                 <Modal
-                    title={`Individual ${medicalReportType === "faculty" ? "Faculty" : medicalReportType === "staff" ? "Staff" : "Student"} Medical Report`}
+                    title={`Individual ${medicalReportType === "faculty" ? "Faculty" : medicalReportType === "staff" ? "Staff" : "Student"} Medical Certificate`}
                     onClose={closeMedicalReport}
                     maxWidth="max-w-5xl"
                 >
