@@ -1,13 +1,51 @@
 import type { Dispatch, SetStateAction } from "react";
-import { Pencil, Search, Stethoscope, Trash2, X } from "lucide-react";
+import { FileText, Pencil, Search, Stethoscope, Trash2, X } from "lucide-react";
 import { ReasonBadge } from "../../utils/reasonColors";
 import { formatNA, formatTemperature, mapCourseToDepartment } from "../../utils/formatters";
 
 export interface VisitRecord { id: number | string; visit_date?: string | null; reason?: string | null; department?: string | null; [key: string]: any; }
 interface VisitPagination { current_page: number; last_page: number; total: number; per_page: number; }
-interface ClinicVisitTableProps { search: string; setSearch: (value: string) => void; loading: boolean; pageLoading: boolean; filteredVisits: VisitRecord[]; getPatientName: (visit: VisitRecord) => { name: string; id?: string; type?: string }; getNurseName: (nurse: any) => string; getMedicineName: (medicine: any) => string; getMedicineUnit: (medicine: any) => string; formatDate: (date: string | null | undefined) => string; handleEdit: (visit: VisitRecord) => void; deleteVisit: VisitRecord | null; setDeleteVisit: Dispatch<SetStateAction<VisitRecord | null>>; handleDelete: () => void; visitPagination: VisitPagination; fetchVisits: (page?: number, searchTerm?: string) => Promise<void>; }
+interface ClinicVisitTableProps {
+    search: string;
+    setSearch: (value: string) => void;
+    loading: boolean;
+    pageLoading: boolean;
+    filteredVisits: VisitRecord[];
+    getPatientName: (visit: VisitRecord) => { name: string; id?: string; type?: string };
+    getNurseName: (nurse: any) => string;
+    getMedicineName: (medicine: any) => string;
+    getMedicineUnit: (medicine: any) => string;
+    formatDate: (date: string | null | undefined) => string;
+    handleEdit: (visit: VisitRecord) => void;
+    deleteVisit: VisitRecord | null;
+    setDeleteVisit: Dispatch<SetStateAction<VisitRecord | null>>;
+    handleDelete: () => void;
+    visitPagination: VisitPagination;
+    fetchVisits: (page?: number, searchTerm?: string) => Promise<void>;
+    onOpenMedicalReport?: (visit: VisitRecord) => void;
+    onDownloadCertificate?: (visit: VisitRecord) => void;
+}
 
-export function ClinicVisitTable({ search, setSearch, loading, pageLoading, filteredVisits, getPatientName, getNurseName, getMedicineName, getMedicineUnit, formatDate, handleEdit, deleteVisit, setDeleteVisit, handleDelete, visitPagination, fetchVisits }: ClinicVisitTableProps) {
+export function ClinicVisitTable({
+    search,
+    setSearch,
+    loading,
+    pageLoading,
+    filteredVisits,
+    getPatientName,
+    getNurseName,
+    getMedicineName,
+    getMedicineUnit,
+    formatDate,
+    handleEdit,
+    deleteVisit,
+    setDeleteVisit,
+    handleDelete,
+    visitPagination,
+    fetchVisits,
+    onOpenMedicalReport,
+    onDownloadCertificate,
+}: ClinicVisitTableProps) {
     return (
         <>
 
@@ -241,7 +279,35 @@ export function ClinicVisitTable({ search, setSearch, loading, pageLoading, filt
 
                                                     <td className="px-5 py-3.5">
 
-                                                        <div className="flex justify-end gap-2">
+                                                        <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    onOpenMedicalReport?.(
+                                                                        visit
+                                                                    )
+                                                                }
+                                                                className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                                                title="View Full Medical Record & History"
+                                                            >
+                                                                <FileText size={13} />
+                                                                <span className="whitespace-nowrap">Medical Record</span>
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    onDownloadCertificate?.(
+                                                                        visit
+                                                                    )
+                                                                }
+                                                                className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50/70 px-2.5 py-1.5 text-xs font-semibold text-amber-900 transition hover:bg-amber-100 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300 cursor-pointer"
+                                                                title="Download Medical Certificate for this visit"
+                                                            >
+                                                                <FileText size={13} />
+                                                                <span className="whitespace-nowrap">Med Cert</span>
+                                                            </button>
 
                                                             <button
                                                                 type="button"
@@ -250,7 +316,7 @@ export function ClinicVisitTable({ search, setSearch, loading, pageLoading, filt
                                                                         visit
                                                                     )
                                                                 }
-                                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] text-[#8a6f50] transition hover:bg-[#f3ebdf]"
+                                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] text-[#8a6f50] transition hover:bg-[#f3ebdf] cursor-pointer"
                                                                 title="Edit visit"
                                                             >
                                                                 <Pencil
@@ -267,7 +333,7 @@ export function ClinicVisitTable({ search, setSearch, loading, pageLoading, filt
                                                                         visit
                                                                     )
                                                                 }
-                                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 text-red-600 transition hover:bg-red-50"
+                                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 text-red-600 transition hover:bg-red-50 cursor-pointer"
                                                                 title="Delete visit"
                                                             >
                                                                 <Trash2
