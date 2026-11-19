@@ -181,7 +181,7 @@ export default function Landing(): React.JSX.Element {
                     >
                         <div className="relative">
                             <img
-                                src="/tcc-logo.jpg"
+                                src="/tcc-logo.png"
                                 alt="TCC Logo"
                                 className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover ring-2 ring-[#e5a93b]/50 shadow-xs shrink-0 transition-transform duration-300 group-hover:scale-105"
                             />
@@ -331,7 +331,7 @@ export default function Landing(): React.JSX.Element {
                     className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden select-none z-0"
                 >
                     <img
-                        src="/tcc-logo.jpg"
+                        src="/tcc-logo.png"
                         alt=""
                         className="h-[500px] w-[500px] sm:h-[640px] sm:w-[640px] lg:h-[760px] lg:w-[760px] rounded-full object-cover opacity-[0.08] mix-blend-screen filter contrast-125"
                     />
@@ -1055,7 +1055,7 @@ export default function Landing(): React.JSX.Element {
                     className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden select-none z-0"
                 >
                     <img
-                        src="/tcc-logo.jpg"
+                        src="/tcc-logo.png"
                         alt=""
                         className="h-[420px] w-[420px] sm:h-[540px] sm:w-[540px] rounded-full object-cover opacity-[0.06] mix-blend-screen filter contrast-125"
                     />
@@ -1103,7 +1103,7 @@ export default function Landing(): React.JSX.Element {
                     <div className="md:col-span-5">
                         <div className="flex items-center gap-3">
                             <img
-                                src="/tcc-logo.jpg"
+                                src="/tcc-logo.png"
                                 alt="TCC Logo"
                                 className="h-10 w-10 rounded-full object-cover ring-2 ring-[#e5a93b]/70 shrink-0"
                             />
@@ -1196,7 +1196,7 @@ export default function Landing(): React.JSX.Element {
                         {/* Animated TCC Logo with glowing golden ring */}
                         <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-[#70091f] shadow-2xl ring-4 ring-[#e5a93b]/90 transition-transform duration-500 scale-105">
                             <img
-                                src="/tcc-logo.jpg"
+                                src="/tcc-logo.png"
                                 alt="TCC Logo"
                                 className="h-20 w-20 rounded-full object-cover shadow-inner"
                             />

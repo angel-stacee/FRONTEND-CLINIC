@@ -377,7 +377,7 @@ function Reports() {
                                     </p>
                                 </div>
                                 <img
-                                    src="/tcc-logo.jpg"
+                                    src="/tcc-logo.png"
                                     alt="Tagoloan Community College Logo"
                                     className="h-16 w-16 rounded-full border border-stone-200 bg-white object-contain p-1 shadow-sm sm:h-20 sm:w-20"
                                 />

@@ -169,7 +169,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
                 <div className="flex items-center gap-3">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/10 p-1">
                         <img
-                            src="/tcc-logo.jpg"
+                            src="/tcc-logo.png"
                             alt="TCC Logo"
                             className="h-12 w-12 rounded-full object-contain transition-transform duration-300 hover:rotate-6 hover:scale-105"
                         />

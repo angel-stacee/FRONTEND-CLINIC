@@ -13,7 +13,7 @@ export function PageLoadingScreen(): React.JSX.Element {
             <div className="flex flex-col items-center">
                 <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-2xl border border-[#e8dfd4] bg-white p-2 shadow-sm dark:border-[#382f25] dark:bg-[#251f19]">
                     <img
-                        src="/tcc-logo.jpg"
+                        src="/tcc-logo.png"
                         alt="TCC Logo"
                         className="h-16 w-16 animate-pulse rounded-full object-contain"
                     />

@@ -233,7 +233,7 @@ export default function Login(): React.JSX.Element {
                 {/* Logo & Header */}
                 <div className="mb-6 flex flex-col items-center text-center">
                     <img
-                        src="/tcc-logo.jpg"
+                        src="/tcc-logo.png"
                         alt="TCC Logo"
                         className="h-20 w-20 rounded-full object-cover shadow-lg ring-2 ring-[#d4a017]/60"
                     />

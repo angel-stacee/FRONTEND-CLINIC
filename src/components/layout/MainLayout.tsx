@@ -56,7 +56,7 @@ function MainLayout({ children }: MainLayoutProps): React.JSX.Element {
 
                 <div className="ml-3 flex items-center gap-2">
                     <img
-                        src="/tcc-logo.jpg"
+                        src="/tcc-logo.png"
                         alt="TCC Logo"
                         className="h-9 w-9 rounded-full object-contain ring-1 ring-[#70091f]/30"
                     />

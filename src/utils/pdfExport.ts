@@ -8,7 +8,8 @@ const TEXT_DARK: [number, number, number] = [40, 40, 40];
 const BORDER_COLOR: [number, number, number] = [232, 223, 212];
 
 /**
- * Helper to dynamically load the official TCC logo as a compressed data URL
+ * Helper to dynamically load the official TCC logo as a transparent PNG data URL
+ * and removes any black/dark background surrounding the circular emblem.
  */
 async function loadLogoDataUrl(): Promise<string | null> {
     if (typeof window === "undefined") return null;
@@ -19,18 +20,97 @@ async function loadLogoDataUrl(): Promise<string | null> {
             img.onload = () => {
                 try {
                     const canvas = document.createElement("canvas");
-                    canvas.width = 160;
-                    canvas.height = 160;
+                    const size = Math.min(img.width || 240, 300);
+                    canvas.width = size;
+                    canvas.height = size;
                     const ctx = canvas.getContext("2d");
                     if (!ctx) return resolve(null);
-                    ctx.drawImage(img, 0, 0, 160, 160);
-                    resolve(canvas.toDataURL("image/jpeg", 0.92));
+                    ctx.drawImage(img, 0, 0, size, size);
+
+                    // Cut out any dark/black background around the circular seal
+                    const imgData = ctx.getImageData(0, 0, size, size);
+                    const d = imgData.data;
+                    const w = size;
+                    const h = size;
+                    const visited = new Uint8Array(w * h);
+                    const queue: number[] = [];
+
+                    const isDark = (idx: number) => {
+                        const r = d[idx];
+                        const g = d[idx + 1];
+                        const b = d[idx + 2];
+                        const a = d[idx + 3];
+                        return a < 30 || (r <= 48 && g <= 48 && b <= 48);
+                    };
+
+                    for (let x = 0; x < w; x++) {
+                        const topIdx = (0 * w + x) * 4;
+                        if (isDark(topIdx)) {
+                            visited[0 * w + x] = 1;
+                            queue.push(x, 0);
+                        }
+                        const botIdx = ((h - 1) * w + x) * 4;
+                        if (isDark(botIdx)) {
+                            visited[(h - 1) * w + x] = 1;
+                            queue.push(x, h - 1);
+                        }
+                    }
+                    for (let y = 0; y < h; y++) {
+                        const leftIdx = (y * w + 0) * 4;
+                        if (!visited[y * w + 0] && isDark(leftIdx)) {
+                            visited[y * w + 0] = 1;
+                            queue.push(0, y);
+                        }
+                        const rightIdx = (y * w + (w - 1)) * 4;
+                        if (!visited[y * w + (w - 1)] && isDark(rightIdx)) {
+                            visited[y * w + (w - 1)] = 1;
+                            queue.push(w - 1, y);
+                        }
+                    }
+
+                    let head = 0;
+                    while (head < queue.length) {
+                        const px = queue[head++];
+                        const py = queue[head++];
+                        const idx = (py * w + px) * 4;
+                        d[idx + 3] = 0;
+
+                        const neighbors = [
+                            [px - 1, py],
+                            [px + 1, py],
+                            [px, py - 1],
+                            [px, py + 1],
+                        ];
+                        for (let i = 0; i < neighbors.length; i++) {
+                            const nx = neighbors[i][0];
+                            const ny = neighbors[i][1];
+                            if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+                                const nPos = ny * w + nx;
+                                if (!visited[nPos]) {
+                                    visited[nPos] = 1;
+                                    const nIdx = nPos * 4;
+                                    if (isDark(nIdx)) {
+                                        queue.push(nx, ny);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    ctx.putImageData(imgData, 0, 0);
+                    resolve(canvas.toDataURL("image/png"));
                 } catch {
                     resolve(null);
                 }
             };
-            img.onerror = () => resolve(null);
-            img.src = "/tcc-logo.jpg";
+            img.onerror = () => {
+                if (img.src.endsWith(".png")) {
+                    img.src = "/tcc-logo.jpg";
+                } else {
+                    resolve(null);
+                }
+            };
+            img.src = "/tcc-logo.png";
         } catch {
             resolve(null);
         }
@@ -86,7 +166,7 @@ export async function exportMonthlyReportPDF(reportData: {
 
     // TCC Logo on the Right Upper
     if (logoData) {
-        doc.addImage(logoData, "JPEG", pageWidth - 14 - 18, 4, 18, 18);
+        doc.addImage(logoData, "PNG", pageWidth - 14 - 18, 4, 18, 18);
     }
 
     // Clinic Title & Subtitle
@@ -404,7 +484,7 @@ export async function exportStudentMedicalReportPDF(
 
     // TCC Logo on the Right Upper
     if (logoData) {
-        doc.addImage(logoData, "JPEG", pageWidth - 14 - 18, 4, 18, 18);
+        doc.addImage(logoData, "PNG", pageWidth - 14 - 18, 4, 18, 18);
     }
 
     doc.setTextColor(255, 255, 255);
@@ -575,7 +655,7 @@ export async function exportMedicalCertificatePDF(cert: MedicalCertificateData) 
 
     // 1. Official Header with Logo on the Right Upper
     if (logoData) {
-        doc.addImage(logoData, "JPEG", pageWidth - 14 - 24, 12, 24, 24);
+        doc.addImage(logoData, "PNG", pageWidth - 14 - 24, 12, 24, 24);
     }
 
     doc.setTextColor(50, 50, 50);
