@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, FileText, GraduationCap, RotateCcw, Search, ShieldCheck, Stethoscope, X } from "lucide-react";
+import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, FileText, GraduationCap, MapPin, RotateCcw, Search, ShieldCheck, Stethoscope, User, X } from "lucide-react";
 import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache } from "../services/recordCache";
 import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components/student-management/FieldsAndModals";
@@ -2596,7 +2596,7 @@ function StudentManagement() {
                         </div>
 
                         <RecordSection
-                            icon="🧑"
+                            icon={<User size={14} />}
                             title="Personal Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -2624,7 +2624,7 @@ function StudentManagement() {
                         </RecordSection>
 
                         <RecordSection
-                            icon="🎓"
+                            icon={<GraduationCap size={14} />}
                             title="Academic Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -2660,7 +2660,7 @@ function StudentManagement() {
                         </RecordSection>
 
                         <RecordSection
-                            icon="📍"
+                            icon={<MapPin size={14} />}
                             title="Contact Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -2681,7 +2681,7 @@ function StudentManagement() {
                         </RecordSection>
 
                         <RecordSection
-                            icon="🩺"
+                            icon={<Stethoscope size={14} />}
                             title="Clinic Visit History"
                         >
                             {Array.isArray(
@@ -2801,7 +2801,7 @@ function StudentManagement() {
                         </div>
 
                         <RecordSection
-                            icon="🧑"
+                            icon={<User size={14} />}
                             title="Personal Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -2836,7 +2836,7 @@ function StudentManagement() {
                         </RecordSection>
 
                         <RecordSection
-                            icon="💼"
+                            icon={<Briefcase size={14} />}
                             title="Work Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -2857,7 +2857,7 @@ function StudentManagement() {
                         </RecordSection>
 
                         <RecordSection
-                            icon="📍"
+                            icon={<MapPin size={14} />}
                             title="Contact Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -2929,7 +2929,7 @@ function StudentManagement() {
                         </div>
 
                         <RecordSection
-                            icon="🧑"
+                            icon={<User size={14} />}
                             title="Personal Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -2964,7 +2964,7 @@ function StudentManagement() {
                         </RecordSection>
 
                         <RecordSection
-                            icon="💼"
+                            icon={<Briefcase size={14} />}
                             title="Work Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2">
@@ -2985,7 +2985,7 @@ function StudentManagement() {
                         </RecordSection>
 
                         <RecordSection
-                            icon="📍"
+                            icon={<MapPin size={14} />}
                             title="Contact Information"
                         >
                             <div className="grid gap-3 sm:grid-cols-2">

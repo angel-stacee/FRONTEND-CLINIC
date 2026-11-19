@@ -484,12 +484,12 @@ export function RecordSection({
 }: RecordSectionProps) {
     return (
         <div className="mb-6 last:mb-0">
-            <div className="mb-3 flex items-center gap-2 border-b border-stone-100 pb-2">
-                <span className="text-base leading-none">
+            <div className="mb-3 flex items-center gap-2.5 border-b border-stone-100 pb-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#70091f]/10 text-[#70091f]">
                     {icon}
                 </span>
 
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-stone-700">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700">
                     {title}
                 </h3>
             </div>
