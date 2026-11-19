@@ -256,7 +256,7 @@ function Profile() {
 
                             <label
                                 htmlFor="profile-image"
-                                className="absolute bottom-0 right-0 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#8a6f50] text-white shadow-md transition hover:bg-[#735a40]"
+                                className="absolute bottom-0 right-0 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-[#70091f] text-white shadow-md transition hover:bg-[#8b1505]"
                             >
                                 <Camera size={19} />
                             </label>
@@ -354,7 +354,7 @@ function Profile() {
                         type="button"
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 rounded-xl bg-[#8a6f50] px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-[#735a40] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="flex items-center gap-2 rounded-xl bg-[#70091f] px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-[#8b1505] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <Save size={18} />
 

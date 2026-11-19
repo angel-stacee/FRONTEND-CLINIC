@@ -18,12 +18,14 @@ import { ClinicVisitTable, type VisitRecord } from "../components/clinic-visits/
 import { ClinicVisitModal } from "../components/clinic-visits/ClinicVisitModal";
 import FloatingToast from "../components/common/FloatingToast";
 import { addClinicNotification } from "../services/notifications";
+import { formatNA, formatTemperature, mapCourseToDepartment } from "../utils/formatters";
 
 const EMPTY_FORM = {
     student_id: "",
     faculty_id: "",
     staff_id: "",
     nurse_id: "",
+    department: "",
     visit_date: "",
     reason: "",
     symptoms: "",
@@ -348,6 +350,7 @@ function ClinicVisits() {
                 label: "Student",
                 identifier: student.student_id || "",
                 name: getFullName(student),
+                department: mapCourseToDepartment(student.course),
             })),
 
             ...faculties.map((faculty) => ({
@@ -356,6 +359,7 @@ function ClinicVisits() {
                 label: "Faculty",
                 identifier: faculty.employee_id || "",
                 name: getFullName(faculty),
+                department: faculty.department || "",
             })),
 
             ...staff.map((person) => ({
@@ -364,6 +368,7 @@ function ClinicVisits() {
                 label: "Staff",
                 identifier: person.staff_id || "",
                 name: getFullName(person),
+                department: person.department || "",
             })),
         ];
     }, [students, faculties, staff]);
@@ -411,6 +416,9 @@ function ClinicVisits() {
                 patient.type === "staff"
                     ? patient.id
                     : "",
+
+            department:
+                patient.department || previous.department || "",
         }));
 
         setPatientSearch(
@@ -849,6 +857,12 @@ function ClinicVisits() {
 
             medicine_quantity:
                 visit.medicine_quantity || "",
+
+            department:
+                visit.department ||
+                (visit.student?.course
+                    ? mapCourseToDepartment(visit.student.course)
+                    : (visit.faculty?.department || visit.staff?.department || "")),
 
             remarks: visit.remarks || "",
         });
@@ -1683,10 +1697,22 @@ function ClinicVisits() {
                                     <span className="font-semibold">Patient:</span>{" "}
                                     {patientSearch || "Selected patient"}
                                 </p>
+                                {formData.department && (
+                                    <p className="truncate text-[#54483a]">
+                                        <span className="font-semibold">Department:</span>{" "}
+                                        {formatNA(formData.department)}
+                                    </p>
+                                )}
                                 <p className="flex items-center gap-2 text-[#766959]">
                                     <CalendarDays size={15} aria-hidden="true" />
                                     <span><span className="font-semibold">Visit date:</span>{" "}{formatDate(formData.visit_date)}</span>
                                 </p>
+                                {formData.temperature && (
+                                    <p className="text-xs text-[#766959]">
+                                        <span className="font-semibold">Temperature:</span>{" "}
+                                        {formatTemperature(formData.temperature)}
+                                    </p>
+                                )}
                             </div>
 
                             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

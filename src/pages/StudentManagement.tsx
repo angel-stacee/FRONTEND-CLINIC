@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { BookOpen, Briefcase, CheckCircle2, ChevronDown, GraduationCap, RotateCcw, Search, X } from "lucide-react";
+import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, FileText, GraduationCap, RotateCcw, Search, ShieldCheck, Stethoscope, X } from "lucide-react";
 import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache } from "../services/recordCache";
 import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components/student-management/FieldsAndModals";
 import { StudentForms, validateContactNumber, type StudentFormValues, type StaffFormValues, type FacultyFormValues } from "../components/student-management/StudentForms";
 import FloatingToast from "../components/common/FloatingToast";
 import { addClinicNotification } from "../services/notifications";
+import { exportStudentMedicalReportPDF } from "../utils/pdfExport";
+import { formatNA, formatTemperature, formatDate, mapCourseToDepartment } from "../utils/formatters";
+import { ReasonBadge } from "../utils/reasonColors";
 
 
 
@@ -196,6 +199,10 @@ function StudentManagement() {
     const [viewingStudent, setViewingStudent] = useState(null);
     const [viewingStaff, setViewingStaff] = useState(null);
     const [viewingFaculty, setViewingFaculty] = useState(null);
+
+    const [medicalReportStudent, setMedicalReportStudent] = useState<any | null>(null);
+    const [medicalReportData, setMedicalReportData] = useState<any | null>(null);
+    const [loadingMedicalReport, setLoadingMedicalReport] = useState(false);
 
 
 
@@ -721,6 +728,45 @@ function StudentManagement() {
             nextParams.delete("profile_code");
             return nextParams;
         }, { replace: true });
+    };
+
+    const openMedicalReport = async (student: any) => {
+        setMedicalReportStudent(student);
+        setLoadingMedicalReport(true);
+        try {
+            const res = await api.get(`/students/${student.id}/medical-history`);
+            setMedicalReportData(res.data);
+        } catch (err) {
+            console.error("Failed to load medical history:", err);
+            setMedicalReportData({
+                student: {
+                    ...student,
+                    full_name: getFullName(student),
+                    department: mapCourseToDepartment(student.course),
+                },
+                total_visits: student.clinic_visits?.length || 0,
+                visits: student.clinic_visits || [],
+            });
+        } finally {
+            setLoadingMedicalReport(false);
+        }
+    };
+
+    const closeMedicalReport = () => {
+        setMedicalReportStudent(null);
+        setMedicalReportData(null);
+    };
+
+    const handleDownloadStudentPDF = () => {
+        if (!medicalReportStudent) return;
+        const studentInfo = medicalReportData?.student || {
+            ...medicalReportStudent,
+            full_name: getFullName(medicalReportStudent),
+            department: mapCourseToDepartment(medicalReportStudent.course),
+        };
+        const visits = medicalReportData?.visits || medicalReportStudent.clinic_visits || [];
+        const count = medicalReportData?.total_visits || visits.length;
+        exportStudentMedicalReportPDF(studentInfo, visits, count);
     };
 
     useEffect(() => {
@@ -1918,32 +1964,43 @@ function StudentManagement() {
                                                             className="align-middle transition-colors hover:bg-[#fcfaf6] dark:hover:bg-[#2a221a]"
                                                         >
                                                             <td className="px-5 py-4 font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
-                                                                {student.student_id}
+                                                                {formatNA(student.student_id)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#3d3329] dark:text-[#f8f3eb]">
-                                                                {getFullName(
+                                                                {formatNA(getFullName(
                                                                     student
-                                                                )}
+                                                                ))}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {student.course ||
-                                                                    "-"}
+                                                                {formatNA(student.course)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {student.year_level ||
-                                                                    "-"}
+                                                                {formatNA(student.year_level)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {student.sex ||
-                                                                    "-"}
+                                                                {formatNA(student.sex)}
                                                             </td>
 
                                                             <td className="px-5 py-4">
                                                                 <div className="flex justify-end gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            openMedicalReport(
+                                                                                student
+                                                                            )
+                                                                        }
+                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
+                                                                        title="Individual Student Medical Report"
+                                                                    >
+                                                                        <FileText size={13} />
+                                                                        Medical Report
+                                                                    </button>
+
                                                                     <button
                                                                         type="button"
                                                                         onClick={() =>
@@ -2100,28 +2157,25 @@ function StudentManagement() {
                                                             className="align-middle transition-colors hover:bg-[#fcfaf6] dark:hover:bg-[#2a221a]"
                                                         >
                                                             <td className="px-5 py-4 font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
-                                                                {person.staff_id}
+                                                                {formatNA(person.staff_id)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#3d3329] dark:text-[#f8f3eb]">
-                                                                {getFullName(
+                                                                {formatNA(getFullName(
                                                                     person
-                                                                )}
+                                                                ))}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {person.position ||
-                                                                    "-"}
+                                                                {formatNA(person.position)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {person.department ||
-                                                                    "-"}
+                                                                {formatNA(person.department)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {person.sex ||
-                                                                    "-"}
+                                                                {formatNA(person.sex)}
                                                             </td>
 
                                                             <td className="px-5 py-4">
@@ -2256,30 +2310,25 @@ function StudentManagement() {
                                                             className="align-middle transition-colors hover:bg-[#fcfaf6] dark:hover:bg-[#2a221a]"
                                                         >
                                                             <td className="px-5 py-4 font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
-                                                                {
-                                                                    faculty.employee_id
-                                                                }
+                                                                {formatNA(faculty.employee_id)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#3d3329] dark:text-[#f8f3eb]">
-                                                                {getFullName(
+                                                                {formatNA(getFullName(
                                                                     faculty
-                                                                )}
+                                                                ))}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {faculty.position ||
-                                                                    "-"}
+                                                                {formatNA(faculty.position)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {faculty.department ||
-                                                                    "-"}
+                                                                {formatNA(faculty.department)}
                                                             </td>
 
                                                             <td className="px-5 py-4 text-[#766959] dark:text-[#c4b5a5]">
-                                                                {faculty.sex ||
-                                                                    "-"}
+                                                                {formatNA(faculty.sex)}
                                                             </td>
 
                                                             <td className="px-5 py-4">
@@ -2417,29 +2466,41 @@ function StudentManagement() {
                 >
                     <div className="p-6">
 
-                        <div className="mb-6 flex flex-col gap-1 rounded-xl bg-amber-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="mb-6 flex flex-col gap-3 rounded-xl bg-amber-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-lg font-semibold text-stone-800">
-                                    {getFullName(
+                                    {formatNA(getFullName(
                                         viewingStudent
-                                    )}
+                                    ))}
                                 </p>
 
                                 <p className="text-sm text-stone-500">
-                                    {viewingStudent.course ||
-                                        "-"}
+                                    {formatNA(viewingStudent.course)}
                                     {" · "}
-                                    {viewingStudent.year_level ||
-                                        "-"}
+                                    {formatNA(viewingStudent.year_level)}
                                 </p>
                             </div>
 
-                            <span className="inline-flex w-fit items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                ID:{" "}
-                                {
-                                    viewingStudent.student_id
-                                }
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const s = viewingStudent;
+                                        setViewingStudent(null);
+                                        openMedicalReport(s);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#70091f] px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-[#8b1505]"
+                                >
+                                    <FileText size={14} />
+                                    Medical Report
+                                </button>
+                                <span className="inline-flex w-fit items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                                    ID:{" "}
+                                    {formatNA(
+                                        viewingStudent.student_id
+                                    )}
+                                </span>
+                            </div>
                         </div>
 
                         <RecordSection
@@ -2474,7 +2535,7 @@ function StudentManagement() {
                             icon="🎓"
                             title="Academic Information"
                         >
-                            <div className="grid gap-3 sm:grid-cols-3">
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                                 <InfoItem
                                     label="Course"
                                     value={
@@ -2493,6 +2554,14 @@ function StudentManagement() {
                                     label="Section"
                                     value={
                                         viewingStudent.section
+                                    }
+                                />
+
+                                <InfoItem
+                                    label="Department"
+                                    value={
+                                        viewingStudent.department ||
+                                        mapCourseToDepartment(viewingStudent.course)
                                     }
                                 />
                             </div>
@@ -2558,32 +2627,20 @@ function StudentManagement() {
                                                             index
                                                         }
                                                     >
-                                                        <td className="px-4 py-3">
+                                                        <td className="px-4 py-3 whitespace-nowrap">
                                                             {formatDate(
                                                                 visit.visit_date
                                                             )}
                                                         </td>
 
                                                         <td className="px-4 py-3">
-                                                            <div className="flex flex-col">
-                                                                <span className="font-medium text-stone-800 dark:text-stone-200">
-                                                                    {visit.reason?.toLowerCase() === "other" && visit.symptoms
-                                                                        ? visit.symptoms
-                                                                        : visit.reason || "-"}
-                                                                </span>
-                                                                {visit.reason?.toLowerCase() !== "other" && visit.symptoms && (
-                                                                    <span className="text-xs text-stone-500 dark:text-stone-400">
-                                                                        {visit.symptoms}
-                                                                    </span>
-                                                                )}
-                                                            </div>
+                                                            <ReasonBadge reason={visit.reason} />
                                                         </td>
 
                                                         <td className="px-4 py-3">
-                                                            {visit
+                                                            {formatNA(visit
                                                                 .nurse
-                                                                ?.name ||
-                                                                "-"}
+                                                                ?.name)}
                                                         </td>
                                                     </tr>
                                                 )
@@ -2825,6 +2882,191 @@ function StudentManagement() {
                                 />
                             </div>
                         </RecordSection>
+                    </div>
+                </Modal>
+            )}
+
+            {/* Individual Student Medical Report Modal */}
+            {medicalReportStudent && (
+                <Modal
+                    title="Individual Student Medical Report"
+                    onClose={closeMedicalReport}
+                    maxWidth="max-w-5xl"
+                >
+                    <div className="p-6">
+                        {/* Header & Export Actions */}
+                        <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-[#70091f]/30 bg-gradient-to-r from-[#70091f]/10 via-[#8b1505]/5 to-transparent p-5 sm:flex-row sm:items-center sm:justify-between dark:border-[#70091f]/50 dark:from-[#70091f]/20">
+                            <div className="flex items-center gap-4">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#70091f] text-white shadow-md shadow-[#70091f]/30">
+                                    <Stethoscope size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-[#2d050d] dark:text-white">
+                                        {formatNA(getFullName(medicalReportStudent))}
+                                    </h3>
+                                    <p className="text-xs text-[#70091f] dark:text-[#f8a598] font-medium">
+                                        Student ID: {formatNA(medicalReportStudent.student_id)} · {formatNA(medicalReportStudent.course)} {medicalReportStudent.year_level ? `- ${medicalReportStudent.year_level}` : ""}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleDownloadStudentPDF}
+                                    disabled={loadingMedicalReport}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 disabled:opacity-50 cursor-pointer"
+                                >
+                                    <Download size={16} />
+                                    Download PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Student Demographics Profile */}
+                        <div className="mb-6 rounded-2xl border border-[#e8dfd4] bg-[#fcfaf6] p-5 dark:border-[#4e4234] dark:bg-[#211c17]">
+                            <h4 className="mb-3 text-xs font-bold uppercase tracking-wider text-[#70091f] dark:text-[#f8a598]">
+                                Student Profile &amp; Demographics
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 text-xs sm:text-sm">
+                                <div>
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Student ID</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.student_id)}</span>
+                                </div>
+                                <div>
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Full Name</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(getFullName(medicalReportStudent))}</span>
+                                </div>
+                                <div>
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Course</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.course)}</span>
+                                </div>
+                                <div>
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Year &amp; Section</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
+                                        {formatNA(
+                                            medicalReportStudent.year_level && medicalReportStudent.section
+                                                ? `${medicalReportStudent.year_level} - ${medicalReportStudent.section}`
+                                                : medicalReportStudent.year_level || medicalReportStudent.section
+                                        )}
+                                    </span>
+                                </div>
+                                <div className="col-span-2">
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Department / College</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">
+                                        {formatNA(medicalReportData?.student?.department || medicalReportStudent.department || mapCourseToDepartment(medicalReportStudent.course))}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Sex</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.sex)}</span>
+                                </div>
+                                <div>
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Birth Date</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatDate(medicalReportStudent.birth_date)}</span>
+                                </div>
+                                <div>
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Contact Number</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.contact_number)}</span>
+                                </div>
+                                <div className="col-span-3">
+                                    <span className="block text-[11px] font-medium text-[#887d70] dark:text-[#a99d8f]">Address</span>
+                                    <span className="font-semibold text-[#3d3329] dark:text-[#f8f3eb]">{formatNA(medicalReportStudent.address)}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Medical Consultation History */}
+                        <div>
+                            <div className="mb-3 flex items-center justify-between">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-[#70091f] dark:text-[#f8a598]">
+                                    Consultation History (Chronological Order)
+                                </h4>
+                                <span className="text-xs font-medium text-[#887d70] dark:text-[#a99d8f]">
+                                    Total Visits: {medicalReportData?.total_visits ?? (medicalReportStudent.clinic_visits?.length || 0)}
+                                </span>
+                            </div>
+
+                            {loadingMedicalReport ? (
+                                <div className="flex h-40 items-center justify-center rounded-xl border border-[#e8dfd4] bg-white dark:border-[#4e4234] dark:bg-[#211c17]">
+                                    <div className="flex items-center gap-2 text-sm text-[#70091f]">
+                                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#70091f] border-t-transparent" />
+                                        <span>Loading official medical records...</span>
+                                    </div>
+                                </div>
+                            ) : (medicalReportData?.visits || medicalReportStudent.clinic_visits || []).length === 0 ? (
+                                <div className="rounded-xl border border-dashed border-[#d9cebf] bg-[#fcfaf6] p-8 text-center dark:border-[#4e4234] dark:bg-[#211c17]">
+                                    <p className="text-sm font-medium text-[#766959] dark:text-[#c4b5a5]">
+                                        No clinic visits on record for this student.
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto rounded-xl border border-[#e8dfd4] dark:border-[#4e4234]">
+                                    <table className="w-full min-w-[850px] text-left text-xs sm:text-sm">
+                                        <thead className="border-b border-[#e8dfd4] bg-[#fcfaf6] text-xs font-bold uppercase tracking-wider text-[#887d70] dark:border-[#4e4234] dark:bg-[#29231d] dark:text-[#c4b5a5]">
+                                            <tr>
+                                                <th className="px-4 py-3">Date</th>
+                                                <th className="px-4 py-3">Reason</th>
+                                                <th className="px-4 py-3">Symptoms</th>
+                                                <th className="px-4 py-3">Temp</th>
+                                                <th className="px-4 py-3">BP</th>
+                                                <th className="px-4 py-3">Assessment &amp; Treatment</th>
+                                                <th className="px-4 py-3">Medicine</th>
+                                                <th className="px-4 py-3">Nurse</th>
+                                                <th className="px-4 py-3">Remarks</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#eee7de] dark:divide-[#382f25]">
+                                            {(medicalReportData?.visits || medicalReportStudent.clinic_visits || []).map((v: any, idx: number) => (
+                                                <tr key={v.id || idx} className="hover:bg-[#fcfaf6] dark:hover:bg-[#2a221a]">
+                                                    <td className="px-4 py-3 whitespace-nowrap font-medium text-[#3d3329] dark:text-[#f8f3eb]">
+                                                        {formatDate(v.visit_date)}
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap">
+                                                        <ReasonBadge reason={v.reason} />
+                                                    </td>
+                                                    <td className="px-4 py-3 max-w-[150px] truncate text-[#766959] dark:text-[#c4b5a5]" title={v.symptoms || ""}>
+                                                        {formatNA(v.symptoms)}
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap font-mono text-[#3d3329] dark:text-[#f8f3eb]">
+                                                        {formatTemperature(v.temperature)}
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap font-mono text-[#766959] dark:text-[#c4b5a5]">
+                                                        {formatNA(v.blood_pressure)}
+                                                    </td>
+                                                    <td className="px-4 py-3 max-w-[180px] text-[#766959] dark:text-[#c4b5a5]">
+                                                        <div className="truncate font-medium text-[#3d3329] dark:text-[#f8f3eb]" title={v.assessment || ""}>
+                                                            {formatNA(v.assessment)}
+                                                        </div>
+                                                        <div className="truncate text-xs text-[#887d70] dark:text-[#a99d8f]" title={v.treatment || ""}>
+                                                            {formatNA(v.treatment)}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-[#766959] dark:text-[#c4b5a5]">
+                                                        {v.medicine ? (
+                                                            <span>
+                                                                {v.medicine.name} ({v.quantity || 1} {v.medicine.unit || "pcs"})
+                                                            </span>
+                                                        ) : v.medicine_name ? (
+                                                            <span>
+                                                                {v.medicine_name} ({v.quantity || 1})
+                                                            </span>
+                                                        ) : (
+                                                            formatNA(null)
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3 whitespace-nowrap text-[#766959] dark:text-[#c4b5a5]">
+                                                        {formatNA(v.nurse?.name)}
+                                                    </td>
+                                                    <td className="px-4 py-3 max-w-[120px] truncate text-[#887d70] dark:text-[#a99d8f]" title={v.remarks || ""}>
+                                                        {formatNA(v.remarks)}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </Modal>
             )}

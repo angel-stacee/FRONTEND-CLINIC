@@ -9,10 +9,14 @@ import {
 } from "recharts";
 import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache } from "../services/recordCache";
+import { exportMonthlyReportPDF } from "../utils/pdfExport";
+import { formatNA, formatTemperature, formatDate } from "../utils/formatters";
+import { ReasonBadge } from "../utils/reasonColors";
 
 import {
     FileText,
     Printer,
+    Download,
     Users,
     Activity,
     Pill,
@@ -20,6 +24,8 @@ import {
     AlertCircle,
     Building2,
     Stethoscope,
+    HeartPulse,
+    CheckCircle2,
 } from "lucide-react";
 
 type ReportPeriod = {
@@ -33,11 +39,13 @@ type ReportPeriod = {
 type ReportSummary = {
     total_visits: number;
     student_visits: number;
+    students_treated?: number;
     faculty_visits: number;
     staff_visits: number;
 };
 
 type VisitReason = { reason: string; count: number };
+type CommonIllness = { illness: string; count: number };
 type MedicineUsage = {
     medicine_id: number | null;
     medicine_name: string;
@@ -54,8 +62,11 @@ type VisitRecord = {
     date: string;
     person: string;
     person_type: string;
+    department?: string | null;
     reason: string | null;
     symptoms?: string | null;
+    temperature?: string | null;
+    blood_pressure?: string | null;
     medicine: string | null;
     medicine_quantity: number | string | null;
     nurse: string | null;
@@ -64,6 +75,7 @@ type MonthlyReport = {
     report: ReportPeriod;
     summary: ReportSummary;
     reasons: VisitReason[];
+    common_illnesses?: CommonIllness[];
     medicine_usage: MedicineUsage[];
     daily_visits: DailyVisitItem[];
     nurse_activity: NurseActivity[];
@@ -152,14 +164,21 @@ function Reports() {
         window.print();
     };
 
+    const handleDownloadPDF = () => {
+        if (!report) return;
+        exportMonthlyReportPDF(report);
+    };
+
     const summary = report?.summary ?? {
         total_visits: 0,
         student_visits: 0,
+        students_treated: 0,
         faculty_visits: 0,
         staff_visits: 0,
     };
 
     const reasons = report?.reasons || [];
+    const commonIllnesses = report?.common_illnesses || [];
 
     const maximumReasonCount = Math.max(
         1,
@@ -197,14 +216,22 @@ function Reports() {
                     </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                        onClick={handleDownloadPDF}
+                        disabled={!report || loading}
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 hover:bg-[#8b1505] disabled:opacity-50 transition"
+                    >
+                        <Download size={17} />
+                        Download PDF
+                    </button>
+
                     <button
                         onClick={handlePrint}
-                        disabled={!report}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 hover:bg-[#8b1505] disabled:opacity-50"
+                        disabled={!report || loading}
+                        className="inline-flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-5 py-3 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50 disabled:opacity-50 transition"
                     >
                         <Printer size={17} />
-
                         Print Report
                     </button>
                 </div>
@@ -212,18 +239,34 @@ function Reports() {
 
 
             <div className="mb-6 rounded-2xl border border-stone-100 bg-white p-5 shadow-sm print:hidden">
-                <div className="mb-4 flex items-center gap-2">
-                    <CalendarDays
-                        size={19}
-                        className="text-[#8a6f50]"
-                    />
+                <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <CalendarDays
+                            size={19}
+                            className="text-[#8a6f50]"
+                        />
 
-                    <h2 className="font-bold text-stone-800">
-                        Select Report Period
-                    </h2>
+                        <h2 className="font-bold text-stone-800">
+                            Select Report Period
+                        </h2>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-xs text-stone-500">
+                        {loading ? (
+                            <span className="flex items-center gap-1.5 font-medium text-[#70091f]">
+                                <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-[#70091f] border-t-transparent" />
+                                Loading report...
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1.5 text-emerald-700 font-medium">
+                                <CheckCircle2 size={14} className="text-emerald-600" />
+                                Automatically updated
+                            </span>
+                        )}
+                    </div>
                 </div>
 
-                <div className="flex flex-col gap-4 sm:flex-row">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
                     <div>
                         <label className="mb-2 block text-xs font-semibold uppercase text-stone-500">
                             Month
@@ -274,16 +317,8 @@ function Reports() {
                         </select>
                     </div>
 
-                    <div className="flex items-end">
-                        <button
-                            onClick={() => generateReport(month, year, true)}
-                            disabled={loading}
-                            className="rounded-xl bg-[#70091f] px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505] disabled:opacity-50"
-                        >
-                            {loading
-                                ? "Generating..."
-                                : "Generate Monthly Report"}
-                        </button>
+                    <div className="pb-1 text-xs text-stone-400">
+                        Viewing report for <span className="font-semibold text-stone-700">{monthNames[month - 1]} {year}</span>
                     </div>
                 </div>
             </div>
@@ -340,8 +375,9 @@ function Reports() {
                         </div>
                     </header>
 
-                    <section className="report-summary-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <section className="report-summary-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
                         <SummaryCard title="Total Visits" value={summary.total_visits || 0} icon={<Activity size={21} />} />
+                        <SummaryCard title="Students Treated" value={summary.students_treated ?? summary.student_visits ?? 0} icon={<Users size={21} />} />
                         <SummaryCard title="Student Visits" value={summary.student_visits || 0} icon={<Users size={21} />} />
                         <SummaryCard title="Faculty Visits" value={summary.faculty_visits || 0} icon={<Users size={21} />} />
                         <SummaryCard title="Staff Visits" value={summary.staff_visits || 0} icon={<Users size={21} />} />
@@ -358,7 +394,7 @@ function Reports() {
                         />
                     </section>
 
-                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                         <section className="report-panel rounded-2xl border border-[#e8dfd4] bg-white p-5 shadow-sm">
                             <div className="mb-4 flex items-center gap-2">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f3ebdf] text-[#8a6f50]"><Stethoscope size={18} aria-hidden="true" /></div>
@@ -371,12 +407,12 @@ function Reports() {
                                 <p className="rounded-xl bg-stone-50 px-4 py-6 text-center text-sm text-stone-500">No visit reasons recorded.</p>
                             ) : (
                                 <div className="space-y-3">
-                                    {reasons.map((item) => {
+                                    {reasons.slice(0, 7).map((item) => {
                                         const count = Number(item.count || 0);
                                         return (
                                             <div key={item.reason}>
                                                 <div className="mb-1 flex items-center justify-between gap-3 text-xs">
-                                                    <span className="truncate font-medium text-stone-700">{item.reason || "Other"}</span>
+                                                    <span className="truncate font-medium text-stone-700">{formatNA(item.reason)}</span>
                                                     <span className="shrink-0 font-bold text-[#8a6f50]">{count}</span>
                                                 </div>
                                                 <div className="h-2 overflow-hidden rounded-full bg-stone-100">
@@ -391,20 +427,42 @@ function Reports() {
 
                         <section className="report-panel rounded-2xl border border-[#e8dfd4] bg-white p-5 shadow-sm">
                             <div className="mb-4 flex items-center gap-2">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-700"><HeartPulse size={18} aria-hidden="true" /></div>
+                                <div>
+                                    <h2 className="text-base font-bold text-stone-900">Common Illnesses</h2>
+                                    <p className="text-xs text-stone-500">Symptoms & complaints</p>
+                                </div>
+                            </div>
+                            {commonIllnesses.length === 0 ? (
+                                <p className="rounded-xl bg-stone-50 px-4 py-6 text-center text-sm text-stone-500">No specific complaints recorded.</p>
+                            ) : (
+                                <div className="divide-y divide-stone-100">
+                                    {commonIllnesses.slice(0, 7).map((item) => (
+                                        <div key={item.illness} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                                            <span className="truncate text-sm font-medium text-stone-700">{formatNA(item.illness)}</span>
+                                            <span className="shrink-0 rounded-lg bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700">{item.count} cases</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+
+                        <section className="report-panel rounded-2xl border border-[#e8dfd4] bg-white p-5 shadow-sm">
+                            <div className="mb-4 flex items-center gap-2">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-700"><Pill size={18} aria-hidden="true" /></div>
                                 <div>
                                     <h2 className="text-base font-bold text-stone-900">Medicine Usage</h2>
-                                    <p className="text-xs text-stone-500">Dispensed during this period</p>
+                                    <p className="text-xs text-stone-500">Dispensed during period</p>
                                 </div>
                             </div>
                             {medicineUsage.length === 0 ? (
                                 <p className="rounded-xl bg-stone-50 px-4 py-6 text-center text-sm text-stone-500">No medicine usage recorded.</p>
                             ) : (
                                 <div className="divide-y divide-stone-100">
-                                    {medicineUsage.map((item) => (
-                                        <div key={item.medicine_id} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                                            <span className="text-sm font-medium text-stone-700">{item.medicine_name}</span>
-                                            <span className="shrink-0 rounded-lg bg-green-50 px-2.5 py-1 text-xs font-bold text-green-700">{Number(item.quantity_used || 0).toLocaleString()} {item.unit}</span>
+                                    {medicineUsage.slice(0, 7).map((item) => (
+                                        <div key={item.medicine_id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                                            <span className="truncate text-sm font-medium text-stone-700">{formatNA(item.medicine_name)}</span>
+                                            <span className="shrink-0 rounded-lg bg-green-50 px-2 py-0.5 text-xs font-bold text-green-700">{Number(item.quantity_used || 0).toLocaleString()} {item.unit}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -424,8 +482,8 @@ function Reports() {
                             ) : (
                                 <div className="divide-y divide-stone-100">
                                     {nurseActivity.map((item) => (
-                                        <div key={item.nurse_id || item.name} className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
-                                            <span className="text-sm font-medium text-stone-700">{item.name}</span>
+                                        <div key={item.nurse_id || item.name} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                                            <span className="truncate text-sm font-medium text-stone-700">{formatNA(item.name)}</span>
                                             <span className="shrink-0 text-sm font-bold text-[#8a6f50]">{Number(item.visits || 0).toLocaleString()}</span>
                                         </div>
                                     ))}
@@ -443,17 +501,23 @@ function Reports() {
                             </div>
                         </div>
                         <div className="overflow-x-auto">
-                            <table className="report-visit-table w-full min-w-[800px] table-fixed">
+                            <table className="report-visit-table w-full min-w-[900px] table-fixed">
                                 <colgroup>
-                                    <col style={{ width: "13%" }} /><col style={{ width: "20%" }} /><col style={{ width: "12%" }} />
-                                    <col style={{ width: "19%" }} /><col style={{ width: "20%" }} /><col style={{ width: "16%" }} />
+                                    <col style={{ width: "12%" }} />
+                                    <col style={{ width: "18%" }} />
+                                    <col style={{ width: "10%" }} />
+                                    <col style={{ width: "18%" }} />
+                                    <col style={{ width: "18%" }} />
+                                    <col style={{ width: "12%" }} />
+                                    <col style={{ width: "12%" }} />
                                 </colgroup>
                                 <thead>
                                     <tr className="bg-stone-50 text-left">
                                         <th className="px-4 py-3 text-xs font-bold uppercase text-stone-500">Date</th>
                                         <th className="px-4 py-3 text-xs font-bold uppercase text-stone-500">Patient</th>
                                         <th className="px-4 py-3 text-xs font-bold uppercase text-stone-500">Type</th>
-                                        <th className="px-4 py-3 text-xs font-bold uppercase text-stone-500">Reason</th>
+                                        <th className="px-4 py-3 text-xs font-bold uppercase text-stone-500">Department</th>
+                                        <th className="px-4 py-3 text-xs font-bold uppercase text-stone-500">Reason / Symptoms</th>
                                         <th className="px-4 py-3 text-xs font-bold uppercase text-stone-500">Medicine</th>
                                         <th className="px-4 py-3 text-xs font-bold uppercase text-stone-500">Nurse</th>
                                     </tr>
@@ -462,29 +526,19 @@ function Reports() {
                                     {visits.length > 0 ? visits.map((visit) => (
                                         <tr key={visit.id} className="border-t border-stone-100">
                                             <td className="px-4 py-3 text-sm text-stone-600">{formatVisitDate(visit.date)}</td>
-                                            <td className="px-4 py-3 text-sm font-semibold text-stone-800">{visit.person}</td>
-                                            <td className="px-4 py-3 text-sm text-stone-600">{visit.person_type}</td>
+                                            <td className="px-4 py-3 text-sm font-semibold text-stone-800">{formatNA(visit.person)}</td>
+                                            <td className="px-4 py-3 text-sm text-stone-600">{formatNA(visit.person_type)}</td>
+                                            <td className="px-4 py-3 text-sm text-stone-600">{formatNA(visit.department)}</td>
                                             <td className="px-4 py-3 text-sm text-stone-700">
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-stone-800">
-                                                        {visit.reason?.toLowerCase() === "other" && visit.symptoms
-                                                            ? visit.symptoms
-                                                            : visit.reason || "—"}
-                                                    </span>
-                                                    {visit.reason?.toLowerCase() !== "other" && visit.symptoms && (
-                                                        <span className="text-xs text-stone-500">
-                                                            {visit.symptoms}
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                <ReasonBadge reason={visit.reason} symptoms={visit.symptoms} />
                                             </td>
                                             <td className="px-4 py-3 text-sm text-stone-600">
-                                                {visit.medicine ? `${visit.medicine}${visit.medicine_quantity ? ` · ${visit.medicine_quantity}` : ""}` : "—"}
+                                                {visit.medicine ? `${visit.medicine}${visit.medicine_quantity ? ` (${visit.medicine_quantity})` : ""}` : "None"}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-stone-600">{visit.nurse || "—"}</td>
+                                            <td className="px-4 py-3 text-sm text-stone-600">{formatNA(visit.nurse)}</td>
                                         </tr>
                                     )) : (
-                                        <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-stone-500">No clinic visits were recorded for this reporting period.</td></tr>
+                                        <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-stone-500">No clinic visits were recorded for this reporting period.</td></tr>
                                     )}
                                 </tbody>
                             </table>

@@ -204,7 +204,7 @@ export const ORG_DATA: Record<
                 reportsTo: "c-2",
                 responsibilities: [
                     "Maintenance of student digital and physical health folders",
-                    "Processing medical certificates and clearance documents",
+                    "Preparing clinic health records and student medical reports",
                     "Generation of monthly health statistics and clinic analytics",
                 ],
             },

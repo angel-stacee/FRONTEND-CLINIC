@@ -8,13 +8,18 @@ const FOCUS_RING = "focus-visible:outline-none focus-visible:ring-2 focus-visibl
 export function StudentDetail({
     label,
     value,
+}: {
+    label: string;
+    value?: any;
 }) {
     const displayValue =
         value !== undefined &&
         value !== null &&
-        String(value).trim()
+        String(value).trim() !== "" &&
+        String(value).trim() !== "-" &&
+        String(value).trim() !== "—"
             ? value
-            : "—";
+            : "N/A";
 
     return (
         <div className="rounded-lg border border-[#eee7de] bg-[#fcfaf6] px-3 py-2">

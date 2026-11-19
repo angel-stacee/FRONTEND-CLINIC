@@ -7,6 +7,7 @@ import {
     Cell,
     Tooltip,
 } from "recharts";
+import { getReasonColorHex } from "../../utils/reasonColors";
 
 export type ReasonItem = {
     label: string;
@@ -45,7 +46,7 @@ export function VisitReasonsPieChart({
         return data.map((item, idx) => ({
             name: item.label,
             value: Number(item.value || 0),
-            fill: item.color || SHADCN_BLUE_COLORS[idx % SHADCN_BLUE_COLORS.length],
+            fill: item.color || getReasonColorHex(item.label),
         }));
     }, [data]);
 

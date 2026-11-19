@@ -481,7 +481,7 @@ export default function Landing(): React.JSX.Element {
                     <span className="text-[#70091f]">✦</span>
                     <span>Vital Signs Monitoring</span>
                     <span className="text-[#70091f]">✦</span>
-                    <span>Medical Certificates</span>
+                    <span>Monthly Health Reports</span>
                     <span className="text-[#70091f]">✦</span>
                     <span>Campus Wellness</span>
                     <span className="text-[#70091f]">✦</span>
@@ -498,7 +498,7 @@ export default function Landing(): React.JSX.Element {
                     <span className="text-[#70091f]">✦</span>
                     <span>Vital Signs Monitoring</span>
                     <span className="text-[#70091f]">✦</span>
-                    <span>Medical Certificates</span>
+                    <span>Monthly Health Reports</span>
                     <span className="text-[#70091f]">✦</span>
                     <span>Campus Wellness</span>
                     <span className="text-[#70091f]">✦</span>
@@ -715,7 +715,7 @@ export default function Landing(): React.JSX.Element {
                         </div>
                     </div>
 
-                    {/* 06: Medical Certificates (Warm Crimson) */}
+                    {/* 06: Monthly Reports & Analytics (Warm Crimson) */}
                     <div className="group lg:col-span-6 rounded-3xl border border-[#70091f]/60 bg-[#2a040e] p-6 sm:p-7 shadow-xl hover:shadow-2xl hover:border-[#e5a93b]/50 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between min-h-[190px]">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-extrabold text-[#e5a93b]">06</span>
@@ -725,10 +725,10 @@ export default function Landing(): React.JSX.Element {
                         </div>
                         <div>
                             <h3 className="text-base sm:text-lg font-bold text-white group-hover:text-[#e5a93b] transition-colors">
-                                Medical Certificates
+                                Monthly Reports &amp; Analytics
                             </h3>
                             <p className="mt-1.5 text-xs text-[#fcebe7]/75 leading-relaxed">
-                                Issue, print, and track authenticated medical clearances for student academic and institutional requirements.
+                                View automatic clinic visit statistics, illness trends, dispensary logs, and export professional PDF reports.
                             </p>
                         </div>
                     </div>
@@ -1072,7 +1072,7 @@ export default function Landing(): React.JSX.Element {
                         records?
                     </h2>
                     <p className="mt-4 text-xs sm:text-sm md:text-base text-[#fcebe7]/80 leading-relaxed font-normal max-w-xl mx-auto">
-                        Sign in to the clinic portal to access your records, clinical visits, vital histories, and medical certificates anytime.
+                        Sign in to the clinic portal to access your records, clinical visits, vital histories, and health summaries anytime.
                     </p>
 
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-4">

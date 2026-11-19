@@ -1,6 +1,7 @@
 import { useState, type FormEventHandler } from "react";
 import { Pill, Search, X } from "lucide-react";
 import type { VisitRecord } from "./ClinicVisitTable";
+import { parseAndNormalizeTemperature } from "../../utils/formatters";
 
 const TEMPERATURE_OPTIONS = [
     { value: "36.0 °C", label: "36.0 °C" },
@@ -374,7 +375,26 @@ export function ClinicVisitModal({
                             />
                         </div>
 
-                        {/* 4. Reason for Visit (Right) */}
+                        {/* Department (Right) */}
+                        <div className="flex flex-col gap-1">
+                            <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
+                                Department
+                            </label>
+
+                            <input
+                                type="text"
+                                name="department"
+                                value={formData.department || ""}
+                                onChange={handleChange}
+                                placeholder="e.g. College of Information Technology (BSIT)"
+                                className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                            />
+                            <p className="text-[10px] text-stone-400">
+                                Auto-retrieved from patient record (editable)
+                            </p>
+                        </div>
+
+                        {/* 4. Reason for Visit (Left) */}
                         <div className="flex flex-col gap-1">
                             <label className="text-sm font-medium text-stone-700 dark:text-stone-300">
                                 Reason for Visit
@@ -469,14 +489,31 @@ export function ClinicVisitModal({
                             {(customFields.temperature ||
                                 (!TEMPERATURE_OPTIONS.some((o) => o.value === formData.temperature) &&
                                     formData.temperature)) && (
-                                <input
-                                    type="text"
-                                    name="temperature"
-                                    value={formData.temperature}
-                                    onChange={handleChange}
-                                    placeholder="e.g. 36.5 °C"
-                                    className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
-                                />
+                                <>
+                                    <input
+                                        type="text"
+                                        name="temperature"
+                                        value={formData.temperature}
+                                        onChange={handleChange}
+                                        onBlur={(event) => {
+                                            const raw = event.target.value.trim();
+                                            if (raw) {
+                                                const normalized = parseAndNormalizeTemperature(raw);
+                                                if (normalized) {
+                                                    setFormData((prev: any) => ({
+                                                        ...prev,
+                                                        temperature: `${normalized} °C`,
+                                                    }));
+                                                }
+                                            }
+                                        }}
+                                        placeholder="e.g. 36.5 °C or 98.6 °F"
+                                        className="mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+                                    />
+                                    <p className="text-[10px] text-stone-500 mt-0.5">
+                                        Auto-standardized to °C. Fahrenheit (°F) converts automatically.
+                                    </p>
+                                </>
                             )}
                         </div>
 

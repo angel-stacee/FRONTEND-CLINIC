@@ -432,6 +432,15 @@ export function ConfirmationModal({
 
 
 export function InfoItem({ label, value }: InfoItemProps) {
+    const isBlank =
+        value === null ||
+        value === undefined ||
+        (typeof value === "string" &&
+            (value.trim() === "" ||
+                value.trim() === "-" ||
+                value.toLowerCase() === "null" ||
+                value.toLowerCase() === "undefined"));
+
     return (
         <div className="rounded-lg bg-stone-50 p-3">
             <p className="text-xs font-medium uppercase text-stone-400">
@@ -439,7 +448,7 @@ export function InfoItem({ label, value }: InfoItemProps) {
             </p>
 
             <p className="mt-1 text-sm font-medium text-stone-800">
-                {value || "-"}
+                {isBlank ? "N/A" : value}
             </p>
         </div>
     );
