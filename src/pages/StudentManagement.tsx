@@ -3050,26 +3050,16 @@ function StudentManagement() {
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={() => handleDownloadCertificate()}
                                     disabled={loadingMedicalReport}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 disabled:opacity-50 cursor-pointer"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 disabled:opacity-50 cursor-pointer"
                                     title="Download Official Medical Certificate"
                                 >
                                     <FileText size={16} />
                                     Download Medical Certificate
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => handleDownloadMedicalReport()}
-                                    disabled={loadingMedicalReport}
-                                    className="inline-flex items-center gap-2 rounded-xl border border-[#70091f]/40 bg-white px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-[#70091f] shadow-sm transition hover:bg-[#70091f]/5 active:scale-95 disabled:opacity-50 cursor-pointer dark:border-[#70091f]/60 dark:bg-[#2c231a] dark:text-[#f8a598]"
-                                    title="Export Official Medical Report (PDF)"
-                                >
-                                    <Download size={16} />
-                                    Export Medical Report
                                 </button>
                             </div>
                         </div>
