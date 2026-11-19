@@ -2,7 +2,19 @@
 import axios from "axios";
 import { invalidateRecordCache } from "./recordCache";
 
-const rawEnvUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
+const cleanUrl = (url: unknown): string => {
+    if (typeof url !== "string") return "";
+    let clean = url.trim();
+    while (
+        (clean.startsWith('"') && clean.endsWith('"')) ||
+        (clean.startsWith("'") && clean.endsWith("'"))
+    ) {
+        clean = clean.slice(1, -1).trim();
+    }
+    return clean.replace(/\/+$/, "");
+};
+
+const rawEnvUrl = cleanUrl(import.meta.env.VITE_API_URL);
 
 export const getApiOrigin = (): string => {
     if (typeof window !== "undefined") {
