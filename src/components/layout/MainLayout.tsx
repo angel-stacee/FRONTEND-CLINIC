@@ -1,4 +1,5 @@
 import React, { useEffect, useState, Suspense } from "react";
+import tccLogo from "../../assets/tcc-logo.png";
 import { Outlet, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import Sidebar from "./Sidebar";
@@ -56,8 +57,18 @@ function MainLayout({ children }: MainLayoutProps): React.JSX.Element {
 
                 <div className="ml-3 flex items-center gap-2">
                     <img
-                        src="/tcc-logo.png"
+                        src={tccLogo}
                         alt="TCC Logo"
+                        onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.dataset.fallback) {
+                                target.dataset.fallback = "1";
+                                target.src = "/tcc-logo.png";
+                            } else if (target.dataset.fallback === "1") {
+                                target.dataset.fallback = "2";
+                                target.src = "/tcc-logo.jpg";
+                            }
+                        }}
                         className="h-9 w-9 rounded-full object-contain ring-1 ring-[#70091f]/30"
                     />
 

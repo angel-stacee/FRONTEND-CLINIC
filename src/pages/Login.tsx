@@ -14,6 +14,7 @@ import {
     X,
 } from "lucide-react";
 import api from "../services/api";
+import tccLogo from "../assets/tcc-logo.png";
 
 export default function Login(): React.JSX.Element {
     const navigate = useNavigate();
@@ -235,8 +236,18 @@ export default function Login(): React.JSX.Element {
                 {/* Logo & Header */}
                 <div className="mb-6 flex flex-col items-center text-center">
                     <img
-                        src="/tcc-logo.png"
+                        src={tccLogo}
                         alt="TCC Logo"
+                        onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.dataset.fallback) {
+                                target.dataset.fallback = "1";
+                                target.src = "/tcc-logo.png";
+                            } else if (target.dataset.fallback === "1") {
+                                target.dataset.fallback = "2";
+                                target.src = "/tcc-logo.jpg";
+                            }
+                        }}
                         className="h-20 w-20 rounded-full object-cover shadow-lg ring-2 ring-[#d4a017]/60"
                     />
 

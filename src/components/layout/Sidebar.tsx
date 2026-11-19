@@ -1,4 +1,5 @@
 import React from "react";
+import tccLogo from "../../assets/tcc-logo.png";
 import api from "../../services/api";
 import { invalidateRecordCache } from "../../services/recordCache";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -169,8 +170,18 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
                 <div className="flex items-center gap-3">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/10 p-1">
                         <img
-                            src="/tcc-logo.png"
+                            src={tccLogo}
                             alt="TCC Logo"
+                            onError={(e) => {
+                                const target = e.currentTarget;
+                                if (!target.dataset.fallback) {
+                                    target.dataset.fallback = "1";
+                                    target.src = "/tcc-logo.png";
+                                } else if (target.dataset.fallback === "1") {
+                                    target.dataset.fallback = "2";
+                                    target.src = "/tcc-logo.jpg";
+                                }
+                            }}
                             className="h-12 w-12 rounded-full object-contain transition-transform duration-300 hover:rotate-6 hover:scale-105"
                         />
                     </div>

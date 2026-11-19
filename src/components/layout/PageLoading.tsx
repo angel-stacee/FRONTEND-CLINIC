@@ -1,4 +1,5 @@
 import React from "react";
+import tccLogo from "../../assets/tcc-logo.png";
 
 /**
  * Fullscreen loading screen used on initial application boot or auth routes.
@@ -13,8 +14,18 @@ export function PageLoadingScreen(): React.JSX.Element {
             <div className="flex flex-col items-center">
                 <div className="relative mb-5 flex h-20 w-20 items-center justify-center rounded-2xl border border-[#e8dfd4] bg-white p-2 shadow-sm dark:border-[#382f25] dark:bg-[#251f19]">
                     <img
-                        src="/tcc-logo.png"
+                        src={tccLogo}
                         alt="TCC Logo"
+                        onError={(e) => {
+                            const target = e.currentTarget;
+                            if (!target.dataset.fallback) {
+                                target.dataset.fallback = "1";
+                                target.src = "/tcc-logo.png";
+                            } else if (target.dataset.fallback === "1") {
+                                target.dataset.fallback = "2";
+                                target.src = "/tcc-logo.jpg";
+                            }
+                        }}
                         className="h-16 w-16 animate-pulse rounded-full object-contain"
                     />
                     <div className="absolute -inset-1 rounded-2xl border border-[#8a6f50]/20 animate-ping opacity-30" />

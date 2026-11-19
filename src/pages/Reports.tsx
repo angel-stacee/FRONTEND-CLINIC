@@ -12,6 +12,7 @@ import { getCachedRecord, invalidateRecordCache } from "../services/recordCache"
 import { exportMonthlyReportPDF } from "../utils/pdfExport";
 import { formatNA, formatTemperature, formatDate } from "../utils/formatters";
 import { ReasonBadge } from "../utils/reasonColors";
+import tccLogo from "../assets/tcc-logo.png";
 
 import {
     FileText,
@@ -377,8 +378,18 @@ function Reports() {
                                     </p>
                                 </div>
                                 <img
-                                    src="/tcc-logo.png"
+                                    src={tccLogo}
                                     alt="Tagoloan Community College Logo"
+                                    onError={(e) => {
+                                        const target = e.currentTarget;
+                                        if (!target.dataset.fallback) {
+                                            target.dataset.fallback = "1";
+                                            target.src = "/tcc-logo.png";
+                                        } else if (target.dataset.fallback === "1") {
+                                            target.dataset.fallback = "2";
+                                            target.src = "/tcc-logo.jpg";
+                                        }
+                                    }}
                                     className="h-16 w-16 rounded-full border border-stone-200 bg-white object-contain p-1 shadow-sm sm:h-20 sm:w-20"
                                 />
                             </div>
