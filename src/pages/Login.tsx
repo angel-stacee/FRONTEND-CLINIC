@@ -178,7 +178,7 @@ export default function Login(): React.JSX.Element {
 
         try {
             const response = await api.post("/login", {
-                email,
+                email: email.trim(),
                 password,
             });
 
@@ -195,8 +195,10 @@ export default function Login(): React.JSX.Element {
         } catch (error: any) {
             if (error.response?.data?.message) {
                 setError(error.response.data.message);
+            } else if (error.response?.data?.error) {
+                setError(error.response.data.error);
             } else {
-                setError("Unable to connect to the server.");
+                setError("Unable to connect to the server. Please check your connection.");
             }
         } finally {
             setLoading(false);

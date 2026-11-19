@@ -2,40 +2,72 @@
 import axios from "axios";
 import { invalidateRecordCache } from "./recordCache";
 
-const envUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
+const rawEnvUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
 
 export const getApiOrigin = (): string => {
-    if (envUrl) {
-        try {
-            return new URL(envUrl).origin;
-        } catch {
-            console.error("Invalid VITE_API_URL:", envUrl);
-        }
-    }
-
     if (typeof window !== "undefined") {
         const host = window.location.hostname;
 
+        // In local development
         if (host === "localhost" || host === "127.0.0.1") {
+            if (rawEnvUrl) {
+                try {
+                    return new URL(rawEnvUrl).origin;
+                } catch {
+                    console.error("Invalid VITE_API_URL:", rawEnvUrl);
+                }
+            }
             return "http://127.0.0.1:8000";
         }
 
-        if (host.includes("railway.app")) {
-            return "https://backend-clinic-production-f6503b5a.up.railway.app";
+        // In production: only use rawEnvUrl if it does NOT point to localhost
+        if (rawEnvUrl && !rawEnvUrl.includes("localhost") && !rawEnvUrl.includes("127.0.0.1")) {
+            try {
+                return new URL(rawEnvUrl).origin;
+            } catch {
+                console.error("Invalid VITE_API_URL:", rawEnvUrl);
+            }
         }
 
-        return window.location.origin;
+        // Live Railway production backend
+        return "https://backend-clinic-production-f6503b5a.up.railway.app";
+    }
+
+    if (rawEnvUrl && !rawEnvUrl.includes("localhost") && !rawEnvUrl.includes("127.0.0.1")) {
+        try {
+            return new URL(rawEnvUrl).origin;
+        } catch {}
     }
 
     return "http://127.0.0.1:8000";
 };
 
 export const getApiBaseUrl = (): string => {
-    if (envUrl) {
-        return envUrl;
+    if (typeof window !== "undefined") {
+        const host = window.location.hostname;
+
+        // In local development
+        if (host === "localhost" || host === "127.0.0.1") {
+            if (rawEnvUrl) {
+                return rawEnvUrl;
+            }
+            return "http://127.0.0.1:8000/api";
+        }
+
+        // In production: only use rawEnvUrl if it does NOT point to localhost
+        if (rawEnvUrl && !rawEnvUrl.includes("localhost") && !rawEnvUrl.includes("127.0.0.1")) {
+            return rawEnvUrl.endsWith("/api") ? rawEnvUrl : `${rawEnvUrl}/api`;
+        }
+
+        // Live Railway production backend API
+        return "https://backend-clinic-production-f6503b5a.up.railway.app/api";
     }
 
-    return `${getApiOrigin()}/api`;
+    if (rawEnvUrl && !rawEnvUrl.includes("localhost") && !rawEnvUrl.includes("127.0.0.1")) {
+        return rawEnvUrl.endsWith("/api") ? rawEnvUrl : `${rawEnvUrl}/api`;
+    }
+
+    return "http://127.0.0.1:8000/api";
 };
 
 export const resolveImageUrl = (
