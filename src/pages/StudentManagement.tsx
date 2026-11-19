@@ -3028,7 +3028,6 @@ function StudentManagement() {
                                                 <th className="px-4 py-3">Medicine</th>
                                                 <th className="px-4 py-3">Nurse</th>
                                                 <th className="px-4 py-3">Remarks</th>
-                                                <th className="px-4 py-3 text-right">Certificate</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-[#eee7de] dark:divide-[#382f25]">
@@ -3075,17 +3074,6 @@ function StudentManagement() {
                                                     </td>
                                                     <td className="px-4 py-3 max-w-[120px] truncate text-[#887d70] dark:text-[#a99d8f]" title={v.remarks || ""}>
                                                         {formatNA(v.remarks)}
-                                                    </td>
-                                                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleDownloadCertificate(v)}
-                                                            className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
-                                                            title="Download Medical Certificate for this consultation"
-                                                        >
-                                                            <FileText size={12} />
-                                                            Med Cert
-                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
