@@ -7,7 +7,7 @@ import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components
 import { StudentForms, validateContactNumber, type StudentFormValues, type StaffFormValues, type FacultyFormValues } from "../components/student-management/StudentForms";
 import FloatingToast from "../components/common/FloatingToast";
 import { addClinicNotification } from "../services/notifications";
-import { exportStudentMedicalReportPDF } from "../utils/pdfExport";
+import { exportMedicalCertificatePDF } from "../utils/pdfExport";
 import { formatNA, formatTemperature, formatDate, mapCourseToDepartment } from "../utils/formatters";
 import { ReasonBadge } from "../utils/reasonColors";
 
@@ -757,7 +757,7 @@ function StudentManagement() {
         setMedicalReportData(null);
     };
 
-    const handleDownloadStudentPDF = () => {
+    const handleDownloadCertificate = (specificVisit?: any) => {
         if (!medicalReportStudent) return;
         const studentInfo = medicalReportData?.student || {
             ...medicalReportStudent,
@@ -765,8 +765,22 @@ function StudentManagement() {
             department: mapCourseToDepartment(medicalReportStudent.course),
         };
         const visits = medicalReportData?.visits || medicalReportStudent.clinic_visits || [];
-        const count = medicalReportData?.total_visits || visits.length;
-        exportStudentMedicalReportPDF(studentInfo, visits, count);
+        const visit = specificVisit || visits[0] || {};
+        exportMedicalCertificatePDF({
+            patient_name: studentInfo.full_name || getFullName(studentInfo),
+            student_id: studentInfo.student_id,
+            role_label: `Student (${studentInfo.course || ""})`,
+            address: studentInfo.address,
+            visit_date: visit.visit_date || new Date().toISOString(),
+            diagnosis: visit.assessment || visit.symptoms || visit.reason || "Clinical Consultation & Treatment",
+            reason: visit.reason,
+            symptoms: visit.symptoms,
+            temperature: visit.temperature,
+            blood_pressure: visit.blood_pressure,
+            treatment: visit.treatment,
+            remarks: visit.remarks,
+            attending_nurse: visit.nurse?.name || visit.nurse_name || "Angel Stacee Sabandal",
+        });
     };
 
     useEffect(() => {
@@ -2912,12 +2926,13 @@ function StudentManagement() {
                             <div className="flex items-center gap-2">
                                 <button
                                     type="button"
-                                    onClick={handleDownloadStudentPDF}
+                                    onClick={() => handleDownloadCertificate()}
                                     disabled={loadingMedicalReport}
                                     className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 disabled:opacity-50 cursor-pointer"
+                                    title="Download Official Medical Certificate"
                                 >
-                                    <Download size={16} />
-                                    Download PDF
+                                    <FileText size={16} />
+                                    Download Medical Certificate
                                 </button>
                             </div>
                         </div>
@@ -3013,6 +3028,7 @@ function StudentManagement() {
                                                 <th className="px-4 py-3">Medicine</th>
                                                 <th className="px-4 py-3">Nurse</th>
                                                 <th className="px-4 py-3">Remarks</th>
+                                                <th className="px-4 py-3 text-right">Certificate</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-[#eee7de] dark:divide-[#382f25]">
@@ -3059,6 +3075,17 @@ function StudentManagement() {
                                                     </td>
                                                     <td className="px-4 py-3 max-w-[120px] truncate text-[#887d70] dark:text-[#a99d8f]" title={v.remarks || ""}>
                                                         {formatNA(v.remarks)}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDownloadCertificate(v)}
+                                                            className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                                            title="Download Medical Certificate for this consultation"
+                                                        >
+                                                            <FileText size={12} />
+                                                            Med Cert
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
