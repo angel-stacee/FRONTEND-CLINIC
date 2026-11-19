@@ -1,4 +1,5 @@
 import type { ChangeEventHandler, ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 interface InputFieldProps {
     label: string;
@@ -308,9 +309,14 @@ export function Modal({
     title,
     maxWidth = "max-w-3xl",
 }: ModalProps) {
-    return (
+    if (typeof document === "undefined") {
+        return null;
+    }
+
+    return createPortal(
         <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-3 sm:p-4 md:p-6 backdrop-blur-[2px] overflow-y-auto"
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-3 sm:p-5 md:p-8 backdrop-blur-[3px] overflow-y-auto"
+            style={{ zIndex: 99999 }}
             onMouseDown={(e) => {
                 if (e.target === e.currentTarget && onClose) {
                     onClose();
@@ -318,7 +324,8 @@ export function Modal({
             }}
         >
             <div
-                className={`my-auto max-h-[92vh] w-full ${maxWidth} overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-[#1f1915]`}
+                className={`my-auto max-h-[92vh] w-full ${maxWidth} overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-[#1f1915] transition-all`}
+                onClick={(e) => e.stopPropagation()}
             >
                 <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e8dfd4] bg-white/95 px-6 py-4 backdrop-blur-sm dark:border-[#382f25] dark:bg-[#1f1915]/95">
                     <h2 className="text-lg font-bold text-stone-800 dark:text-stone-100">
@@ -336,7 +343,8 @@ export function Modal({
 
                 {children}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
@@ -361,16 +369,24 @@ export function ConfirmationModal({
         return null;
     }
 
-    return (
+    if (typeof document === "undefined") {
+        return null;
+    }
+
+    return createPortal(
         <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+            style={{ zIndex: 99999 }}
             onMouseDown={(e) => {
                 if (e.target === e.currentTarget && onClose && !loading) {
                     onClose();
                 }
             }}
         >
-            <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div
+                className="w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-[#1f1915]"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="flex items-start gap-4 px-6 py-5">
                     <div
                         className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${
@@ -387,22 +403,22 @@ export function ConfirmationModal({
                     </div>
 
                     <div className="min-w-0">
-                        <h2 className="text-lg font-bold text-stone-800">
+                        <h2 className="text-lg font-bold text-stone-800 dark:text-white">
                             {title}
                         </h2>
 
-                        <p className="mt-2 text-sm leading-6 text-stone-600">
+                        <p className="mt-2 text-sm leading-6 text-stone-600 dark:text-stone-300">
                             {message}
                         </p>
                     </div>
                 </div>
 
-                <div className="flex flex-col-reverse gap-2 border-t border-stone-100 bg-stone-50 px-6 py-4 sm:flex-row sm:justify-end">
+                <div className="flex flex-col-reverse gap-2 border-t border-stone-100 bg-stone-50 px-6 py-4 dark:border-[#382f25] dark:bg-[#28201a] sm:flex-row sm:justify-end">
                     <button
                         type="button"
                         onClick={onClose}
                         disabled={loading}
-                        className="rounded-lg border border-stone-300 bg-white px-5 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-lg border border-stone-300 bg-white px-5 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-stone-700 dark:bg-[#1f1915] dark:text-stone-200 dark:hover:bg-[#2c221a]"
                     >
                         {cancelText}
                     </button>
@@ -414,14 +430,15 @@ export function ConfirmationModal({
                         className={`rounded-lg px-5 py-2.5 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
                             danger
                                 ? "bg-red-600 hover:bg-red-700"
-                                : "bg-amber-600 hover:bg-amber-700"
+                                : "bg-[#70091f] hover:bg-[#8b1505]"
                         }`}
                     >
                         {loading ? "Processing..." : confirmText}
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

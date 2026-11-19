@@ -142,7 +142,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
             className={`
                 tcc-sidebar
                 ${sidebarOpen ? "is-open" : ""}
-                fixed inset-y-0 left-0 z-50
+                fixed inset-y-0 left-0 z-30 lg:z-20
                 flex w-[264px] flex-col
                 bg-gradient-to-b from-[#5c0819] via-[#480613] to-[#2e030c]
                 text-white
@@ -151,7 +151,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
                 lg:translate-x-0
                 ${
                     sidebarOpen
-                        ? "translate-x-0"
+                        ? "translate-x-0 !z-50"
                         : "-translate-x-full"
                 }
             `}
