@@ -24,6 +24,7 @@ interface ClinicVisitTableProps {
     fetchVisits: (page?: number, searchTerm?: string) => Promise<void>;
     onOpenMedicalReport?: (visit: VisitRecord) => void;
     onDownloadCertificate?: (visit: VisitRecord) => void;
+    onViewVisit?: (visit: VisitRecord) => void;
 }
 
 export function ClinicVisitTable({
@@ -45,6 +46,7 @@ export function ClinicVisitTable({
     fetchVisits,
     onOpenMedicalReport,
     onDownloadCertificate,
+    onViewVisit,
 }: ClinicVisitTableProps) {
     return (
         <>
@@ -298,18 +300,27 @@ export function ClinicVisitTable({
                                                             <button
                                                                 type="button"
                                                                 onClick={() =>
+                                                                    onViewVisit
+                                                                        ? onViewVisit(visit)
+                                                                        : onOpenMedicalReport?.(visit)
+                                                                }
+                                                                className="rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] px-3 py-1.5 text-xs font-medium text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:bg-[#382f25] cursor-pointer"
+                                                                title="View visit details"
+                                                            >
+                                                                View
+                                                            </button>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
                                                                     handleEdit(
                                                                         visit
                                                                     )
                                                                 }
-                                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] text-[#8a6f50] transition hover:bg-[#f3ebdf] cursor-pointer"
+                                                                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-900/60 cursor-pointer"
                                                                 title="Edit visit"
                                                             >
-                                                                <Pencil
-                                                                    size={
-                                                                        14
-                                                                    }
-                                                                />
+                                                                Edit
                                                             </button>
 
                                                             <button
@@ -319,14 +330,10 @@ export function ClinicVisitTable({
                                                                         visit
                                                                     )
                                                                 }
-                                                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 text-red-600 transition hover:bg-red-50 cursor-pointer"
+                                                                className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60 cursor-pointer"
                                                                 title="Delete visit"
                                                             >
-                                                                <Trash2
-                                                                    size={
-                                                                        14
-                                                                    }
-                                                                />
+                                                                Delete
                                                             </button>
 
                                                         </div>

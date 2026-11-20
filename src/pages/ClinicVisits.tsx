@@ -21,7 +21,7 @@ import FloatingToast from "../components/common/FloatingToast";
 import { addClinicNotification } from "../services/notifications";
 import { formatNA, formatTemperature, formatDate, mapCourseToDepartment } from "../utils/formatters";
 import { exportMedicalCertificatePDF } from "../utils/pdfExport";
-import { Modal } from "../components/student-management/FieldsAndModals";
+import { InfoItem, Modal, RecordSection } from "../components/student-management/FieldsAndModals";
 import { ReasonBadge } from "../utils/reasonColors";
 
 const EMPTY_FORM = {
@@ -122,6 +122,7 @@ function ClinicVisits() {
     const [showAddConfirmation, setShowAddConfirmation] = useState(false);
     const [pendingVisitPayload, setPendingVisitPayload] = useState(null);
     const [editingVisit, setEditingVisit] = useState(null);
+    const [viewingVisit, setViewingVisit] = useState<VisitRecord | null>(null);
     const [deleteVisit, setDeleteVisit] = useState<VisitRecord | null>(null);
     const [toastMessage, setToastMessage] = useState("");
 
@@ -1831,6 +1832,7 @@ function ClinicVisits() {
                     fetchVisits={fetchVisits}
                     onOpenMedicalReport={openMedicalReportForVisit}
                     onDownloadCertificate={handleDownloadCertificateForVisit}
+                    onViewVisit={setViewingVisit}
                 />
 
                 {/* Individual Patient Medical Certificate Modal */}
@@ -2053,6 +2055,117 @@ function ClinicVisits() {
                                         </table>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    </Modal>
+                )}
+
+                {/* Individual Clinic Visit Details Modal */}
+                {viewingVisit && (
+                    <Modal
+                        title="Clinic Visit Details"
+                        onClose={() => setViewingVisit(null)}
+                        maxWidth="max-w-3xl"
+                    >
+                        <div className="p-6">
+                            {/* Top Patient Header Card */}
+                            <div className="mb-6 rounded-2xl bg-amber-50/70 border border-amber-200/60 p-5 dark:border-amber-900/30 dark:bg-amber-950/20">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        {(() => {
+                                            const patientInfo = getPatientName(viewingVisit);
+                                            return (
+                                                <>
+                                                    <div className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                                                        {patientInfo.type}
+                                                    </div>
+                                                    <h3 className="mt-2 text-xl font-bold text-[#302820] dark:text-white">
+                                                        {patientInfo.name}
+                                                    </h3>
+                                                    <p className="mt-0.5 text-xs font-medium text-stone-500 dark:text-stone-400">
+                                                        ID: {formatNA(patientInfo.id || viewingVisit.student_id || viewingVisit.faculty_id || viewingVisit.staff_id)}
+                                                        {" · "}
+                                                        {viewingVisit.student?.course || viewingVisit.faculty?.department || viewingVisit.staff?.department || viewingVisit.department || "General"}
+                                                    </p>
+                                                </>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <div className="rounded-xl border border-stone-200 bg-white px-4 py-2 text-center shadow-xs dark:border-stone-800 dark:bg-stone-900">
+                                        <p className="text-[10px] font-bold uppercase tracking-wider text-stone-400">
+                                            Visit Date
+                                        </p>
+                                        <p className="mt-0.5 text-sm font-bold text-[#70091f] dark:text-[#f8a598]">
+                                            {formatDate(viewingVisit.visit_date)}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Visit Details Section */}
+                            <RecordSection icon={<Stethoscope size={14} />} title="Clinical Assessment & Vitals">
+                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                    <InfoItem label="Reason" value={<ReasonBadge reason={viewingVisit.reason} />} />
+                                    <InfoItem label="Temperature" value={formatTemperature(viewingVisit.temperature)} />
+                                    <InfoItem label="Blood Pressure" value={viewingVisit.blood_pressure ? `${viewingVisit.blood_pressure} mmHg` : "N/A"} />
+                                    <InfoItem label="Attending Nurse" value={getNurseName(viewingVisit)} />
+                                </div>
+                                {viewingVisit.symptoms && (
+                                    <div className="mt-3">
+                                        <InfoItem label="Symptoms Reported" value={viewingVisit.symptoms} />
+                                    </div>
+                                )}
+                            </RecordSection>
+
+                            {/* Treatment & Medicine Section */}
+                            <RecordSection icon={<Pill size={14} />} title="Treatment & Medication">
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    <InfoItem label="Treatment / Action" value={viewingVisit.treatment || "N/A"} />
+                                    <InfoItem 
+                                        label="Medicine Dispensed" 
+                                        value={viewingVisit.medicine ? `${getMedicineName(viewingVisit.medicine)} (Qty: ${viewingVisit.medicine_quantity || 1} ${getMedicineUnit(viewingVisit.medicine)})` : "None"} 
+                                    />
+                                </div>
+                                {viewingVisit.remarks && (
+                                    <div className="mt-3">
+                                        <InfoItem label="Remarks / Clinical Notes" value={viewingVisit.remarks} />
+                                    </div>
+                                )}
+                            </RecordSection>
+
+                            {/* Modal Footer Actions */}
+                            <div className="mt-6 flex items-center justify-end gap-3 border-t border-stone-100 pt-4 dark:border-stone-800">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const target = viewingVisit;
+                                        setViewingVisit(null);
+                                        openMedicalReportForVisit(target);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#70091f]/40 bg-[#fdf5f3] px-4 py-2.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                >
+                                    <FileText size={14} />
+                                    Medical Certificate
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const target = viewingVisit;
+                                        setViewingVisit(null);
+                                        handleEdit(target);
+                                    }}
+                                    className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-400 cursor-pointer"
+                                >
+                                    Edit Visit
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewingVisit(null)}
+                                    className="rounded-xl border border-stone-200 bg-stone-100 px-4 py-2.5 text-xs font-semibold text-stone-700 transition hover:bg-stone-200 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-200 cursor-pointer"
+                                >
+                                    Close
+                                </button>
                             </div>
                         </div>
                     </Modal>
