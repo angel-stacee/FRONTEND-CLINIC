@@ -41,6 +41,10 @@ import {
     Pill,
     CheckCircle2,
     AlertOctagon,
+    ChevronDown,
+    LogOut,
+    Settings,
+    User as UserIcon,
 } from "lucide-react";
 import {
     getStoredNotifications,
@@ -54,7 +58,7 @@ import {
     type ClinicNotification,
 } from "../services/notifications";
 import ThemeToggle from "../components/common/ThemeToggle";
-import { applyTheme } from "../utils/theme";
+import { applyTheme, useTheme } from "../utils/theme";
 
 const FOCUS_RING =
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#70091f]/40";
@@ -272,10 +276,14 @@ function useOutsideClick(ref, onOutside, active) {
 
 function Dashboard() {
     const navigate = useNavigate();
+    const { isDark, toggleTheme } = useTheme();
 
     const searchInputRef = useRef(null);
     const searchBoxRef = useRef(null);
     const bellRef = useRef(null);
+    const profileMenuRef = useRef(null);
+
+    const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
     const [dashboard, setDashboard] = useState<any>(() => {
         const inMem = peekCachedRecord<any>("dashboard")?.data;
@@ -425,6 +433,29 @@ function Dashboard() {
         () => setBellOpen(false),
         bellOpen
     );
+
+    useOutsideClick(
+        profileMenuRef,
+        () => setProfileMenuOpen(false),
+        profileMenuOpen
+    );
+
+    const handleLogout = async () => {
+        try {
+            api.post("/logout", {}, { timeout: 3000 }).catch(() => {});
+        } catch {
+            // ignore
+        }
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("tcc-dashboard-cache");
+        try {
+            invalidateRecordCache();
+        } catch {
+            // ignore
+        }
+        navigate("/login", { replace: true });
+    };
 
     async function loadDashboard() {
         // If we don't have dashboard data, show loading; otherwise refresh smoothly in background
@@ -1733,10 +1764,11 @@ function Dashboard() {
                     )}
                 </div>
 
-                <div className="ml-auto flex items-center gap-4">
+                <div className="ml-auto flex items-center gap-2.5 sm:gap-4">
 
-                    <ThemeToggle />
-
+                    <div className="hidden sm:block">
+                        <ThemeToggle />
+                    </div>
 
                     <div
                         ref={bellRef}
@@ -1757,20 +1789,20 @@ function Dashboard() {
                             aria-expanded={
                                 bellOpen
                             }
-                            className={`relative flex h-10 w-10 items-center justify-center rounded-full text-[#766959] hover:bg-[#fcebe7] hover:text-[#70091f] ${FOCUS_RING}`}
+                            className={`relative flex h-10 w-10 items-center justify-center rounded-full text-[#766959] hover:bg-[#fcebe7] hover:text-[#70091f] dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-[#f8a598] ${FOCUS_RING}`}
                         >
                             <Bell size={21} />
 
                             {(customNotifications.some((n) => !n.read) || (activityFeed.length > 0 && !bellSeen)) && (
-                                <span className="absolute right-2 top-1.5 h-2.5 w-2.5 rounded-full bg-[#a98b70] ring-2 ring-white" />
+                                <span className="absolute right-2 top-1.5 h-2.5 w-2.5 rounded-full bg-[#a98b70] ring-2 ring-white dark:ring-stone-900" />
                             )}
                         </button>
 
                         {bellOpen && (
-                            <div className="absolute right-0 top-12 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-[#e8dfd4] bg-white shadow-xl">
+                            <div className="absolute right-0 top-12 z-50 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-[#e8dfd4] bg-white shadow-xl dark:border-stone-800 dark:bg-[#1f1914]">
 
-                                <div className="border-b border-[#e8dfd4] px-4 py-3 flex items-center justify-between">
-                                    <p className="text-sm font-semibold">
+                                <div className="border-b border-[#e8dfd4] px-4 py-3 flex items-center justify-between dark:border-stone-800">
+                                    <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">
                                         Notifications
                                     </p>
                                     {activityFeed.length > 0 && (
@@ -1780,7 +1812,7 @@ function Dashboard() {
                                                 e.stopPropagation();
                                                 handleClearAllActivities();
                                             }}
-                                            className="text-xs font-semibold text-[#70091f] hover:underline"
+                                            className="text-xs font-semibold text-[#70091f] hover:underline dark:text-[#f8a598]"
                                         >
                                             Clear all
                                         </button>
@@ -1808,7 +1840,7 @@ function Dashboard() {
                                                     </div>
 
                                                     <div className="min-w-0 flex-1">
-                                                        <p className="truncate text-sm font-semibold">
+                                                        <p className="truncate text-sm font-semibold text-stone-900 dark:text-stone-100">
                                                             {
                                                                 item.title
                                                             }
@@ -1852,27 +1884,132 @@ function Dashboard() {
                         )}
                     </div>
 
-                    <div className="h-8 w-px bg-[#e8dfd4]" />
+                    <div className="h-8 w-px bg-[#e8dfd4] dark:bg-stone-800" />
 
+                    {/* Profile Avatar & Interactive Dropdown Menu */}
+                    <div ref={profileMenuRef} className="relative">
+                        <button
+                            type="button"
+                            onClick={() => setProfileMenuOpen((open) => !open)}
+                            aria-expanded={profileMenuOpen}
+                            aria-haspopup="true"
+                            aria-label="User profile menu"
+                            className="flex items-center gap-2 rounded-xl p-1 transition hover:bg-stone-100 sm:gap-2.5 sm:px-2.5 sm:py-1.5 dark:hover:bg-stone-800/60 focus:outline-none"
+                        >
+                            <Avatar
+                                user={user}
+                                size={40}
+                                iconSize={21}
+                            />
 
-                    <div className="flex items-center gap-3 rounded-xl px-2 py-1.5">
-                        <Avatar
-                            user={user}
-                            size={40}
-                            iconSize={21}
-                        />
+                            <div className="hidden text-left sm:block">
+                                <p className="text-sm font-semibold leading-tight text-stone-800 dark:text-stone-200">
+                                    {user?.name ||
+                                        "Clinic Staff"}
+                                </p>
 
-                        <div className="hidden text-left sm:block">
-                            <p className="text-sm font-semibold">
-                                {user?.name ||
-                                    "Clinic Staff"}
-                            </p>
+                                <p className="text-xs text-[#887d70] leading-tight dark:text-stone-400">
+                                    {formatRole(user?.role) ||
+                                        "Clinic Staff"}
+                                </p>
+                            </div>
 
-                            <p className="text-xs text-[#887d70]">
-                                {formatRole(user?.role) ||
-                                    "Clinic Staff"}
-                            </p>
-                        </div>
+                            <ChevronDown
+                                size={14}
+                                className={`hidden text-stone-400 transition-transform duration-200 sm:block ${
+                                    profileMenuOpen ? "rotate-180" : ""
+                                }`}
+                            />
+                        </button>
+
+                        {profileMenuOpen && (
+                            <div className="absolute right-0 top-12 z-50 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-[#e8dfd4] bg-white p-2 shadow-2xl dark:border-stone-800 dark:bg-[#1f1914] animate-in fade-in zoom-in-95 duration-150">
+                                {/* User Info Header */}
+                                <div className="flex items-center gap-3 border-b border-[#eee7de] px-3 py-3 dark:border-stone-800">
+                                    <Avatar user={user} size={42} iconSize={22} />
+                                    <div className="min-w-0 flex-1 text-left">
+                                        <p className="truncate text-sm font-bold text-stone-900 dark:text-stone-100">
+                                            {user?.name || "Clinic Staff"}
+                                        </p>
+                                        <p className="truncate text-xs text-[#887d70] dark:text-stone-400">
+                                            {user?.email || "admin.clinic.edu@gmail.com"}
+                                        </p>
+                                        <span className="mt-1.5 inline-block rounded-full bg-[#70091f]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#70091f] dark:bg-[#70091f]/30 dark:text-[#f8a598]">
+                                            {formatRole(user?.role) || "Clinic Staff"}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Dark / Light Mode Switcher Row */}
+                                <div className="border-b border-[#eee7de] p-1.5 dark:border-stone-800">
+                                    <button
+                                        type="button"
+                                        onClick={toggleTheme}
+                                        role="switch"
+                                        aria-checked={isDark}
+                                        aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+                                        className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 transition hover:bg-stone-50 dark:hover:bg-stone-800/50 cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400">
+                                                {isDark ? <Moon size={15} /> : <Sun size={15} />}
+                                            </div>
+                                            <div className="text-left">
+                                                <p className="text-xs font-semibold text-stone-800 dark:text-stone-200">
+                                                    {isDark ? "Dark Mode" : "Light Mode"}
+                                                </p>
+                                                <p className="text-[10px] text-[#887d70] dark:text-stone-400">
+                                                    Tap to switch theme
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div
+                                            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-200 ${
+                                                isDark ? "bg-[#70091f]" : "bg-stone-300 dark:bg-stone-600"
+                                            }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                                                    isDark ? "translate-x-4" : "translate-x-1"
+                                                }`}
+                                            />
+                                        </div>
+                                    </button>
+                                </div>
+
+                                {/* Navigation Links */}
+                                <div className="p-1 space-y-0.5">
+                                    <Link
+                                        to="/profile"
+                                        onClick={() => setProfileMenuOpen(false)}
+                                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-[#fcebe7]/60 hover:text-[#70091f] dark:text-stone-300 dark:hover:bg-stone-800/60 dark:hover:text-[#f8a598]"
+                                    >
+                                        <UserIcon size={15} className="text-[#70091f] dark:text-[#f8a598]" />
+                                        <span>My Profile</span>
+                                    </Link>
+                                    <Link
+                                        to="/settings"
+                                        onClick={() => setProfileMenuOpen(false)}
+                                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-[#fcebe7]/60 hover:text-[#70091f] dark:text-stone-300 dark:hover:bg-stone-800/60 dark:hover:text-[#f8a598]"
+                                    >
+                                        <Settings size={15} className="text-[#70091f] dark:text-[#f8a598]" />
+                                        <span>Settings</span>
+                                    </Link>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setProfileMenuOpen(false);
+                                            handleLogout();
+                                        }}
+                                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40 cursor-pointer text-left"
+                                    >
+                                        <LogOut size={15} />
+                                        <span>Log Out</span>
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </header>
