@@ -237,11 +237,11 @@ export function Header({
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 <button
                     type="button"
-                    onClick={onToggleSidebar ? onToggleSidebar : () => setSidebarOpen((prev) => !prev)}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#70091f] transition duration-200 hover:bg-[#fcebe7] active:scale-95 dark:text-[#f8a598] dark:hover:bg-stone-800 cursor-pointer"
+                    onClick={() => setSidebarOpen((prev) => !prev)}
+                    className="flex lg:hidden h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#70091f] transition duration-200 hover:bg-[#fcebe7] active:scale-95 dark:text-[#f8a598] dark:hover:bg-stone-800 cursor-pointer"
                     aria-label="Toggle Navigation Sidebar"
-                    title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    aria-expanded={sidebarOpen || !sidebarCollapsed}
+                    title="Open Navigation Menu"
+                    aria-expanded={sidebarOpen}
                 >
                     <Menu size={22} />
                 </button>

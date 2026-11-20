@@ -220,13 +220,15 @@ function Sidebar({
                     </div>
 
                     {/* Toggle Button inside sidebar on desktop */}
-                    {!sidebarCollapsed && onToggleSidebar && (
+                    {onToggleSidebar && (
                         <button
                             type="button"
                             onClick={onToggleSidebar}
-                            className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white cursor-pointer"
-                            title="Collapse sidebar"
-                            aria-label="Collapse sidebar"
+                            className={`hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white cursor-pointer ${
+                                sidebarCollapsed ? "mt-2 mx-auto" : ""
+                            }`}
+                            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                         >
                             <Menu size={18} />
                         </button>
