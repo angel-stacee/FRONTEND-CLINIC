@@ -11,8 +11,31 @@ interface MainLayoutProps {
 
 function MainLayout({ children }: MainLayoutProps): React.JSX.Element {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+        try {
+            return localStorage.getItem("tcc-sidebar-collapsed") === "true";
+        } catch {
+            return false;
+        }
+    });
     const location = useLocation();
     const [isPageTransitioning, setIsPageTransitioning] = useState(false);
+
+    const handleToggleSidebar = () => {
+        if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+            setSidebarCollapsed((prev) => {
+                const next = !prev;
+                try {
+                    localStorage.setItem("tcc-sidebar-collapsed", String(next));
+                } catch {
+                    // ignore
+                }
+                return next;
+            });
+        } else {
+            setSidebarOpen((prev) => !prev);
+        }
+    };
 
     useEffect(() => {
         setIsPageTransitioning(true);
@@ -47,6 +70,9 @@ function MainLayout({ children }: MainLayoutProps): React.JSX.Element {
             <Sidebar
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
+                sidebarCollapsed={sidebarCollapsed}
+                setSidebarCollapsed={setSidebarCollapsed}
+                onToggleSidebar={handleToggleSidebar}
             />
 
             {/* Mobile Backdrop Overlay */}
@@ -60,11 +86,19 @@ function MainLayout({ children }: MainLayoutProps): React.JSX.Element {
             )}
 
             {/* Main Column with Global Top Header */}
-            <div className="flex min-h-screen flex-col lg:ml-[264px] lg:w-[calc(100%-264px)]">
+            <div
+                className={`flex min-h-screen flex-col transition-[margin,width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                    sidebarCollapsed
+                        ? "lg:ml-[78px] lg:w-[calc(100%-78px)]"
+                        : "lg:ml-[264px] lg:w-[calc(100%-264px)]"
+                }`}
+            >
                 {/* Global App Header for ALL pages */}
                 <Header
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
+                    sidebarCollapsed={sidebarCollapsed}
+                    onToggleSidebar={handleToggleSidebar}
                 />
 
                 {/* Top Route Transition Loading Bar */}

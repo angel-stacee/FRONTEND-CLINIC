@@ -34,6 +34,8 @@ import { Avatar } from "../dashboard/DashboardWidgets";
 interface HeaderProps {
     sidebarOpen: boolean;
     setSidebarOpen: (open: boolean | ((prev: boolean) => boolean)) => void;
+    sidebarCollapsed?: boolean;
+    onToggleSidebar?: () => void;
 }
 
 function useOutsideClick(
@@ -114,7 +116,12 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
     },
 };
 
-export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps): React.JSX.Element {
+export function Header({
+    sidebarOpen,
+    setSidebarOpen,
+    sidebarCollapsed = false,
+    onToggleSidebar,
+}: HeaderProps): React.JSX.Element {
     const location = useLocation();
     const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
@@ -226,16 +233,17 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps): React.JSX.
 
     return (
         <header className="sticky top-0 z-30 flex h-[68px] sm:h-[72px] w-full items-center justify-between border-b border-[#eee7de] bg-white/95 px-4 sm:px-6 lg:px-8 backdrop-blur shadow-xs transition-colors duration-200 dark:border-stone-800 dark:bg-[#16120e]/95">
-            {/* Left side: Hamburger toggle on mobile + Dynamic Page Title & Subtitle */}
+            {/* Left side: Hamburger toggle + Dynamic Page Title & Subtitle */}
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 <button
                     type="button"
-                    onClick={() => setSidebarOpen((prev) => !prev)}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#70091f] transition duration-200 hover:bg-[#fcebe7] active:scale-95 lg:hidden dark:text-[#f8a598] dark:hover:bg-stone-800"
-                    aria-label="Toggle Navigation Drawer"
-                    aria-expanded={sidebarOpen}
+                    onClick={onToggleSidebar ? onToggleSidebar : () => setSidebarOpen((prev) => !prev)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#70091f] transition duration-200 hover:bg-[#fcebe7] active:scale-95 dark:text-[#f8a598] dark:hover:bg-stone-800 cursor-pointer"
+                    aria-label="Toggle Navigation Sidebar"
+                    title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    aria-expanded={sidebarOpen || !sidebarCollapsed}
                 >
-                    {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+                    <Menu size={22} />
                 </button>
 
                 {/* Mobile Logo display */}

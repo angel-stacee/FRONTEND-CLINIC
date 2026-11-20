@@ -14,11 +14,15 @@ import {
     LogOut,
     Heart,
     X,
+    Menu,
 } from "lucide-react";
 
 interface SidebarProps {
     sidebarOpen: boolean;
     setSidebarOpen: (open: boolean) => void;
+    sidebarCollapsed?: boolean;
+    setSidebarCollapsed?: (collapsed: boolean | ((prev: boolean) => boolean)) => void;
+    onToggleSidebar?: () => void;
 }
 
 const routePrefetchers: Record<string, () => void> = {
@@ -32,7 +36,12 @@ const routePrefetchers: Record<string, () => void> = {
     "/profile": () => { import("../../pages/Profile"); },
 };
 
-function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Element {
+function Sidebar({
+    sidebarOpen,
+    setSidebarOpen,
+    sidebarCollapsed = false,
+    onToggleSidebar,
+}: SidebarProps): React.JSX.Element {
     const location = useLocation();
     const navigate = useNavigate();
     const [pendingPath, setPendingPath] = React.useState<string | null>(null);
@@ -143,11 +152,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
                 tcc-sidebar
                 ${sidebarOpen ? "is-open" : ""}
                 fixed inset-y-0 left-0 z-30 lg:z-20
-                flex w-[264px] flex-col
+                flex flex-col
+                ${sidebarCollapsed ? "lg:w-[78px]" : "lg:w-[264px]"}
+                w-[264px]
                 bg-gradient-to-b from-[#5c0819] via-[#480613] to-[#2e030c]
                 text-white
                 shadow-[8px_0_30px_rgba(0,0,0,0.35)]
-                transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+                transition-[width,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
                 lg:translate-x-0
                 ${
                     sidebarOpen
@@ -156,54 +167,87 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
                 }
             `}
         >
+            {/* Mobile close button */}
             <div className="flex justify-end px-4 pt-4 lg:hidden">
                 <button
                     onClick={() => setSidebarOpen(false)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg text-white/80 transition duration-200 hover:rotate-90 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcebe7]"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-white/80 transition duration-200 hover:rotate-90 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcebe7] cursor-pointer"
                     aria-label="Close sidebar"
                 >
                     <X size={22} />
                 </button>
             </div>
 
-            <div className="px-5 pb-6 pt-7">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white/10 p-1">
-                        <img
-                            src={tccLogo}
-                            alt="TCC Logo"
-                            onError={(e) => {
-                                const target = e.currentTarget;
-                                if (!target.dataset.fallback) {
-                                    target.dataset.fallback = "1";
-                                    target.src = "/tcc-logo.png";
-                                } else if (target.dataset.fallback === "1") {
-                                    target.dataset.fallback = "2";
-                                    target.src = "/tcc-logo.jpg";
-                                }
-                            }}
-                            className="h-12 w-12 rounded-full object-contain transition-transform duration-300 hover:rotate-6 hover:scale-105"
-                        />
+            {/* Logo and Brand Header */}
+            <div className={`transition-all duration-300 ${sidebarCollapsed ? "px-2 pb-4 pt-5" : "px-5 pb-6 pt-7"}`}>
+                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"}`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div
+                            className={`flex shrink-0 items-center justify-center rounded-full bg-white/10 p-1 transition-all duration-300 ${
+                                sidebarCollapsed ? "h-11 w-11" : "h-13 w-13"
+                            }`}
+                        >
+                            <img
+                                src={tccLogo}
+                                alt="TCC Logo"
+                                onError={(e) => {
+                                    const target = e.currentTarget;
+                                    if (!target.dataset.fallback) {
+                                        target.dataset.fallback = "1";
+                                        target.src = "/tcc-logo.png";
+                                    } else if (target.dataset.fallback === "1") {
+                                        target.dataset.fallback = "2";
+                                        target.src = "/tcc-logo.jpg";
+                                    }
+                                }}
+                                className={`rounded-full object-contain transition-all duration-300 ${
+                                    sidebarCollapsed ? "h-9 w-9" : "h-11 w-11 hover:rotate-6 hover:scale-105"
+                                }`}
+                            />
+                        </div>
+
+                        {!sidebarCollapsed && (
+                            <div className="min-w-0">
+                                <p className="truncate text-base font-bold text-[#fcebe7]">
+                                    TCC Clinic
+                                </p>
+
+                                <p className="truncate text-xs font-medium text-[#fcebe7]/75">
+                                    Management System
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    <div>
-                        <p className="text-l font-bold text-[#fcebe7]">
-                            TCC Clinic
-                        </p>
-
-                        <p className="mt-1 text-xs font-medium text-[#fcebe7]/75">
-                            Management System
-                        </p>
-                    </div>
+                    {/* Toggle Button inside sidebar on desktop */}
+                    {!sidebarCollapsed && onToggleSidebar && (
+                        <button
+                            type="button"
+                            onClick={onToggleSidebar}
+                            className="hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white cursor-pointer"
+                            title="Collapse sidebar"
+                            aria-label="Collapse sidebar"
+                        >
+                            <Menu size={18} />
+                        </button>
+                    )}
                 </div>
             </div>
 
-            <div className="mx-5 border-t border-white/10" />
+            <div className={`border-t border-white/10 ${sidebarCollapsed ? "mx-2" : "mx-5"}`} />
 
-            <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-4 py-6">
-                <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#fcebe7]/60">
-                    Main Menu
-                </p>
+            {/* Navigation Menu */}
+            <nav
+                aria-label="Main navigation"
+                className={`flex-1 overflow-y-auto py-5 transition-all duration-300 ${
+                    sidebarCollapsed ? "px-2" : "px-4"
+                }`}
+            >
+                {!sidebarCollapsed && (
+                    <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#fcebe7]/60">
+                        Main Menu
+                    </p>
+                )}
 
                 <div className="space-y-1.5">
                     {menuItems.map((item) => {
@@ -225,9 +269,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
                                 aria-current={isActive ? "page" : undefined}
                                 title={item.name}
                                 className={`
-                                    group flex h-12 items-center gap-3
-                                    rounded-xl px-3.5
-                                    transition-[transform,background-color,color,box-shadow] duration-200 ease-out
+                                    group flex h-11 items-center
+                                    ${sidebarCollapsed ? "justify-center px-0 w-11 mx-auto" : "gap-3 px-3.5 w-full"}
+                                    rounded-xl
+                                    transition-all duration-200 ease-out
                                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fcebe7]
                                     ${
                                         isActive
@@ -256,11 +301,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
                                     />
                                 </div>
 
-                                <span className="text-[14px] font-medium">
-                                    {item.name}
-                                </span>
+                                {!sidebarCollapsed && (
+                                    <span className="truncate text-[14px] font-medium">
+                                        {item.name}
+                                    </span>
+                                )}
 
-                                {pendingPath === item.path && location.pathname !== item.path && (
+                                {!sidebarCollapsed && pendingPath === item.path && location.pathname !== item.path && (
                                     <span className="ml-auto flex h-2 w-2 relative">
                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#fcebe7] opacity-75" />
                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-[#fcebe7]" />
@@ -272,40 +319,49 @@ function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps): React.JSX.Eleme
                 </div>
             </nav>
 
-            <div className="px-4 pb-5 space-y-3">
+            {/* Bottom Actions */}
+            <div className={`pb-5 space-y-3 transition-all duration-300 ${sidebarCollapsed ? "px-2" : "px-4"}`}>
                 {/* Log Out Button */}
                 <button
                     type="button"
                     onClick={handleLogout}
-                    className="group flex h-11 w-full items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-3.5 text-left text-[#fcebe7]/90 transition-all duration-200 hover:border-red-400/50 hover:bg-red-500/20 hover:text-white hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 active:scale-[0.98]"
+                    title="Log Out"
+                    aria-label="Log Out"
+                    className={`group flex h-11 items-center rounded-xl border border-white/15 bg-white/5 text-left text-[#fcebe7]/90 transition-all duration-200 hover:border-red-400/50 hover:bg-red-500/20 hover:text-white hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 active:scale-[0.98] cursor-pointer ${
+                        sidebarCollapsed ? "w-11 mx-auto justify-center px-0" : "w-full gap-3 px-3.5"
+                    }`}
                 >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-900/40 text-red-300 transition-all duration-200 group-hover:scale-105 group-hover:bg-red-600 group-hover:text-white">
                         <LogOut size={16} strokeWidth={2.2} />
                     </div>
 
-                    <span className="text-sm font-semibold tracking-tight">
-                        Log Out
-                    </span>
+                    {!sidebarCollapsed && (
+                        <span className="truncate text-sm font-semibold tracking-tight">
+                            Log Out
+                        </span>
+                    )}
                 </button>
 
                 {/* Better Care Banner */}
-                <div className="rounded-2xl border border-white/15 bg-white/10 p-3.5">
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-[#fcebe7]">
-                            <Heart size={18} fill="currentColor" />
-                        </div>
+                {!sidebarCollapsed && (
+                    <div className="rounded-2xl border border-white/15 bg-white/10 p-3.5">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-[#fcebe7]">
+                                <Heart size={18} fill="currentColor" />
+                            </div>
 
-                        <div className="min-w-0">
-                            <p className="text-xs font-bold text-white truncate">
-                                Better Care
-                            </p>
+                            <div className="min-w-0">
+                                <p className="text-xs font-bold text-white truncate">
+                                    Better Care
+                                </p>
 
-                            <p className="text-[11px] text-[#fcebe7]/70 truncate">
-                                Better Records, Better Monitoring
-                            </p>
+                                <p className="text-[11px] text-[#fcebe7]/70 truncate">
+                                    Better Records, Better Monitoring
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </aside>
     );
