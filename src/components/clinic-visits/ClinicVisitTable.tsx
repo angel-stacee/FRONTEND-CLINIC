@@ -68,48 +68,48 @@ export function ClinicVisitTable({
 
 
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1200px] text-left">
+                        <table className="w-full min-w-[1420px] text-left">
 
                             <thead>
                                 <tr className="border-b border-[#e8dfd4] bg-[#fcfaf6]">
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[170px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
                                         Patient
                                     </th>
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[150px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
                                         Nurse on Duty
                                     </th>
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[160px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
                                         Reason
                                     </th>
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[140px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
                                         Department
                                     </th>
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[110px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70] whitespace-nowrap">
                                         Visit Date
                                     </th>
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[110px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70] whitespace-nowrap">
                                         Temperature
                                     </th>
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[110px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70] whitespace-nowrap">
                                         Blood Pressure
                                     </th>
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[150px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
                                         Treatment
                                     </th>
 
-                                    <th className="px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[220px] px-5 py-3 text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
                                         Medicine
                                     </th>
 
-                                    <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
+                                    <th className="min-w-[250px] px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-[#887d70]">
                                         Actions
                                     </th>
 
@@ -240,40 +240,34 @@ export function ClinicVisitTable({
                                                     </td>
 
 
-                                                    <td className="max-w-[200px] px-5 py-3.5 text-xs text-[#766959]">
+                                                    <td className="min-w-[220px] px-5 py-3.5 text-xs text-[#766959]">
 
                                                         {medicineName ? (
-                                                            <div>
+                                                            <div className="space-y-1">
 
-                                                                <p className="font-semibold text-[#3d3329]">
+                                                                <p className="font-semibold text-[#3d3329] leading-snug">
                                                                     {
                                                                         medicineName
                                                                     }
                                                                 </p>
 
-                                                                {visit.medicine?.unit && (
-                                                                    <p className="mt-0.5 text-[10px] text-[#887d70]">
-                                                                        Unit:{" "}
-                                                                        {
-                                                                            visit
-                                                                                .medicine
-                                                                                .unit
-                                                                        }
-                                                                    </p>
-                                                                )}
+                                                                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                                                    {visit.medicine?.unit && (
+                                                                        <span className="inline-flex items-center rounded-md border border-[#e8dfd4] bg-[#fcfaf6] px-2 py-0.5 text-[10px] font-medium text-[#766959] whitespace-nowrap">
+                                                                            Unit: {visit.medicine.unit}
+                                                                        </span>
+                                                                    )}
 
-                                                                {visit.medicine_quantity && (
-                                                                    <p className="mt-0.5 text-[10px] font-semibold text-[#8a6f50]">
-                                                                        Quantity Used:{" "}
-                                                                        {
-                                                                            visit.medicine_quantity
-                                                                        }
-                                                                    </p>
-                                                                )}
+                                                                    {visit.medicine_quantity && (
+                                                                        <span className="inline-flex items-center rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 whitespace-nowrap">
+                                                                            Quantity Used: {visit.medicine_quantity}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
 
                                                             </div>
                                                         ) : (
-                                                            "-"
+                                                            <span className="text-[#a99d8f]">-</span>
                                                         )}
 
                                                     </td>
