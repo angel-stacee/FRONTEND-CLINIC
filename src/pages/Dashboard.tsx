@@ -1207,6 +1207,533 @@ function Dashboard() {
 
 
 
+            {/* Quick Patient Search Bar */}
+            <div className="w-full border-b border-[#eee7de] bg-white px-6 py-3.5 dark:border-stone-800 dark:bg-[#16120e]">
+
+                <div
+                    ref={searchBoxRef}
+                    className="relative w-full max-w-xl"
+                >
+                    <Search
+                        size={18}
+                        className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-500 dark:text-stone-400"
+                    />
+
+                    <input
+                        ref={searchInputRef}
+                        value={search}
+                        onFocus={() => {
+                            if (search.trim()) {
+                                setShowSearchDropdown(true);
+                            }
+                        }}
+                        onChange={(event) => {
+                            const value = event.target.value;
+                            setSearch(value);
+                            setShowSearchDropdown(Boolean(value.trim()));
+
+                            if (!value.trim()) {
+                                setStudents([]);
+                                setStaff([]);
+                                setFaculties([]);
+                                setSearchLoading(false);
+                            }
+
+                            setPickedKey(null);
+                        }}
+                        onKeyDown={handleSearchKeyDown}
+                        placeholder="Search students, staff, or faculty by name or ID..."
+                        aria-label="Search students, staff, or faculty"
+                        className="w-full rounded-xl border border-stone-300 bg-[#faf7f4] py-2.5 pl-10 pr-10 text-sm font-medium text-stone-900 outline-none transition placeholder:font-normal placeholder:text-stone-500 hover:bg-white focus:border-[#70091f] focus:bg-white focus:ring-2 focus:ring-[#70091f]/15 dark:border-stone-700 dark:bg-[#1c1713] dark:text-stone-100 dark:placeholder:text-stone-400 dark:focus:bg-[#16120e]"
+                    />
+
+                    {!search ? (
+                        <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-md border border-stone-300 bg-white px-2 py-0.5 text-xs font-semibold text-stone-600 shadow-2xs sm:block dark:border-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                            /
+                        </kbd>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={closeSearch}
+                            aria-label="Clear search"
+                            className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-stone-500 hover:bg-[#f6f1e9] hover:text-[#3c332a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#70091f] cursor-pointer"
+                        >
+                            <X size={14} />
+                        </button>
+                    )}
+
+                    {showSearchDropdown && Boolean(search.trim()) && (
+                        <div className="absolute left-0 top-full z-50 mt-2 max-h-[calc(100vh-110px)] w-[min(900px,calc(100vw-56px))] overflow-y-auto rounded-xl border border-[#e8dfd4] bg-white shadow-xl">
+
+                            {selectedStudent ? (
+                                <div className="p-4">
+
+                                    <div className="flex items-start gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPickedKey(null)}
+                                            className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] text-[#887d70] hover:bg-[#fcebe7] hover:text-[#70091f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#70091f]"
+                                            aria-label="Back to search results"
+                                            title="Back to search results"
+                                        >
+                                            <ArrowLeft size={16} />
+                                        </button>
+
+                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fcebe7] text-sm font-bold text-[#70091f]">
+                                            {getInitials(
+                                                getName(
+                                                    selectedStudent
+                                                )
+                                            )}
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="text-base font-bold">
+                                                    {getName(
+                                                        selectedStudent
+                                                    )}
+                                                </p>
+
+                                                <span className="rounded-full bg-[#fcebe7] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#70091f]">
+                                                    {TYPE_LABELS[
+                                                        selectedStudent._type
+                                                    ] || "Student"}
+                                                </span>
+                                            </div>
+
+                                            <p className="text-xs text-[#887d70]">
+                                                {TYPE_ID_LABELS[
+                                                    selectedStudent._type
+                                                ] || "Student ID"}
+                                                :{" "}
+                                                {getPersonId(
+                                                    selectedStudent
+                                                )}
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={
+                                                closeSearch
+                                            }
+                                            className="flex h-8 w-8 items-center justify-center rounded-full text-[#887d70] hover:bg-[#f6eee4] hover:text-[#70091f]"
+                                            aria-label="Close student search"
+                                        >
+                                            <X size={17} />
+                                        </button>
+                                    </div>
+
+                                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+
+                                        {selectedStudent._type ===
+                                        "student" ? (
+                                            <>
+                                                <StudentDetail
+                                                    label="Course"
+                                                    value={
+                                                        selectedStudent.course
+                                                    }
+                                                />
+
+                                                <StudentDetail
+                                                    label="Year Level"
+                                                    value={
+                                                        selectedStudent.year_level
+                                                    }
+                                                />
+
+                                                <StudentDetail
+                                                    label="Section"
+                                                    value={
+                                                        selectedStudent.section
+                                                    }
+                                                />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <StudentDetail
+                                                    label="Position"
+                                                    value={
+                                                        selectedStudent.position
+                                                    }
+                                                />
+
+                                                <StudentDetail
+                                                    label="Department"
+                                                    value={
+                                                        selectedStudent.department
+                                                    }
+                                                />
+                                            </>
+                                        )}
+
+                                        <StudentDetail
+                                            label="Sex"
+                                            value={
+                                                selectedStudent.sex ||
+                                                selectedStudent.gender
+                                            }
+                                        />
+
+                                        <StudentDetail
+                                            label="Birth Date"
+                                            value={formatDate(
+                                                selectedStudent.birth_date
+                                            )}
+                                        />
+
+                                        <StudentDetail
+                                            label="Contact"
+                                            value={
+                                                selectedStudent.contact_number
+                                            }
+                                        />
+                                    </div>
+
+                                    <div className="mt-2">
+                                        <StudentDetail
+                                            label="Address"
+                                            value={
+                                                selectedStudent.address
+                                            }
+                                        />
+                                    </div>
+
+
+                                    <div className="mt-5 border-t border-[#eee7de] pt-4">
+                                        <div className="mb-3 flex items-center justify-between">
+
+                                            <div>
+                                                <p className="text-sm font-bold">
+                                                    Clinic Visits
+                                                </p>
+
+                                                <p className="text-xs text-[#a99d8f]">
+                                                    Visit history for this{" "}
+                                                    {selectedStudent._type === "faculty"
+                                                        ? "faculty member"
+                                                        : selectedStudent._type === "staff"
+                                                        ? "staff member"
+                                                        : "student"}
+                                                </p>
+                                            </div>
+
+                                            <span className="rounded-full bg-[#fcebe7] px-2.5 py-1 text-xs font-bold text-[#70091f]">
+                                                {
+                                                    studentVisits.length
+                                                }
+                                            </span>
+                                        </div>
+
+                                        {studentDetailsLoading ? (
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-12 w-full" />
+                                                <Skeleton className="h-12 w-full" />
+                                            </div>
+                                        ) : studentVisits.length ? (
+                                            <div className="space-y-2">
+                                                {studentVisits
+                                                    .slice(
+                                                        0,
+                                                        5
+                                                    )
+                                                    .map(
+                                                        (
+                                                            visit,
+                                                            index
+                                                        ) => (
+                                                            <div
+                                                                key={
+                                                                    visit.id ??
+                                                                    `visit-${index}`
+                                                                }
+                                                                className="rounded-lg border border-[#eee7de] bg-[#fcfaf6] p-3"
+                                                            >
+                                                                <div className="flex items-start justify-between gap-3">
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-sm font-semibold">
+                                                                            {visit.reason?.trim()?.toLowerCase() === "other" && visit.symptoms?.trim()
+                                                                                ? visit.symptoms.trim()
+                                                                                : visit.reason?.trim() || "Clinic Visit"}
+                                                                        </p>
+
+                                                                        <p className="mt-1 text-xs text-[#887d70]">
+                                                                            {formatDate(
+                                                                                visit.visit_date ||
+                                                                                    visit.created_at
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <Stethoscope
+                                                                        size={
+                                                                            16
+                                                                        }
+                                                                        className="shrink-0 text-[#70091f]"
+                                                                    />
+                                                                </div>
+
+                                                                {(visit.notes ||
+                                                                    visit.symptoms ||
+                                                                    visit.diagnosis) && (
+                                                                    <p className="mt-2 text-xs leading-5 text-[#766959]">
+                                                                        {visit.notes ||
+                                                                            visit.symptoms ||
+                                                                            visit.diagnosis}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        )
+                                                    )}
+                                            </div>
+                                        ) : (
+                                            <p className="rounded-lg bg-[#fcfaf6] px-3 py-4 text-center text-xs text-[#a99d8f]">
+                                                No clinic visits found for this{" "}
+                                                {selectedStudent._type === "faculty"
+                                                    ? "faculty member"
+                                                    : selectedStudent._type === "staff"
+                                                    ? "staff member"
+                                                    : "student"}.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div className="mt-5 border-t border-[#eee7de] pt-4">
+                                        <div className="mb-3 flex items-center justify-between">
+
+                                            <div>
+                                                <p className="text-sm font-bold">
+                                                    Medical / Health Records
+                                                </p>
+
+                                                <p className="text-xs text-[#a99d8f]">
+                                                    Health details recorded with clinic visits
+                                                </p>
+                                            </div>
+
+                                            <span className="rounded-full bg-[#fcebe7] px-2.5 py-1 text-xs font-bold text-[#8f7154]">
+                                                {
+                                                    studentRecords.length
+                                                }
+                                            </span>
+                                        </div>
+
+                                        {studentDetailsLoading ? (
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-12 w-full" />
+                                                <Skeleton className="h-12 w-full" />
+                                            </div>
+                                        ) : studentRecords.length ? (
+                                            <div className="space-y-2">
+                                                {studentRecords
+                                                    .slice(
+                                                        0,
+                                                        5
+                                                    )
+                                                    .map(
+                                                        (
+                                                            record,
+                                                            index
+                                                        ) => (
+                                                            <div
+                                                                key={
+                                                                    record.id ??
+                                                                    `record-${index}`
+                                                                }
+                                                                className="rounded-lg border border-[#eee7de] bg-[#fcfaf6] p-3"
+                                                            >
+                                                                <div className="flex items-start justify-between gap-3">
+
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-sm font-semibold">
+                                                                            {record.record_type ||
+                                                                                record.type ||
+                                                                                record.title ||
+                                                                                "Health Record"}
+                                                                        </p>
+
+                                                                        <p className="mt-1 text-xs text-[#887d70]">
+                                                                            {formatDate(
+                                                                                record.record_date ||
+                                                                                    record.date ||
+                                                                                    record.created_at
+                                                                            )}
+                                                                        </p>
+                                                                    </div>
+
+                                                                    <FileText
+                                                                        size={
+                                                                            16
+                                                                        }
+                                                                        className="shrink-0 text-[#8f7154]"
+                                                                    />
+                                                                </div>
+
+                                                                <div className="mt-2 space-y-1 text-xs text-[#766959]">
+
+                                                                    {record.diagnosis && (
+                                                                        <p>
+                                                                            <span className="font-semibold">
+                                                                                Diagnosis:
+                                                                            </span>{" "}
+                                                                            {
+                                                                                record.diagnosis
+                                                                            }
+                                                                        </p>
+                                                                    )}
+
+                                                                    {record.notes && (
+                                                                        <p>
+                                                                            <span className="font-semibold">
+                                                                                Notes:
+                                                                            </span>{" "}
+                                                                            {
+                                                                                record.notes
+                                                                            }
+                                                                        </p>
+                                                                    )}
+
+                                                                    {record.allergies && (
+                                                                        <p>
+                                                                            <span className="font-semibold">
+                                                                                Allergies:
+                                                                            </span>{" "}
+                                                                            {
+                                                                                record.allergies
+                                                                            }
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    )}
+                                            </div>
+                                        ) : (
+                                            <p className="rounded-lg bg-[#fcfaf6] px-3 py-4 text-center text-xs text-[#a99d8f]">
+                                                No medical or health records found for this{" "}
+                                                {selectedStudent._type === "faculty"
+                                                    ? "faculty member"
+                                                    : selectedStudent._type === "staff"
+                                                    ? "staff member"
+                                                    : "student"}.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {studentDetailsError && (
+                                        <p className="mt-3 rounded-lg bg-[#fdeeea] px-3 py-2 text-xs text-red-700">
+                                            This person's visit history could not be loaded. Please try again.
+                                        </p>
+                                    )}
+
+                                    <Link
+                                        to={`/students?profile_type=${encodeURIComponent(
+                                            selectedStudent._type
+                                        )}&profile_code=${encodeURIComponent(
+                                            selectedStudent.student_id ||
+                                                selectedStudent.staff_id ||
+                                                selectedStudent.employee_id ||
+                                                selectedStudent.id
+                                        )}&search=${encodeURIComponent(
+                                            selectedStudent.student_id ||
+                                                selectedStudent.staff_id ||
+                                                selectedStudent.employee_id ||
+                                                selectedStudent.id
+                                        )}`}
+                                        onClick={
+                                            closeSearch
+                                        }
+                                        className={`mt-4 flex items-center justify-center gap-1 rounded-lg bg-[#70091f] px-3.5 py-2.5 text-xs font-semibold text-white hover:bg-[#8b1505] ${FOCUS_RING}`}
+                                    >
+                                        View{" "}
+                                        {TYPE_LABELS[
+                                            selectedStudent._type
+                                        ] || "Student"}{" "}
+                                        Profile
+                                        <ChevronRight
+                                            size={14}
+                                        />
+                                    </Link>
+                                </div>
+                            ) : searchLoading ? (
+                                <div className="flex items-center justify-center gap-2.5 px-4 py-8 text-sm font-medium text-[#70091f]">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#70091f] border-t-transparent" />
+                                    <span>Searching students, staff, and faculty...</span>
+                                </div>
+                            ) : filteredPeople.length ? (
+                                filteredPeople.map(
+                                    (
+                                        person,
+                                        index
+                                    ) => (
+                                        <button
+                                            type="button"
+                                            key={
+                                                personKey(
+                                                    person
+                                                ) ??
+                                                `person-${index}`
+                                            }
+                                            onClick={() =>
+                                                pickStudent(
+                                                    person
+                                                )
+                                            }
+                                            className="flex w-full items-center gap-3 border-b border-[#eee7de] px-4 py-3 text-left last:border-b-0 hover:bg-[#f6f1e9]"
+                                        >
+                                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#fcebe7] text-xs font-bold text-[#70091f]">
+                                                {getInitials(
+                                                    getName(
+                                                        person
+                                                    )
+                                                )}
+                                            </div>
+
+                                            <div className="min-w-0 flex-1">
+                                                <p className="truncate text-sm font-semibold">
+                                                    {getName(
+                                                        person
+                                                    )}
+                                                </p>
+
+                                                <p className="text-xs text-[#a99d8f]">
+                                                    {TYPE_LABELS[
+                                                        person._type
+                                                    ] ||
+                                                        "Student"}{" "}
+                                                    ·{" "}
+                                                    {getPersonId(
+                                                        person
+                                                    )}
+                                                    {person.course ? ` · ${person.course}` : ""}
+                                                    {person.department ? ` · ${person.department}` : ""}
+                                                </p>
+                                            </div>
+
+                                            <ChevronRight
+                                                size={16}
+                                                className="shrink-0 text-[#ded4c9]"
+                                            />
+                                        </button>
+                                    )
+                                )
+                            ) : (
+                                <p className="px-4 py-5 text-center text-sm text-[#a99d8f]">
+                                    No student, staff, or faculty matches “
+                                    {search.trim()}”.
+                                </p>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+
+
+
+
             <main className="flex w-full flex-col p-6 lg:p-7">
 
 
