@@ -4,6 +4,7 @@ import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache, peekCachedRecord } from "../services/recordCache";
 import { getImageUrl, getLastMonths, isDateOnly, parseDate, toDateKey, visitDateKey } from "../utils/dashboard";
 import { Avatar, LineAreaChart, MiniBarChart, SectionHeader, Skeleton, StudentDetail } from "../components/dashboard/DashboardWidgets";
+import { ConfirmationModal } from "../components/student-management/FieldsAndModals";
 import { InteractiveClinicVisitsChart } from "../components/dashboard/InteractiveClinicVisitsChart";
 import { VisitReasonsPieChart } from "../components/dashboard/VisitReasonsPieChart";
 import "./Dashboard.css";
@@ -316,6 +317,7 @@ function Dashboard() {
     const [dismissedKeys, setDismissedKeys] = useState<string[]>(() =>
         getDismissedActivityKeys()
     );
+    const [showClearConfirm, setShowClearConfirm] = useState(false);
 
     useEffect(() => {
         const handleNotifUpdate = () => {
@@ -2369,8 +2371,8 @@ function Dashboard() {
                                 activityFeed.length > 0 ? (
                                     <button
                                         type="button"
-                                        onClick={handleClearAllActivities}
-                                        className="flex items-center gap-1.5 rounded-lg border border-[#e8dfd4] bg-stone-50/60 px-2.5 py-1 text-xs font-semibold text-stone-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 dark:border-stone-700 dark:bg-stone-800/60 dark:text-stone-300 dark:hover:border-rose-900/40 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                                        onClick={() => setShowClearConfirm(true)}
+                                        className="flex items-center gap-1.5 rounded-lg border border-[#e8dfd4] bg-stone-50/60 px-2.5 py-1 text-xs font-semibold text-stone-600 transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 dark:border-stone-700 dark:bg-stone-800/60 dark:text-stone-300 dark:hover:border-rose-900/40 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 cursor-pointer"
                                         title="Clear all activities"
                                     >
                                         <Trash2 size={13} />
@@ -2531,6 +2533,21 @@ function Dashboard() {
             <Suspense fallback={null}>
                 <DashboardAssistant />
             </Suspense>
+
+            {/* Confirmation Modal for Clear All Activities */}
+            <ConfirmationModal
+                open={showClearConfirm}
+                title="Clear All Activities"
+                message="Are you sure you want to clear all recent activities? This will remove all activity history from your feed."
+                confirmText="Yes, Clear All"
+                cancelText="Cancel"
+                danger={true}
+                onConfirm={() => {
+                    handleClearAllActivities();
+                    setShowClearConfirm(false);
+                }}
+                onClose={() => setShowClearConfirm(false)}
+            />
         </div>
     );
 }

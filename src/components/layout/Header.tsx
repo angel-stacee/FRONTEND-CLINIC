@@ -30,6 +30,7 @@ import {
 } from "../../services/notifications";
 import { useTheme } from "../../utils/theme";
 import { Avatar } from "../dashboard/DashboardWidgets";
+import { ConfirmationModal } from "../student-management/FieldsAndModals";
 
 interface HeaderProps {
     sidebarOpen: boolean;
@@ -131,6 +132,7 @@ export function Header({
 
     const [bellOpen, setBellOpen] = useState(false);
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+    const [confirmClearNotifications, setConfirmClearNotifications] = useState(false);
     const [notifications, setNotifications] = useState<ClinicNotification[]>(() =>
         getStoredNotifications()
     );
@@ -318,8 +320,8 @@ export function Header({
                                 {notifications.length > 0 && (
                                     <button
                                         type="button"
-                                        onClick={handleClearAll}
-                                        className="text-xs font-semibold text-[#70091f] hover:underline dark:text-[#f8a598]"
+                                        onClick={() => setConfirmClearNotifications(true)}
+                                        className="text-xs font-semibold text-[#70091f] hover:underline dark:text-[#f8a598] cursor-pointer"
                                     >
                                         Clear all
                                     </button>
@@ -493,6 +495,21 @@ export function Header({
                     )}
                 </div>
             </div>
+
+            {/* Confirmation Modal for Clear All Notifications */}
+            <ConfirmationModal
+                open={confirmClearNotifications}
+                title="Clear All Notifications"
+                message="Are you sure you want to clear all notifications? This action cannot be undone."
+                confirmText="Yes, Clear All"
+                cancelText="Cancel"
+                danger={true}
+                onConfirm={() => {
+                    handleClearAll();
+                    setConfirmClearNotifications(false);
+                }}
+                onClose={() => setConfirmClearNotifications(false)}
+            />
         </header>
     );
 }
