@@ -138,6 +138,7 @@ export function Header({
     const [bellOpen, setBellOpen] = useState(false);
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
     const [confirmClearNotifications, setConfirmClearNotifications] = useState(false);
+    const [notifToDelete, setNotifToDelete] = useState<any | null>(null);
     const [headerSearch, setHeaderSearch] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
@@ -564,10 +565,10 @@ export function Header({
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteOne(item.id || item.key);
+                                                    setNotifToDelete(item);
                                                 }}
                                                 title="Delete notification"
-                                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-stone-400 opacity-60 transition hover:bg-rose-50 hover:text-rose-600 hover:opacity-100 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                                                className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-stone-400 opacity-60 transition hover:bg-rose-50 hover:text-rose-600 hover:opacity-100 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 cursor-pointer"
                                             >
                                                 <Trash2 size={13} />
                                             </button>
@@ -718,6 +719,27 @@ export function Header({
                     setConfirmClearNotifications(false);
                 }}
                 onClose={() => setConfirmClearNotifications(false)}
+            />
+
+            {/* Confirmation Modal for Individual Notification Delete */}
+            <ConfirmationModal
+                open={Boolean(notifToDelete)}
+                title="Delete Notification"
+                message={
+                    notifToDelete
+                        ? `Are you sure you want to delete "${notifToDelete.title}"? This action cannot be undone.`
+                        : "Are you sure you want to delete this notification?"
+                }
+                confirmText="Yes, Delete"
+                cancelText="Cancel"
+                danger={true}
+                onConfirm={() => {
+                    if (notifToDelete) {
+                        handleDeleteOne(notifToDelete.id || notifToDelete.key);
+                        setNotifToDelete(null);
+                    }
+                }}
+                onClose={() => setNotifToDelete(null)}
             />
         </header>
     );

@@ -318,6 +318,7 @@ function Dashboard() {
         getDismissedActivityKeys()
     );
     const [showClearConfirm, setShowClearConfirm] = useState(false);
+    const [activityToDelete, setActivityToDelete] = useState<any | null>(null);
 
     useEffect(() => {
         const handleNotifUpdate = () => {
@@ -2443,11 +2444,11 @@ function Dashboard() {
                                                 type="button"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteActivity(item.key);
+                                                    setActivityToDelete(item);
                                                 }}
                                                 title="Delete activity"
                                                 aria-label={`Delete activity: ${item.title}`}
-                                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500/30 dark:text-stone-500 dark:hover:bg-rose-950/40 dark:hover:text-rose-400"
+                                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-500/30 dark:text-stone-500 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 cursor-pointer"
                                             >
                                                 <Trash2 size={15} />
                                             </button>
@@ -2547,6 +2548,27 @@ function Dashboard() {
                     setShowClearConfirm(false);
                 }}
                 onClose={() => setShowClearConfirm(false)}
+            />
+
+            {/* 2nd Confirmation: Confirmation Modal for Individual Activity Delete */}
+            <ConfirmationModal
+                open={Boolean(activityToDelete)}
+                title="Delete Activity"
+                message={
+                    activityToDelete
+                        ? `Are you sure you want to delete "${activityToDelete.title}"? This action cannot be undone.`
+                        : "Are you sure you want to delete this activity?"
+                }
+                confirmText="Yes, Delete"
+                cancelText="Cancel"
+                danger={true}
+                onConfirm={() => {
+                    if (activityToDelete) {
+                        handleDeleteActivity(activityToDelete.key);
+                        setActivityToDelete(null);
+                    }
+                }}
+                onClose={() => setActivityToDelete(null)}
             />
         </div>
     );
