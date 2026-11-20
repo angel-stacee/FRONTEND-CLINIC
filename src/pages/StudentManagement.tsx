@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, Eye, FileText, GraduationCap, MapPin, Pencil, RotateCcw, Search, ShieldCheck, Stethoscope, Trash2, User, X } from "lucide-react";
+import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, Eye, FileBadge, FileText, GraduationCap, MapPin, Pencil, RotateCcw, Search, ShieldCheck, Stethoscope, Trash2, User, X } from "lucide-react";
 import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache } from "../services/recordCache";
 import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components/student-management/FieldsAndModals";
@@ -2056,11 +2056,12 @@ function StudentManagement() {
                                                                                 student
                                                                             )
                                                                         }
-                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                                                        className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 sm:px-3 text-xs font-semibold text-[#70091f] shadow-xs transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
                                                                         title="Individual Student Medical Certificate"
+                                                                        aria-label="Individual Student Medical Certificate"
                                                                     >
-                                                                        <FileText size={13} />
-                                                                        Medical Certificate
+                                                                        <FileBadge size={14} className="shrink-0" />
+                                                                        <span>Medical Certificate</span>
                                                                     </button>
 
                                                                     <button
@@ -2256,11 +2257,12 @@ function StudentManagement() {
                                                                                 "staff"
                                                                             )
                                                                         }
-                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                                                        className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 sm:px-3 text-xs font-semibold text-[#70091f] shadow-xs transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
                                                                         title="Individual Staff Medical Certificate"
+                                                                        aria-label="Individual Staff Medical Certificate"
                                                                     >
-                                                                        <FileText size={13} />
-                                                                        Medical Certificate
+                                                                        <FileBadge size={14} className="shrink-0" />
+                                                                        <span>Medical Certificate</span>
                                                                     </button>
 
                                                                     <button
@@ -2430,11 +2432,12 @@ function StudentManagement() {
                                                                                 "faculty"
                                                                             )
                                                                         }
-                                                                        className="inline-flex items-center gap-1 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 py-1.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
+                                                                        className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 sm:px-3 text-xs font-semibold text-[#70091f] shadow-xs transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598] cursor-pointer"
                                                                         title="Individual Faculty Medical Certificate"
+                                                                        aria-label="Individual Faculty Medical Certificate"
                                                                     >
-                                                                        <FileText size={13} />
-                                                                        Medical Certificate
+                                                                        <FileBadge size={14} className="shrink-0" />
+                                                                        <span>Medical Certificate</span>
                                                                     </button>
 
                                                                     <button
@@ -2601,7 +2604,7 @@ function StudentManagement() {
                                     }}
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-[#70091f] px-3 py-1.5 text-xs font-semibold text-white shadow transition hover:bg-[#8b1505] cursor-pointer"
                                 >
-                                    <FileText size={14} />
+                                    <FileBadge size={14} className="shrink-0" />
                                     Medical Certificate
                                 </button>
                                 <span className="inline-flex w-fit items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
@@ -3076,7 +3079,7 @@ function StudentManagement() {
                                     className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[#70091f]/20 transition hover:bg-[#8b1505] active:scale-95 disabled:opacity-50 cursor-pointer"
                                     title="Download Official Medical Certificate"
                                 >
-                                    <FileText size={16} />
+                                    <FileBadge size={16} className="shrink-0" />
                                     Download Medical Certificate
                                 </button>
                             </div>
