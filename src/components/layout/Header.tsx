@@ -20,6 +20,9 @@ import {
     Search,
     Loader2,
     ArrowRight,
+    ArrowLeft,
+    FileText,
+    ChevronRight,
 } from "lucide-react";
 import tccLogo from "../../assets/tcc-logo.png";
 import api from "../../services/api";
@@ -32,7 +35,7 @@ import {
     markAllNotificationsAsRead,
 } from "../../services/notifications";
 import { useTheme } from "../../utils/theme";
-import { Avatar } from "../dashboard/DashboardWidgets";
+import { Avatar, StudentDetail, Skeleton } from "../dashboard/DashboardWidgets";
 import { ConfirmationModal } from "../student-management/FieldsAndModals";
 
 interface HeaderProps {
@@ -79,6 +82,43 @@ function formatRelative(dateStr?: string) {
 function formatRole(role?: string) {
     if (!role) return "Clinic Staff";
     return role;
+}
+
+function getPersonName(person?: any) {
+    if (!person) return "Unknown";
+    if (person.name) return person.name;
+    const fullName = `${person.first_name || ""} ${person.last_name || ""}`.trim();
+    return fullName || "Unknown";
+}
+
+function getInitials(name?: string) {
+    if (!name) return "?";
+    return (
+        name
+            .split(" ")
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join("")
+            .toUpperCase() || "?"
+    );
+}
+
+function getPersonId(person?: any) {
+    return (
+        person?.student_id ||
+        person?.staff_id ||
+        person?.employee_id ||
+        person?.id ||
+        ""
+    );
+}
+
+function formatDisplayDate(raw?: string | null) {
+    if (!raw) return "—";
+    const d = new Date(raw);
+    if (isNaN(d.getTime())) return raw;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 const PAGE_META: Record<string, { title: string; subtitle: string }> = {
@@ -142,6 +182,10 @@ export function Header({
     const [headerSearch, setHeaderSearch] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
+    const [selectedPerson, setSelectedPerson] = useState<any | null>(null);
+    const [personVisits, setPersonVisits] = useState<any[]>([]);
+    const [personRecords, setPersonRecords] = useState<any[]>([]);
+    const [personDetailsLoading, setPersonDetailsLoading] = useState(false);
     const [searchResults, setSearchResults] = useState<{
         students: any[];
         staff: any[];
@@ -199,6 +243,45 @@ export function Header({
         if (e) e.preventDefault();
         const term = headerSearch.trim();
         if (!term) return;
+
+        if (selectedPerson) {
+            setSearchOpen(false);
+            const targetType = selectedPerson._type || "student";
+            const targetId = getPersonId(selectedPerson);
+            navigate(
+                `/students?${
+                    targetType !== "student" ? `tab=${targetType}&` : ""
+                }profile_type=${encodeURIComponent(targetType)}&profile_code=${encodeURIComponent(
+                    targetId
+                )}&search=${encodeURIComponent(targetId)}`
+            );
+            return;
+        }
+
+        const allPeople = [
+            ...searchResults.students.map((s) => ({ ...s, _type: "student" })),
+            ...searchResults.staff.map((st) => ({ ...st, _type: "staff" })),
+            ...searchResults.faculties.map((f) => ({ ...f, _type: "faculty" })),
+        ];
+
+        const exact = allPeople.find(
+            (p) =>
+                String(getPersonId(p)).toLowerCase() === term.toLowerCase() ||
+                getPersonName(p).toLowerCase() === term.toLowerCase()
+        );
+
+        if (exact) {
+            setSelectedPerson(exact);
+            setSearchOpen(true);
+            return;
+        }
+
+        if (allPeople.length > 0) {
+            setSelectedPerson(allPeople[0]);
+            setSearchOpen(true);
+            return;
+        }
+
         setSearchOpen(false);
         navigate(`/students?search=${encodeURIComponent(term)}`);
     };
@@ -255,6 +338,71 @@ export function Header({
 
         return () => clearTimeout(timer);
     }, [headerSearch]);
+
+    // Fetch visits and health records when a person is clicked from search results
+    useEffect(() => {
+        let cancelled = false;
+        if (!selectedPerson) {
+            setPersonVisits([]);
+            setPersonRecords([]);
+            setPersonDetailsLoading(false);
+            return;
+        }
+
+        const loadPersonDetails = async () => {
+            setPersonDetailsLoading(true);
+            try {
+                const personPk = selectedPerson.id ?? getPersonId(selectedPerson);
+                const param =
+                    selectedPerson._type === "faculty"
+                        ? `faculty_id=${encodeURIComponent(personPk)}`
+                        : selectedPerson._type === "staff"
+                        ? `staff_id=${encodeURIComponent(personPk)}`
+                        : `student_id=${encodeURIComponent(personPk)}`;
+
+                const res = await api.get(`/clinic-visits?${param}`);
+                if (cancelled) return;
+
+                const data = res.data;
+                const visits = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                setPersonVisits(visits);
+                setPersonRecords(
+                    visits
+                        .filter(
+                            (v: any) =>
+                                v.assessment ||
+                                v.treatment ||
+                                v.remarks ||
+                                v.symptoms ||
+                                v.diagnosis ||
+                                v.notes
+                        )
+                        .map((v: any) => ({
+                            id: `record-${v.id}`,
+                            record_type: v.reason || "Clinic Visit",
+                            record_date: v.visit_date || v.created_at,
+                            diagnosis: v.diagnosis || v.assessment,
+                            notes: v.notes || v.remarks || v.treatment,
+                            allergies: v.allergies,
+                        }))
+                );
+            } catch {
+                if (!cancelled) {
+                    setPersonVisits([]);
+                    setPersonRecords([]);
+                }
+            } finally {
+                if (!cancelled) {
+                    setPersonDetailsLoading(false);
+                }
+            }
+        };
+
+        loadPersonDetails();
+        return () => {
+            cancelled = true;
+        };
+    }, [selectedPerson]);
 
     const unreadCount = useMemo(() => {
         return notifications.filter((n) => !n.read).length;
@@ -352,9 +500,14 @@ export function Header({
                                 ref={searchInputRef}
                                 type="text"
                                 value={headerSearch}
-                                onChange={(e) => setHeaderSearch(e.target.value)}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setHeaderSearch(val);
+                                    setSelectedPerson(null);
+                                    if (val.trim().length >= 2) setSearchOpen(true);
+                                }}
                                 onFocus={() => {
-                                    if (headerSearch.trim().length >= 2) setSearchOpen(true);
+                                    if (headerSearch.trim().length >= 2 || selectedPerson) setSearchOpen(true);
                                 }}
                                 placeholder="Search patients, ID, staff..."
                                 className="w-full rounded-full border border-stone-300/90 bg-[#faf7f4] py-2 pl-10 pr-10 text-sm font-medium text-stone-900 shadow-2xs outline-none transition placeholder:font-normal placeholder:text-stone-500 hover:bg-white focus:border-[#70091f] focus:bg-white focus:ring-2 focus:ring-[#70091f]/15 dark:border-stone-700 dark:bg-[#1c1713] dark:text-stone-100 dark:placeholder:text-stone-400 dark:hover:bg-[#221b16] dark:focus:bg-[#16120e]"
@@ -367,6 +520,7 @@ export function Header({
                                         type="button"
                                         onClick={() => {
                                             setHeaderSearch("");
+                                            setSelectedPerson(null);
                                             setSearchOpen(false);
                                         }}
                                         className="text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-stone-200 cursor-pointer"
@@ -382,107 +536,341 @@ export function Header({
                         </div>
                     </form>
 
-                    {/* Instant Search Results Dropdown */}
-                    {searchOpen && headerSearch.trim().length >= 2 && (
-                        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-[420px] overflow-y-auto rounded-2xl border border-stone-200 bg-white p-2.5 shadow-2xl transition-all duration-200 dark:border-stone-800 dark:bg-[#1f1914]">
-                            {/* Students */}
-                            {searchResults.students.length > 0 && (
-                                <div className="mb-2">
-                                    <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-                                        Students ({searchResults.students.length})
-                                    </p>
-                                    {searchResults.students.map((s) => (
+                    {/* Instant Search Results Dropdown & Rich Patient Flyout Card */}
+                    {searchOpen && (headerSearch.trim().length >= 2 || selectedPerson) && (
+                        <div className="absolute left-0 top-full z-50 mt-2 max-h-[calc(100vh-90px)] w-[min(880px,calc(100vw-32px))] overflow-y-auto rounded-2xl border border-stone-200 bg-white p-4 shadow-2xl transition-all duration-200 dark:border-stone-800 dark:bg-[#1a1511]">
+                            {selectedPerson ? (
+                                <div>
+                                    {/* Patient Header Row matching preview card */}
+                                    <div className="flex items-center gap-3">
                                         <button
-                                            key={`search-student-${s.id || s.student_id}`}
+                                            type="button"
+                                            onClick={() => setSelectedPerson(null)}
+                                            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-stone-200 bg-[#faf7f4] text-stone-600 transition hover:bg-[#fcebe7] hover:text-[#70091f] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:bg-stone-700 cursor-pointer"
+                                            aria-label="Back to search results"
+                                            title="Back to search results"
+                                        >
+                                            <ArrowLeft size={16} />
+                                        </button>
+
+                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fcebe7] text-sm font-bold text-[#70091f] dark:bg-[#70091f]/30 dark:text-[#f8a598]">
+                                            {getInitials(getPersonName(selectedPerson))}
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 truncate">
+                                                    {getPersonName(selectedPerson)}
+                                                </h3>
+                                                <span className="rounded-full bg-[#fcebe7] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#70091f] dark:bg-[#70091f]/30 dark:text-[#f8a598]">
+                                                    {selectedPerson._type || "Student"}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-stone-500 dark:text-stone-400">
+                                                {selectedPerson._type === "faculty"
+                                                    ? "Faculty ID"
+                                                    : selectedPerson._type === "staff"
+                                                    ? "Staff ID"
+                                                    : "Student ID"}
+                                                : {getPersonId(selectedPerson)}
+                                            </p>
+                                        </div>
+
+                                        <button
                                             type="button"
                                             onClick={() => {
                                                 setSearchOpen(false);
-                                                navigate(`/students?search=${encodeURIComponent(s.student_id || s.last_name || "")}`);
+                                                setSelectedPerson(null);
+                                                setHeaderSearch("");
                                             }}
-                                            className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                                            className="flex h-8 w-8 items-center justify-center rounded-full text-stone-400 hover:bg-stone-100 hover:text-stone-700 dark:hover:bg-stone-800 dark:hover:text-stone-200 cursor-pointer"
+                                            aria-label="Close search preview"
                                         >
-                                            <div className="truncate">
-                                                <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">{s.name || `${s.first_name || ""} ${s.last_name || ""}`}</p>
-                                                <p className="text-xs text-stone-500 dark:text-stone-400">{s.student_id} {s.course ? `· ${s.course}` : ""}</p>
-                                            </div>
-                                            <ArrowRight size={14} className="text-stone-400 shrink-0" />
+                                            <X size={17} />
                                         </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Staff */}
-                            {searchResults.staff.length > 0 && (
-                                <div className="mb-2">
-                                    <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-                                        Staff ({searchResults.staff.length})
-                                    </p>
-                                    {searchResults.staff.map((st) => (
-                                        <button
-                                            key={`search-staff-${st.id || st.employee_id || st.staff_id}`}
-                                            type="button"
-                                            onClick={() => {
-                                                setSearchOpen(false);
-                                                navigate(`/students?tab=staff&search=${encodeURIComponent(st.employee_id || st.staff_id || st.last_name || "")}`);
-                                            }}
-                                            className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
-                                        >
-                                            <div className="truncate">
-                                                <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">{st.name || `${st.first_name || ""} ${st.last_name || ""}`}</p>
-                                                <p className="text-xs text-stone-500 dark:text-stone-400">{st.employee_id || st.staff_id} {st.position ? `· ${st.position}` : ""}</p>
-                                            </div>
-                                            <ArrowRight size={14} className="text-stone-400 shrink-0" />
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Faculties */}
-                            {searchResults.faculties.length > 0 && (
-                                <div className="mb-2">
-                                    <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-                                        Faculty ({searchResults.faculties.length})
-                                    </p>
-                                    {searchResults.faculties.map((f) => (
-                                        <button
-                                            key={`search-faculty-${f.id || f.faculty_id || f.employee_id}`}
-                                            type="button"
-                                            onClick={() => {
-                                                setSearchOpen(false);
-                                                navigate(`/students?tab=faculty&search=${encodeURIComponent(f.faculty_id || f.employee_id || f.last_name || "")}`);
-                                            }}
-                                            className="flex w-full items-center justify-between rounded-xl px-2.5 py-2 text-left text-xs text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
-                                        >
-                                            <div className="truncate">
-                                                <p className="text-sm font-semibold text-stone-900 dark:text-stone-100">{f.name || `${f.first_name || ""} ${f.last_name || ""}`}</p>
-                                                <p className="text-xs text-stone-500 dark:text-stone-400">{f.faculty_id || f.employee_id} {f.department ? `· ${f.department}` : ""}</p>
-                                            </div>
-                                            <ArrowRight size={14} className="text-stone-400 shrink-0" />
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Empty state */}
-                            {!isSearching &&
-                                searchResults.students.length === 0 &&
-                                searchResults.staff.length === 0 &&
-                                searchResults.faculties.length === 0 && (
-                                    <div className="py-4 text-center text-sm font-medium text-stone-500 dark:text-stone-400">
-                                        No records found for "{headerSearch}"
                                     </div>
-                                )}
 
-                            <div className="border-t border-stone-200 pt-1.5 dark:border-stone-800">
-                                <button
-                                    type="button"
-                                    onClick={() => handleSearchSubmit()}
-                                    className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold text-[#70091f] hover:bg-[#fcebe7]/60 dark:text-[#f8a598] dark:hover:bg-stone-800 cursor-pointer"
-                                >
-                                    <span>View all results for "{headerSearch}"</span>
-                                    <ArrowRight size={13} />
-                                </button>
-                            </div>
+                                    {/* Demographics Details Grid */}
+                                    <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6">
+                                        {selectedPerson._type === "student" ? (
+                                            <>
+                                                <StudentDetail label="COURSE" value={selectedPerson.course} />
+                                                <StudentDetail label="YEAR LEVEL" value={selectedPerson.year_level} />
+                                                <StudentDetail label="SECTION" value={selectedPerson.section} />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <StudentDetail label="POSITION" value={selectedPerson.position} />
+                                                <StudentDetail label="DEPARTMENT" value={selectedPerson.department} />
+                                            </>
+                                        )}
+                                        <StudentDetail label="SEX" value={selectedPerson.sex || selectedPerson.gender} />
+                                        <StudentDetail label="BIRTH DATE" value={formatDisplayDate(selectedPerson.birth_date)} />
+                                        <StudentDetail label="CONTACT" value={selectedPerson.contact_number || selectedPerson.contact} />
+                                    </div>
+
+                                    {selectedPerson.address && (
+                                        <div className="mt-2.5">
+                                            <StudentDetail label="ADDRESS" value={selectedPerson.address} />
+                                        </div>
+                                    )}
+
+                                    {/* Clinic Visits Section */}
+                                    <div className="mt-5 border-t border-stone-200 pt-4 dark:border-stone-800">
+                                        <div className="mb-3 flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-bold text-stone-900 dark:text-stone-100">Clinic Visits</p>
+                                                <p className="text-xs text-stone-500 dark:text-stone-400">
+                                                    Visit history for this {selectedPerson._type === "faculty" ? "faculty member" : selectedPerson._type === "staff" ? "staff member" : "student"}
+                                                </p>
+                                            </div>
+                                            <span className="rounded-full bg-[#fcebe7] px-2.5 py-0.5 text-xs font-bold text-[#70091f] dark:bg-[#70091f]/30 dark:text-[#f8a598]">
+                                                {personVisits.length}
+                                            </span>
+                                        </div>
+
+                                        {personDetailsLoading ? (
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-16 w-full rounded-xl" />
+                                                <Skeleton className="h-16 w-full rounded-xl" />
+                                            </div>
+                                        ) : personVisits.length > 0 ? (
+                                            <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                                                {personVisits.map((visit: any, index: number) => (
+                                                    <div
+                                                        key={visit.id ?? `visit-${index}`}
+                                                        className="rounded-xl border border-stone-200/90 bg-[#faf7f4]/80 p-3 transition dark:border-stone-800 dark:bg-[#1f1914]"
+                                                    >
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                                                                    {visit.reason?.trim()?.toLowerCase() === "other" && visit.symptoms?.trim()
+                                                                        ? visit.symptoms.trim()
+                                                                        : visit.reason?.trim() || "Clinic Visit"}
+                                                                </p>
+                                                                <p className="mt-0.5 text-xs text-stone-400 dark:text-stone-500">
+                                                                    {formatDisplayDate(visit.visit_date || visit.created_at)}
+                                                                </p>
+                                                            </div>
+                                                            <Stethoscope size={16} className="shrink-0 text-[#70091f] dark:text-[#f8a598]" />
+                                                        </div>
+                                                        {(visit.notes || visit.symptoms || visit.diagnosis || visit.remarks || visit.treatment) && (
+                                                            <p className="mt-2 text-xs leading-5 text-stone-600 dark:text-stone-300">
+                                                                {visit.notes || visit.symptoms || visit.diagnosis || visit.remarks || visit.treatment}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="rounded-xl bg-[#faf7f4] px-3 py-4 text-center text-xs text-stone-500 dark:bg-stone-900 dark:text-stone-400">
+                                                No clinic visits found for this {selectedPerson._type || "student"}.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* Medical / Health Records Section */}
+                                    <div className="mt-5 border-t border-stone-200 pt-4 dark:border-stone-800">
+                                        <div className="mb-3 flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm font-bold text-stone-900 dark:text-stone-100">Medical / Health Records</p>
+                                                <p className="text-xs text-stone-500 dark:text-stone-400">
+                                                    Health details recorded with clinic visits
+                                                </p>
+                                            </div>
+                                            <span className="rounded-full bg-[#fcebe7] px-2.5 py-0.5 text-xs font-bold text-[#70091f] dark:bg-[#70091f]/30 dark:text-[#f8a598]">
+                                                {personRecords.length}
+                                            </span>
+                                        </div>
+
+                                        {personDetailsLoading ? (
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-16 w-full rounded-xl" />
+                                                <Skeleton className="h-16 w-full rounded-xl" />
+                                            </div>
+                                        ) : personRecords.length > 0 ? (
+                                            <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+                                                {personRecords.map((record: any, index: number) => (
+                                                    <div
+                                                        key={record.id ?? `record-${index}`}
+                                                        className="rounded-xl border border-stone-200/90 bg-[#faf7f4]/80 p-3 transition dark:border-stone-800 dark:bg-[#1f1914]"
+                                                    >
+                                                        <div className="flex items-start justify-between gap-3">
+                                                            <div className="min-w-0">
+                                                                <p className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                                                                    {record.record_type || record.type || record.title || "Health Record"}
+                                                                </p>
+                                                                <p className="mt-0.5 text-xs text-stone-400 dark:text-stone-500">
+                                                                    {formatDisplayDate(record.record_date || record.date || record.created_at)}
+                                                                </p>
+                                                            </div>
+                                                            <FileText size={16} className="shrink-0 text-[#70091f] dark:text-[#f8a598]" />
+                                                        </div>
+                                                        <div className="mt-2 space-y-1 text-xs text-stone-600 dark:text-stone-300">
+                                                            {record.diagnosis && (
+                                                                <p>
+                                                                    <span className="font-semibold text-stone-800 dark:text-stone-200">Diagnosis:</span>{" "}
+                                                                    {record.diagnosis}
+                                                                </p>
+                                                            )}
+                                                            {record.notes && (
+                                                                <p>
+                                                                    <span className="font-semibold text-stone-800 dark:text-stone-200">Notes:</span>{" "}
+                                                                    {record.notes}
+                                                                </p>
+                                                            )}
+                                                            {record.allergies && (
+                                                                <p>
+                                                                    <span className="font-semibold text-stone-800 dark:text-stone-200">Allergies:</span>{" "}
+                                                                    {record.allergies}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="rounded-xl bg-[#faf7f4] px-3 py-4 text-center text-xs text-stone-500 dark:bg-stone-900 dark:text-stone-400">
+                                                No medical or health records found for this {selectedPerson._type || "student"}.
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    {/* View Profile Action Button */}
+                                    <Link
+                                        to={`/students?${
+                                            selectedPerson._type !== "student" ? `tab=${selectedPerson._type}&` : ""
+                                        }profile_type=${encodeURIComponent(
+                                            selectedPerson._type || "student"
+                                        )}&profile_code=${encodeURIComponent(
+                                            getPersonId(selectedPerson)
+                                        )}&search=${encodeURIComponent(getPersonId(selectedPerson))}`}
+                                        onClick={() => {
+                                            setSearchOpen(false);
+                                            setSelectedPerson(null);
+                                        }}
+                                        className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#70091f] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#590718] active:scale-[0.99] cursor-pointer"
+                                    >
+                                        <span>
+                                            View {selectedPerson._type === "faculty" ? "Faculty" : selectedPerson._type === "staff" ? "Staff" : "Student"} Profile
+                                        </span>
+                                        <ChevronRight size={15} />
+                                    </Link>
+                                </div>
+                            ) : (
+                                <div>
+                                    {/* Students */}
+                                    {searchResults.students.length > 0 && (
+                                        <div className="mb-2">
+                                            <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                                                Students ({searchResults.students.length})
+                                            </p>
+                                            {searchResults.students.map((s) => (
+                                                <button
+                                                    key={`search-student-${s.id || s.student_id}`}
+                                                    type="button"
+                                                    onClick={() => setSelectedPerson({ ...s, _type: "student" })}
+                                                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                                                >
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fcebe7] text-xs font-bold text-[#70091f] dark:bg-[#70091f]/30 dark:text-[#f8a598]">
+                                                        {getInitials(getPersonName(s))}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1 truncate">
+                                                        <p className="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">
+                                                            {getPersonName(s)}
+                                                        </p>
+                                                        <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
+                                                            Student · {getPersonId(s)} {s.course ? `· ${s.course}` : ""} {s.year_level ? `· ${s.year_level}` : ""}
+                                                        </p>
+                                                    </div>
+                                                    <ChevronRight size={15} className="text-stone-400 shrink-0" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Staff */}
+                                    {searchResults.staff.length > 0 && (
+                                        <div className="mb-2">
+                                            <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                                                Staff ({searchResults.staff.length})
+                                            </p>
+                                            {searchResults.staff.map((st) => (
+                                                <button
+                                                    key={`search-staff-${st.id || st.employee_id || st.staff_id}`}
+                                                    type="button"
+                                                    onClick={() => setSelectedPerson({ ...st, _type: "staff" })}
+                                                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                                                >
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fcebe7] text-xs font-bold text-[#70091f] dark:bg-[#70091f]/30 dark:text-[#f8a598]">
+                                                        {getInitials(getPersonName(st))}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1 truncate">
+                                                        <p className="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">
+                                                            {getPersonName(st)}
+                                                        </p>
+                                                        <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
+                                                            Staff · {getPersonId(st)} {st.position ? `· ${st.position}` : ""}
+                                                        </p>
+                                                    </div>
+                                                    <ChevronRight size={15} className="text-stone-400 shrink-0" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Faculties */}
+                                    {searchResults.faculties.length > 0 && (
+                                        <div className="mb-2">
+                                            <p className="px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                                                Faculty ({searchResults.faculties.length})
+                                            </p>
+                                            {searchResults.faculties.map((f) => (
+                                                <button
+                                                    key={`search-faculty-${f.id || f.faculty_id || f.employee_id}`}
+                                                    type="button"
+                                                    onClick={() => setSelectedPerson({ ...f, _type: "faculty" })}
+                                                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                                                >
+                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#fcebe7] text-xs font-bold text-[#70091f] dark:bg-[#70091f]/30 dark:text-[#f8a598]">
+                                                        {getInitials(getPersonName(f))}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1 truncate">
+                                                        <p className="text-sm font-semibold text-stone-900 dark:text-stone-100 truncate">
+                                                            {getPersonName(f)}
+                                                        </p>
+                                                        <p className="text-xs text-stone-500 dark:text-stone-400 truncate">
+                                                            Faculty · {getPersonId(f)} {f.department ? `· ${f.department}` : ""}
+                                                        </p>
+                                                    </div>
+                                                    <ChevronRight size={15} className="text-stone-400 shrink-0" />
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Empty state */}
+                                    {!isSearching &&
+                                        searchResults.students.length === 0 &&
+                                        searchResults.staff.length === 0 &&
+                                        searchResults.faculties.length === 0 && (
+                                            <div className="py-4 text-center text-sm font-medium text-stone-500 dark:text-stone-400">
+                                                No records found for "{headerSearch}"
+                                            </div>
+                                        )}
+
+                                    <div className="border-t border-stone-200 pt-1.5 dark:border-stone-800">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSearchSubmit()}
+                                            className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold text-[#70091f] hover:bg-[#fcebe7]/60 dark:text-[#f8a598] dark:hover:bg-stone-800 cursor-pointer"
+                                        >
+                                            <span>View all results for "{headerSearch}"</span>
+                                            <ArrowRight size={13} />
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

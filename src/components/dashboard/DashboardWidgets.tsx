@@ -22,12 +22,12 @@ export function StudentDetail({
             : "N/A";
 
     return (
-        <div className="rounded-lg border border-[#eee7de] bg-[#fcfaf6] px-3 py-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#a99d8f]">
+        <div className="rounded-lg border border-[#eee7de] bg-[#fcfaf6] px-3 py-2 dark:border-stone-800 dark:bg-[#1f1914]">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#a99d8f] dark:text-stone-400">
                 {label}
             </p>
 
-            <p className="mt-0.5 truncate text-xs font-semibold text-[#302820]">
+            <p className="mt-0.5 truncate text-xs font-semibold text-[#302820] dark:text-stone-100">
                 {displayValue}
             </p>
         </div>
