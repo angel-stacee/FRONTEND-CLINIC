@@ -154,9 +154,6 @@ function Settings() {
                 {/* Change Name */}
                 <ChangeNameSection onSuccess={setToastMessage} />
 
-                {/* Account Email (Locked) */}
-                <ChangeEmailSection />
-
                 {/* Change Profile Photo */}
                 <ChangeProfilePhotoSection onSuccess={setToastMessage} />
 
@@ -417,64 +414,6 @@ function ChangeNameSection({ onSuccess }: { onSuccess?: (msg: string) => void })
                     )}
                 </div>
             </form>
-        </section>
-    );
-}
-
-// ---------------------------------------------------------------------------
-// Change Email
-// ---------------------------------------------------------------------------
-
-function ChangeEmailSection() {
-    const user = storedUser();
-
-    return (
-        <section className="tcc-settings-card mt-5 rounded-2xl border border-[#e8dfd4] bg-white p-5 shadow-sm sm:p-6">
-            <div className="mb-5 flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f3ebdf] text-[#8a6f50]">
-                    {/* Mail icon */}
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                    >
-                        <rect width="20" height="16" x="2" y="4" rx="2" />
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                    </svg>
-                </div>
-                <div>
-                    <h2 className="text-base font-bold text-[#302820]">Email address</h2>
-                    <p className="mt-1 text-sm text-[#887d70]">
-                        The email address associated with your clinic account is permanent and cannot be modified.
-                    </p>
-                </div>
-            </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="flex-1">
-                    <label className="text-sm font-medium text-[#514538]">
-                        Email address
-                        <input
-                            type="email"
-                            readOnly
-                            disabled
-                            value={user.email}
-                            className="mt-1.5 h-11 w-full cursor-not-allowed rounded-xl border border-[#e8dfd4] bg-[#f7f5f0] px-3 text-sm text-[#766959] select-all outline-none"
-                        />
-                    </label>
-                </div>
-                <div className="sm:self-end">
-                    <span className="inline-flex h-11 items-center gap-1.5 rounded-xl border border-[#e8dfd4] bg-[#f3ebdf]/60 px-3.5 text-xs font-semibold text-[#8a6f50]">
-                        <LockKeyhole size={14} aria-hidden="true" /> Locked
-                    </span>
-                </div>
-            </div>
         </section>
     );
 }
