@@ -1652,7 +1652,13 @@ function StudentManagement() {
                         }}
                         className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505] focus:outline-none focus:ring-2 focus:ring-[#70091f]/40"
                     >
-                        <span>+ Add Patient</span>
+                        <span>
+                            {activeTab === "staff"
+                                ? "+ Add Staff"
+                                : activeTab === "faculty"
+                                ? "+ Add Faculty"
+                                : "+ Add Student"}
+                        </span>
                     </button>
                 </div>
 

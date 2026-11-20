@@ -1012,7 +1012,7 @@ export function StudentForms({
                     title={
                         editingStaff
                             ? "Edit Staff"
-                            : "Add New Patient"
+                            : "Add Staff Member"
                     }
                     onClose={handleCloseStaff}
                 >
@@ -1248,12 +1248,12 @@ export function StudentForms({
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-end gap-3 border-t pt-5">
+                        <div className="mt-6 flex justify-end gap-3 border-t border-stone-200 dark:border-stone-800 pt-5">
                             <button
                                 type="button"
                                 onClick={handleCancelStaff}
                                 disabled={saving}
-                                className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                                className="rounded-xl border border-stone-300 dark:border-stone-700 px-4 py-2.5 text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition cursor-pointer"
                             >
                                 Cancel
                             </button>
@@ -1261,11 +1261,11 @@ export function StudentForms({
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-amber-700"
+                                className="rounded-xl bg-[#70091f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#8b1505] active:scale-[0.99] cursor-pointer"
                             >
                                 {editingStaff
                                     ? "Update Staff"
-                                    : "Save Patient"}
+                                    : "Add Staff"}
                             </button>
                         </div>
                     </form>
@@ -1281,7 +1281,7 @@ export function StudentForms({
                     title={
                         editingFaculty
                             ? "Edit Faculty"
-                            : "Add New Patient"
+                            : "Add Faculty Member"
                     }
                     onClose={handleCloseFaculty}
                 >
@@ -1521,12 +1521,12 @@ export function StudentForms({
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-end gap-3 border-t pt-5">
+                        <div className="mt-6 flex justify-end gap-3 border-t border-stone-200 dark:border-stone-800 pt-5">
                             <button
                                 type="button"
                                 onClick={handleCancelFaculty}
                                 disabled={saving}
-                                className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
+                                className="rounded-xl border border-stone-300 dark:border-stone-700 px-4 py-2.5 text-sm font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-50 dark:hover:bg-stone-800 transition cursor-pointer"
                             >
                                 Cancel
                             </button>
@@ -1534,11 +1534,11 @@ export function StudentForms({
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-amber-700"
+                                className="rounded-xl bg-[#70091f] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#8b1505] active:scale-[0.99] cursor-pointer"
                             >
                                 {editingFaculty
                                     ? "Update Faculty"
-                                    : "Save Patient"}
+                                    : "Add Faculty"}
                             </button>
                         </div>
                     </form>
