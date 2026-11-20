@@ -84,8 +84,7 @@ export default function Login(): React.JSX.Element {
                 response.data?.message ||
                 `A 6-digit OTP verification code has been sent to ${cleanEmail}.`;
             setForgotSuccessMessage(msg);
-            const receivedOtp = response.data?.otp || response.data?.dev_otp || "123456";
-            setForgotOtp(receivedOtp);
+            setForgotOtp("");
             setForgotStep("otp");
             setResendCooldown(10);
         } catch (err: any) {
@@ -579,19 +578,12 @@ export default function Login(): React.JSX.Element {
                                             setForgotOtp(val);
                                             if (forgotError) setForgotError("");
                                         }}
-                                        placeholder="123456"
+                                        placeholder="• • • • • •"
                                         className="w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 text-center font-mono text-xl tracking-[0.4em] text-white placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-stone-400 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
                                     />
-                                    <div className="mt-2 flex items-center justify-between text-xs text-white/60">
-                                        <span>Enter 6-digit code or fallback:</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => setForgotOtp("123456")}
-                                            className="rounded-lg border border-[#d4a017]/40 bg-[#70091f]/40 px-2.5 py-0.5 font-mono text-xs font-bold text-[#d4a017] transition hover:bg-[#70091f] hover:text-white"
-                                        >
-                                            Use 123456
-                                        </button>
-                                    </div>
+                                    <p className="mt-1.5 text-center text-xs text-white/60">
+                                        Please enter the 6-digit code received in your email.
+                                    </p>
                                 </div>
 
                                 <div className="flex items-center justify-between pt-1 text-xs">
