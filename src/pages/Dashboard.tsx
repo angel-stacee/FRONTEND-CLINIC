@@ -57,7 +57,6 @@ import {
     markAllNotificationsAsRead,
     type ClinicNotification,
 } from "../services/notifications";
-import ThemeToggle from "../components/common/ThemeToggle";
 import { applyTheme, useTheme } from "../utils/theme";
 
 const FOCUS_RING =

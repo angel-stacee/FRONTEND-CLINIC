@@ -28,7 +28,6 @@ import {
     getStoredNotifications,
     markAllNotificationsAsRead,
 } from "../../services/notifications";
-import ThemeToggle from "../common/ThemeToggle";
 import { useTheme } from "../../utils/theme";
 import { Avatar } from "../dashboard/DashboardWidgets";
 
@@ -269,13 +268,8 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps): React.JSX.
                 </div>
             </div>
 
-            {/* Right side: ThemeToggle, Notifications Bell & Profile Dropdown */}
+            {/* Right side: Notifications Bell & Profile Dropdown */}
             <div className="ml-auto flex items-center gap-2 sm:gap-4 shrink-0">
-                {/* Desktop Theme Toggle Pill */}
-                <div className="hidden sm:block">
-                    <ThemeToggle />
-                </div>
-
                 {/* Notifications Bell */}
                 <div ref={bellRef} className="relative">
                     <button
