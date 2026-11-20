@@ -471,7 +471,7 @@ function MemberCard({
                                 e.stopPropagation();
                                 onEdit(member);
                             }}
-                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-[#70091f] hover:bg-[#fae1dc]/50 transition dark:text-[#f38a7c] dark:hover:bg-[#70091f]/20"
+                            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-[#70091f] hover:bg-[#70091f]/10 transition dark:text-[#f38a7c] dark:hover:bg-[#70091f]/20"
                         >
                             <Pencil size={11} />
                             <span>Edit</span>
@@ -1125,9 +1125,9 @@ export default function Organization(): React.JSX.Element {
     };
 
     return (
-        <div className="flex w-full flex-col p-6 lg:p-7">
+        <div className="tcc-module-page min-h-screen px-5 py-5 lg:px-6 lg:py-6">
             {/* ── HEADER BANNER ────────────────────────────────────────── */}
-            <div className="relative mb-6 w-full overflow-hidden rounded-2xl bg-gradient-to-r from-[#fae1dc] to-[#fcebe7] border border-[#f0ded9] p-6 sm:p-7 dark:from-[#2e0911] dark:to-[#1e050b] dark:border-[#521320]">
+            <div className="tcc-module-header relative mb-6 w-full rounded-2xl border px-5 py-5 shadow-sm sm:px-6 sm:py-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <div className="inline-flex items-center gap-2">
@@ -1148,7 +1148,7 @@ export default function Organization(): React.JSX.Element {
 
                     {/* Quick Stats Badges */}
                     <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
-                        <div className="min-w-[110px] rounded-2xl border border-white/70 bg-white/90 px-5 py-3 text-center shadow-sm backdrop-blur-sm sm:min-w-[125px] sm:py-3.5 dark:border-[#44382c] dark:bg-[#251f19]/90">
+                        <div className="min-w-[110px] rounded-2xl border border-[#e8dfd4] bg-white px-5 py-3 text-center shadow-sm sm:min-w-[125px] sm:py-3.5 dark:border-[#44382c] dark:bg-[#251f19]">
                             <p className="text-2xl font-extrabold tracking-tight text-[#70091f] sm:text-3xl dark:text-[#f38a7c]">
                                 {orgData.clinic.members.length}
                             </p>
@@ -1156,7 +1156,7 @@ export default function Organization(): React.JSX.Element {
                                 Clinic Staff
                             </p>
                         </div>
-                        <div className="min-w-[110px] rounded-2xl border border-white/70 bg-white/90 px-5 py-3 text-center shadow-sm backdrop-blur-sm sm:min-w-[125px] sm:py-3.5 dark:border-[#44382c] dark:bg-[#251f19]/90">
+                        <div className="min-w-[110px] rounded-2xl border border-[#e8dfd4] bg-white px-5 py-3 text-center shadow-sm sm:min-w-[125px] sm:py-3.5 dark:border-[#44382c] dark:bg-[#251f19]">
                             <p className="text-2xl font-extrabold tracking-tight text-[#70091f] sm:text-3xl dark:text-[#f38a7c]">
                                 {orgData.admin.members.length}
                             </p>
@@ -1201,7 +1201,7 @@ export default function Organization(): React.JSX.Element {
                                     "inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all shadow-sm",
                                     isSelected
                                         ? "bg-[#70091f] text-white shadow-md ring-2 ring-[#70091f]/30 dark:bg-[#8b1505]"
-                                        : "bg-white text-stone-700 hover:bg-[#fae1dc]/40 hover:text-[#70091f] border border-stone-200 dark:bg-[#251f19] dark:text-stone-300 dark:border-[#382f25] dark:hover:bg-[#342820]",
+                                        : "bg-white text-stone-700 hover:bg-[#f6eee4] hover:text-[#70091f] border border-stone-200 dark:bg-[#251f19] dark:text-stone-300 dark:border-[#382f25] dark:hover:bg-[#342820]",
                                 ].join(" ")}
                             >
                                 <span>{tab.icon}</span>
@@ -1254,7 +1254,7 @@ export default function Organization(): React.JSX.Element {
                             type="button"
                             onClick={handleResetDefaults}
                             title="Reset all organization data to default records"
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-600 shadow-xs hover:border-[#70091f]/40 hover:bg-[#fae1dc]/30 hover:text-[#70091f] transition dark:bg-[#251f19] dark:border-[#382f25] dark:text-stone-300"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-600 shadow-xs hover:border-[#70091f]/40 hover:bg-[#f6eee4] hover:text-[#70091f] transition dark:bg-[#251f19] dark:border-[#382f25] dark:text-stone-300"
                         >
                             <RotateCcw size={13} />
                             <span className="hidden sm:inline">Reset Defaults</span>
