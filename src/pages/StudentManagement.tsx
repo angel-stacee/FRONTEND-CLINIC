@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, FileText, GraduationCap, MapPin, RotateCcw, Search, ShieldCheck, Stethoscope, User, X } from "lucide-react";
+import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, Eye, FileText, GraduationCap, MapPin, Pencil, RotateCcw, Search, ShieldCheck, Stethoscope, Trash2, User, X } from "lucide-react";
 import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache } from "../services/recordCache";
 import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components/student-management/FieldsAndModals";
@@ -2070,9 +2070,11 @@ function StudentManagement() {
                                                                                 student
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] px-3 py-1.5 text-xs font-medium text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:bg-[#382f25]"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:bg-[#382f25] cursor-pointer"
+                                                                        title="View Student Record"
+                                                                        aria-label="View Student Record"
                                                                     >
-                                                                        View
+                                                                        <Eye size={15} />
                                                                     </button>
 
                                                                     <button
@@ -2082,9 +2084,11 @@ function StudentManagement() {
                                                                                 student
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-900/60"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200/80 bg-amber-50 text-amber-700 transition hover:bg-amber-100 hover:text-amber-800 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:border-amber-700/60 dark:hover:text-amber-300 cursor-pointer"
+                                                                        title="Edit Student Record"
+                                                                        aria-label="Edit Student Record"
                                                                     >
-                                                                        Edit
+                                                                        <Pencil size={15} />
                                                                     </button>
 
                                                                     <button
@@ -2094,9 +2098,11 @@ function StudentManagement() {
                                                                                 student
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-red-400 dark:hover:border-red-900/60 dark:hover:bg-red-950/40 cursor-pointer"
+                                                                        title="Delete Student Record"
+                                                                        aria-label="Delete Student Record"
                                                                     >
-                                                                        Delete
+                                                                        <Trash2 size={15} />
                                                                     </button>
                                                                 </div>
                                                             </td>
@@ -2264,9 +2270,11 @@ function StudentManagement() {
                                                                                 person
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] px-3 py-1.5 text-xs font-medium text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:bg-[#382f25]"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:bg-[#382f25] cursor-pointer"
+                                                                        title="View Staff Record"
+                                                                        aria-label="View Staff Record"
                                                                     >
-                                                                        View
+                                                                        <Eye size={15} />
                                                                     </button>
 
                                                                     <button
@@ -2276,9 +2284,11 @@ function StudentManagement() {
                                                                                 person
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-900/60"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200/80 bg-amber-50 text-amber-700 transition hover:bg-amber-100 hover:text-amber-800 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:border-amber-700/60 dark:hover:text-amber-300 cursor-pointer"
+                                                                        title="Edit Staff Record"
+                                                                        aria-label="Edit Staff Record"
                                                                     >
-                                                                        Edit
+                                                                        <Pencil size={15} />
                                                                     </button>
 
                                                                     <button
@@ -2288,9 +2298,11 @@ function StudentManagement() {
                                                                                 person
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-red-400 dark:hover:border-red-900/60 dark:hover:bg-red-950/40 cursor-pointer"
+                                                                        title="Delete Staff Record"
+                                                                        aria-label="Delete Staff Record"
                                                                     >
-                                                                        Delete
+                                                                        <Trash2 size={15} />
                                                                     </button>
                                                                 </div>
                                                             </td>
@@ -2432,9 +2444,11 @@ function StudentManagement() {
                                                                                 faculty
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] px-3 py-1.5 text-xs font-medium text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:bg-[#382f25]"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:bg-[#382f25] cursor-pointer"
+                                                                        title="View Faculty Record"
+                                                                        aria-label="View Faculty Record"
                                                                     >
-                                                                        View
+                                                                        <Eye size={15} />
                                                                     </button>
 
                                                                     <button
@@ -2444,9 +2458,11 @@ function StudentManagement() {
                                                                                 faculty
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-900/60"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200/80 bg-amber-50 text-amber-700 transition hover:bg-amber-100 hover:text-amber-800 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1] dark:hover:border-amber-700/60 dark:hover:text-amber-300 cursor-pointer"
+                                                                        title="Edit Faculty Record"
+                                                                        aria-label="Edit Faculty Record"
                                                                     >
-                                                                        Edit
+                                                                        <Pencil size={15} />
                                                                     </button>
 
                                                                     <button
@@ -2456,9 +2472,11 @@ function StudentManagement() {
                                                                                 faculty
                                                                             )
                                                                         }
-                                                                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-900/60"
+                                                                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-red-400 dark:hover:border-red-900/60 dark:hover:bg-red-950/40 cursor-pointer"
+                                                                        title="Delete Faculty Record"
+                                                                        aria-label="Delete Faculty Record"
                                                                     >
-                                                                        Delete
+                                                                        <Trash2 size={15} />
                                                                     </button>
                                                                 </div>
                                                             </td>

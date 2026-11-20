@@ -17,6 +17,9 @@ import {
     Pill,
     CheckCircle2,
     AlertCircle,
+    Search,
+    Loader2,
+    ArrowRight,
 } from "lucide-react";
 import tccLogo from "../../assets/tcc-logo.png";
 import api from "../../services/api";
@@ -121,9 +124,19 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps): React.JSX.
 
     const bellRef = useRef<HTMLDivElement>(null);
     const profileMenuRef = useRef<HTMLDivElement>(null);
+    const searchContainerRef = useRef<HTMLDivElement>(null);
 
     const [bellOpen, setBellOpen] = useState(false);
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+    const [headerSearch, setHeaderSearch] = useState("");
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchOpen, setSearchOpen] = useState(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+    const [searchResults, setSearchResults] = useState<{
+        students: any[];
+        staff: any[];
+        faculties: any[];
+    }>({ students: [], staff: [], faculties: [] });
     const [notifications, setNotifications] = useState<ClinicNotification[]>(() =>
         getStoredNotifications()
     );
@@ -170,6 +183,54 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps): React.JSX.
 
     useOutsideClick(bellRef, () => setBellOpen(false), bellOpen);
     useOutsideClick(profileMenuRef, () => setProfileMenuOpen(false), profileMenuOpen);
+    useOutsideClick(searchContainerRef, () => setSearchOpen(false), searchOpen);
+
+    const handleSearchSubmit = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        const term = headerSearch.trim();
+        if (!term) return;
+        setSearchOpen(false);
+        setMobileSearchOpen(false);
+        navigate(`/students?search=${encodeURIComponent(term)}`);
+    };
+
+    useEffect(() => {
+        const term = headerSearch.trim();
+        if (!term || term.length < 2) {
+            setSearchResults({ students: [], staff: [], faculties: [] });
+            setIsSearching(false);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const [studentsRes, staffRes, facultyRes] = await Promise.allSettled([
+                    api.get("/students", { params: { search: term, per_page: 5 } }),
+                    api.get("/staff", { params: { search: term, per_page: 5 } }),
+                    api.get("/faculties", { params: { search: term, per_page: 5 } }),
+                ]);
+
+                const extractData = (res: PromiseSettledResult<any>) => {
+                    if (res.status !== "fulfilled") return [];
+                    const d = res.value?.data;
+                    return Array.isArray(d) ? d : (d?.data || d?.students || d?.staff || d?.faculties || []);
+                };
+
+                setSearchResults({
+                    students: extractData(studentsRes),
+                    staff: extractData(staffRes),
+                    faculties: extractData(facultyRes),
+                });
+            } catch {
+                // ignore
+            } finally {
+                setIsSearching(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [headerSearch]);
 
     const unreadCount = useMemo(() => {
         return notifications.filter((n) => !n.read).length;
@@ -225,7 +286,7 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps): React.JSX.
     };
 
     return (
-        <header className="sticky top-0 z-30 flex h-[68px] sm:h-[72px] w-full items-center justify-between border-b border-[#eee7de] bg-white/95 px-4 sm:px-6 lg:px-8 backdrop-blur shadow-xs transition-colors duration-200 dark:border-stone-800 dark:bg-[#16120e]/95">
+        <header className="sticky top-0 z-30 flex flex-wrap min-h-[68px] sm:min-h-[72px] w-full items-center justify-between border-b border-[#eee7de] bg-white/95 px-4 sm:px-6 lg:px-8 backdrop-blur shadow-xs transition-colors duration-200 dark:border-stone-800 dark:bg-[#16120e]/95">
             {/* Left side: Hamburger toggle on mobile + Dynamic Page Title & Subtitle */}
             <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                 <button
@@ -268,8 +329,155 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps): React.JSX.
                 </div>
             </div>
 
+            {/* Center: Global Search Bar */}
+            <div ref={searchContainerRef} className="relative hidden md:flex flex-1 max-w-xs lg:max-w-md mx-4">
+                <form onSubmit={handleSearchSubmit} className="w-full">
+                    <div className="relative flex items-center w-full">
+                        <Search size={16} className="pointer-events-none absolute left-3.5 text-[#a99d8f]" />
+                        <input
+                            type="text"
+                            value={headerSearch}
+                            onFocus={() => {
+                                if (headerSearch.trim()) setSearchOpen(true);
+                            }}
+                            onChange={(e) => {
+                                setHeaderSearch(e.target.value);
+                                setSearchOpen(Boolean(e.target.value.trim()));
+                            }}
+                            placeholder="Search patients, ID, staff..."
+                            className="w-full rounded-xl border border-[#e8dfd4] bg-[#fcfaf6] py-2 pl-9 pr-9 text-xs text-stone-800 outline-none transition placeholder:text-[#a99d8f] focus:border-[#70091f] focus:bg-white focus:ring-2 focus:ring-[#70091f]/15 dark:border-stone-700 dark:bg-[#1f1914] dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-[#f8a598] dark:focus:ring-[#f8a598]/15"
+                        />
+                        {headerSearch ? (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setHeaderSearch("");
+                                    setSearchOpen(false);
+                                }}
+                                className="absolute right-2.5 text-[#a99d8f] hover:text-stone-700 dark:hover:text-stone-300 cursor-pointer"
+                            >
+                                <X size={14} />
+                            </button>
+                        ) : (
+                            <kbd className="pointer-events-none absolute right-2.5 hidden lg:block rounded border border-[#e8dfd4] bg-white px-1.5 py-0.5 text-[10px] text-[#a99d8f] dark:border-stone-700 dark:bg-stone-800">
+                                /
+                            </kbd>
+                        )}
+                    </div>
+                </form>
+
+                {/* Dropdown Results */}
+                {searchOpen && Boolean(headerSearch.trim()) && (
+                    <div className="absolute left-0 top-full mt-2 w-full min-w-[320px] rounded-xl border border-[#e8dfd4] bg-white p-2 shadow-xl dark:border-stone-700 dark:bg-[#1f1914] z-50">
+                        {isSearching ? (
+                            <div className="flex items-center justify-center gap-2 py-4 text-xs text-[#887d70] dark:text-stone-400">
+                                <Loader2 size={14} className="animate-spin text-[#70091f] dark:text-[#f8a598]" />
+                                <span>Searching records...</span>
+                            </div>
+                        ) : (
+                            <div className="space-y-2 max-h-72 overflow-y-auto">
+                                {searchResults.students.length > 0 && (
+                                    <div>
+                                        <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#a99d8f] dark:text-stone-500">Students</p>
+                                        {searchResults.students.slice(0, 3).map((st) => (
+                                            <button
+                                                key={st.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSearchOpen(false);
+                                                    navigate(`/students?search=${encodeURIComponent(st.id_number || st.name)}`);
+                                                }}
+                                                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs text-left text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                                            >
+                                                <div className="truncate">
+                                                    <p className="font-semibold">{st.name || `${st.first_name || ''} ${st.last_name || ''}`}</p>
+                                                    <p className="text-[10px] text-[#887d70] dark:text-stone-400">{st.id_number} {st.course ? `· ${st.course}` : ''}</p>
+                                                </div>
+                                                <ArrowRight size={13} className="text-[#a99d8f] shrink-0" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {searchResults.staff.length > 0 && (
+                                    <div>
+                                        <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#a99d8f] dark:text-stone-500">Staff</p>
+                                        {searchResults.staff.slice(0, 2).map((st) => (
+                                            <button
+                                                key={st.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSearchOpen(false);
+                                                    navigate(`/students?tab=staff&search=${encodeURIComponent(st.employee_id || st.name)}`);
+                                                }}
+                                                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs text-left text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                                            >
+                                                <div className="truncate">
+                                                    <p className="font-semibold">{st.name || `${st.first_name || ''} ${st.last_name || ''}`}</p>
+                                                    <p className="text-[10px] text-[#887d70] dark:text-stone-400">{st.employee_id} {st.department ? `· ${st.department}` : ''}</p>
+                                                </div>
+                                                <ArrowRight size={13} className="text-[#a99d8f] shrink-0" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {searchResults.faculties.length > 0 && (
+                                    <div>
+                                        <p className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#a99d8f] dark:text-stone-500">Faculty</p>
+                                        {searchResults.faculties.slice(0, 2).map((f) => (
+                                            <button
+                                                key={f.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSearchOpen(false);
+                                                    navigate(`/students?tab=faculty&search=${encodeURIComponent(f.faculty_id || f.employee_id || f.name)}`);
+                                                }}
+                                                className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-xs text-left text-stone-800 hover:bg-[#fcebe7]/60 dark:text-stone-200 dark:hover:bg-stone-800 cursor-pointer"
+                                            >
+                                                <div className="truncate">
+                                                    <p className="font-semibold">{f.name || `${f.first_name || ''} ${f.last_name || ''}`}</p>
+                                                    <p className="text-[10px] text-[#887d70] dark:text-stone-400">{f.faculty_id || f.employee_id} {f.department ? `· ${f.department}` : ''}</p>
+                                                </div>
+                                                <ArrowRight size={13} className="text-[#a99d8f] shrink-0" />
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {searchResults.students.length === 0 && searchResults.staff.length === 0 && searchResults.faculties.length === 0 && (
+                                    <div className="py-3 text-center text-xs text-[#887d70] dark:text-stone-400">
+                                        No records found for "{headerSearch}"
+                                    </div>
+                                )}
+
+                                <div className="border-t border-[#eee7de] pt-1.5 dark:border-stone-800">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSearchSubmit()}
+                                        className="flex w-full items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold text-[#70091f] hover:bg-[#fcebe7]/60 dark:text-[#f8a598] dark:hover:bg-stone-800 cursor-pointer"
+                                    >
+                                        <span>View all results for "{headerSearch}"</span>
+                                        <ArrowRight size={12} />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
             {/* Right side: Notifications Bell & Profile Dropdown */}
             <div className="ml-auto flex items-center gap-2 sm:gap-4 shrink-0">
+                {/* Mobile Search Toggle */}
+                <button
+                    type="button"
+                    onClick={() => setMobileSearchOpen((prev) => !prev)}
+                    aria-label="Search records"
+                    className="flex md:hidden h-10 w-10 items-center justify-center rounded-full text-[#766959] transition duration-200 hover:bg-[#fcebe7] hover:text-[#70091f] dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-[#f8a598] cursor-pointer"
+                >
+                    <Search size={19} />
+                </button>
                 {/* Notifications Bell */}
                 <div ref={bellRef} className="relative">
                     <button
@@ -485,6 +693,32 @@ export function Header({ sidebarOpen, setSidebarOpen }: HeaderProps): React.JSX.
                     )}
                 </div>
             </div>
+
+            {/* Mobile Search Input Row */}
+            {mobileSearchOpen && (
+                <div className="md:hidden w-full border-t border-[#eee7de] pb-3 pt-2 dark:border-stone-800">
+                    <form onSubmit={handleSearchSubmit} className="w-full">
+                        <div className="relative flex items-center w-full">
+                            <Search size={16} className="pointer-events-none absolute left-3 text-[#a99d8f]" />
+                            <input
+                                autoFocus
+                                type="text"
+                                value={headerSearch}
+                                onChange={(e) => setHeaderSearch(e.target.value)}
+                                placeholder="Search students, staff, or ID..."
+                                className="w-full rounded-xl border border-[#e8dfd4] bg-[#fcfaf6] py-2 pl-9 pr-9 text-xs text-stone-800 outline-none placeholder:text-[#a99d8f] focus:border-[#70091f] focus:bg-white dark:border-stone-700 dark:bg-[#1f1914] dark:text-stone-100"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setMobileSearchOpen(false)}
+                                className="absolute right-2.5 text-[#a99d8f] hover:text-stone-700 dark:hover:text-stone-300 cursor-pointer"
+                            >
+                                <X size={15} />
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
         </header>
     );
 }
