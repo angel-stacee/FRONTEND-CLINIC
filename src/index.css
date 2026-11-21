@@ -613,7 +613,7 @@ html.tcc-dark .tcc-module-page [class~="divide-[#e8dfd4]"] {
 }
 
 .tcc-module-page#reports-page > * {
-    max-width: 1500px;
+    width: 100%;
     margin-left: auto;
     margin-right: auto;
 }
@@ -1082,6 +1082,29 @@ html.dark .tcc-module-page table tbody tr:hover {
 .marquee-mask {
     mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+/* Ensure inputs and selects with values or autofill are crisp and bold for maximum readability */
+input:not(:placeholder-shown):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
+select:has(option:checked:not([value=""])),
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+select:-webkit-autofill {
+    font-weight: 700 !important;
+    color: #1c1917 !important;
+    -webkit-text-fill-color: #1c1917 !important;
+}
+
+html.tcc-dark input:not(:placeholder-shown):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
+html.tcc-dark select:has(option:checked:not([value=""])),
+html.tcc-dark input:-webkit-autofill,
+html.tcc-dark input:-webkit-autofill:hover,
+html.tcc-dark input:-webkit-autofill:focus,
+html.tcc-dark select:-webkit-autofill {
+    font-weight: 700 !important;
+    color: #f8f3eb !important;
+    -webkit-text-fill-color: #f8f3eb !important;
 }
 
 

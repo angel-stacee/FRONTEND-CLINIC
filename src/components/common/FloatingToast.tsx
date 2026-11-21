@@ -6,13 +6,18 @@ export interface FloatingToastProps {
     type?: "success" | "delete" | "info" | "error";
     onClose: () => void;
     duration?: number;
+    action?: {
+        label: string;
+        onClick: () => void;
+    };
 }
 
 export function FloatingToast({
     message,
     type,
     onClose,
-    duration = 4000,
+    duration = 5000,
+    action,
 }: FloatingToastProps) {
     useEffect(() => {
         if (!message) return undefined;
@@ -68,6 +73,18 @@ export function FloatingToast({
             <p className="pr-2 text-sm font-medium text-[#302820]">
                 {message}
             </p>
+            {action && (
+                <button
+                    type="button"
+                    onClick={() => {
+                        action.onClick();
+                        onClose();
+                    }}
+                    className="shrink-0 rounded-lg bg-[#70091f] px-2.5 py-1 text-xs font-bold text-white shadow-xs transition hover:bg-[#8b1505] cursor-pointer"
+                >
+                    {action.label}
+                </button>
+            )}
             <button
                 type="button"
                 onClick={onClose}

@@ -13,6 +13,7 @@ import {
     AlertOctagon,
     Calendar,
     TrendingUp,
+    RotateCcw,
 } from "lucide-react";
 import {
     ResponsiveContainer,
@@ -24,6 +25,7 @@ import {
 import api from "../services/api";
 import FloatingToast from "../components/common/FloatingToast";
 import { MedicineModal } from "../components/medicine/MedicineModal";
+import { RestoreMedicinesModal } from "../components/medicine/RestoreMedicinesModal";
 import { addClinicNotification, getStoredNotifications } from "../services/notifications";
 
 const TREATMENT_TYPES = [
@@ -77,6 +79,8 @@ function Medicine() {
 
     const [error, setError] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | undefined>(undefined);
+    const [showRestoreModal, setShowRestoreModal] = useState(false);
 
     useEffect(() => {
         if (!successMessage) return undefined;
@@ -371,9 +375,21 @@ function Medicine() {
         }
     };
 
+    const handleRestoreQuick = async (id: number | string) => {
+        try {
+            await api.post(`/medicines/${id}/restore`);
+            setSuccessMessage("Medicine restored successfully.");
+            setToastAction(undefined);
+            await loadMedicines(pagination.current_page, search, statusFilter);
+        } catch (err: any) {
+            console.error("Failed to restore medicine:", err);
+            setError("Failed to restore medicine.");
+        }
+    };
+
     const deleteMedicine = async (medicine) => {
         const confirmed = window.confirm(
-            `Are you sure you want to delete ${medicine.medicine_name}?`
+            `Are you sure you want to move "${medicine.medicine_name}" to trash?`
         );
 
         if (!confirmed) return;
@@ -386,13 +402,17 @@ function Medicine() {
                     (item) => item.id !== medicine.id
                 )
             );
-            await loadMedicines(pagination.current_page, search);
-            setSuccessMessage(`${medicine.medicine_name} deleted successfully.`);
+            await loadMedicines(pagination.current_page, search, statusFilter);
+            setSuccessMessage(`${medicine.medicine_name} moved to trash.`);
+            setToastAction({
+                label: "Undo",
+                onClick: () => handleRestoreQuick(medicine.id),
+            });
 
             addClinicNotification({
                 type: "delete",
-                title: "Medicine Deleted",
-                description: `${medicine.medicine_name} removed from inventory`,
+                title: "Medicine Moved to Trash",
+                description: `${medicine.medicine_name} moved to trash`,
                 category: "medicine",
             });
         } catch (err) {
@@ -571,10 +591,14 @@ function Medicine() {
         <div className="tcc-module-page min-h-screen text-[#302820]">
             <FloatingToast
                 message={successMessage}
-                onClose={() => setSuccessMessage("")}
+                action={toastAction}
+                onClose={() => {
+                    setSuccessMessage("");
+                    setToastAction(undefined);
+                }}
             />
 
-            <main className="mx-auto w-full max-w-[1500px] px-5 py-5 lg:px-6 lg:py-6">
+            <main className="w-full px-3.5 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
 
 
                 <div className="tcc-module-header mb-5 flex flex-col gap-4 rounded-2xl border px-5 py-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -598,13 +622,26 @@ function Medicine() {
                         </div>
                     </div>
 
-                    <button
-                        onClick={openAddForm}
-                        className="flex items-center justify-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505]"
-                    >
-                        <Plus size={17} />
-                        Add Medicine
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <button
+                            type="button"
+                            onClick={() => setShowRestoreModal(true)}
+                            className="flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-[#e8dfd4] bg-white px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold text-[#6d5942] shadow-xs transition hover:bg-[#fcfaf6] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#211c17] dark:text-[#e5dcd1] dark:hover:bg-[#2c231a] cursor-pointer"
+                            title="Restore deleted medicine records"
+                        >
+                            <RotateCcw size={15} className="text-[#8a6f50]" />
+                            <span>Restore Deleted</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={openAddForm}
+                            className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505] cursor-pointer"
+                        >
+                            <Plus size={17} />
+                            <span>Add Medicine</span>
+                        </button>
+                    </div>
                 </div>
 
 
@@ -674,7 +711,7 @@ function Medicine() {
                 )}
 
 
-                <section className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                <section className="mb-4 grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-3 xl:grid-cols-5">
 
                     <div className="rounded-xl border border-[#e8dfd4] bg-[#fcfaf6] px-4 py-3.5 shadow-sm">
                         <div className="flex items-center justify-between">
@@ -1160,8 +1197,8 @@ function Medicine() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[900px]">
+                    <div className="hidden md:block overflow-x-auto scrollbar-thin">
+                        <table className="w-full min-w-[760px] lg:min-w-full">
 
                             <thead>
                                 <tr className="border-b border-[#e8dfd4] bg-[#fcfaf6] text-left">
@@ -1395,6 +1432,90 @@ function Medicine() {
                         </table>
                     </div>
 
+                    {/* Mobile Medicine Card View */}
+                    <div className="block md:hidden divide-y divide-[#eee7de] p-3 space-y-3 dark:divide-[#382f25]">
+                        {loading ? (
+                            <div className="py-8 text-center text-xs text-[#887d70]">Loading medicines...</div>
+                        ) : filteredMedicines.length === 0 ? (
+                            <div className="py-8 text-center text-xs font-semibold text-[#887d70]">No medicines found</div>
+                        ) : (
+                            filteredMedicines.map((medicine) => {
+                                const status = getStatus(medicine);
+                                const exp = getExpirationInfo(medicine.expiration_date);
+
+                                return (
+                                    <div
+                                        key={medicine.id}
+                                        className="rounded-xl border border-[#e8dfd4] bg-white p-3.5 shadow-xs dark:border-[#4e4234] dark:bg-[#261f19]"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f3ebdf] text-[#8a6f50]">
+                                                    <Pill size={16} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-bold text-[#302820] dark:text-[#f8f3eb]">
+                                                        {medicine.medicine_name}
+                                                    </h3>
+                                                    {medicine.description && (
+                                                        <p className="line-clamp-1 text-[10px] text-[#a99d8f]">
+                                                            {medicine.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <span className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-semibold ${status.className}`}>
+                                                {status.label}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                                            <div className="rounded-lg bg-[#fcfaf6] p-2 dark:bg-[#211c17]">
+                                                <span className="block text-[10px] text-[#887d70]">Stock Level</span>
+                                                <span className="font-bold text-[#302820] dark:text-[#f8f3eb]">
+                                                    {medicine.stock} {medicine.unit}
+                                                </span>
+                                                <span className="block text-[9px] text-[#a99d8f]">
+                                                    Min: {medicine.minimum_stock}
+                                                </span>
+                                            </div>
+
+                                            <div className="rounded-lg bg-[#fcfaf6] p-2 dark:bg-[#211c17]">
+                                                <span className="block text-[10px] text-[#887d70]">Treatment</span>
+                                                <span className="font-semibold text-[#8a6f50] truncate block">
+                                                    {medicine.treatment_type || "General"}
+                                                </span>
+                                                <span className="block text-[9px] text-[#a99d8f]">
+                                                    {exp.formattedDate ? `Exp: ${exp.formattedDate}` : "No expiry"}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3 flex items-center justify-end gap-2 border-t border-[#eee7de] pt-2.5 dark:border-[#382f25]">
+                                            <button
+                                                type="button"
+                                                onClick={() => openEditForm(medicine)}
+                                                className="flex h-7 w-7 items-center justify-center rounded-lg border border-[#e8dfd4] text-[#8a6f50] transition hover:bg-[#f3ebdf]"
+                                                title="Edit medicine"
+                                            >
+                                                <Pencil size={13} />
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => deleteMedicine(medicine)}
+                                                className="flex h-7 w-7 items-center justify-center rounded-lg border border-red-100 text-red-600 transition hover:bg-red-50"
+                                                title="Delete medicine"
+                                            >
+                                                <Trash2 size={13} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+
                     <div className="flex items-center justify-between gap-3 border-t border-[#e8dfd4] px-4 py-3 text-xs text-[#887d70]">
                         <span>
                             {pagination.total} medicine(s) · Page {pagination.current_page} of {pagination.last_page}
@@ -1433,6 +1554,13 @@ function Medicine() {
                 saving={saving}
                 error={error}
                 treatmentTypes={TREATMENT_TYPES}
+            />
+
+            {/* Restore Deleted Medicines Modal */}
+            <RestoreMedicinesModal
+                open={showRestoreModal}
+                onClose={() => setShowRestoreModal(false)}
+                onRestored={() => loadMedicines(pagination.current_page, search, statusFilter)}
             />
         </div>
     );

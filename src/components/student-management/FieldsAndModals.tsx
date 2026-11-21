@@ -45,9 +45,11 @@ export function InputField({
     pattern,
     error,
 }: InputFieldProps) {
+    const hasValue = value !== null && value !== undefined && String(value).trim() !== "";
+
     return (
         <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-stone-700">
+            <label className="text-sm font-semibold text-stone-800 dark:text-stone-200">
                 {label}
 
                 {required && (
@@ -73,7 +75,9 @@ export function InputField({
                 pattern={pattern}
                 className={`w-full rounded-lg border ${
                     error ? "border-red-400 focus:border-red-500 focus:ring-red-100" : "border-stone-300 focus:border-amber-500 focus:ring-amber-100"
-                } bg-white px-3 py-2.5 text-sm outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-stone-100`}
+                } bg-white px-3 py-2.5 text-sm outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-stone-100 ${
+                    hasValue ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-700 placeholder:text-stone-400"
+                }`}
             />
 
             {error && (
@@ -187,7 +191,7 @@ export function DateOfBirthField({
 
     return (
         <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-stone-700">
+            <label className="text-sm font-semibold text-stone-800 dark:text-stone-200">
                 {label}
                 {required && <span className="ml-1 text-red-500">*</span>}
             </label>
@@ -199,7 +203,9 @@ export function DateOfBirthField({
                     required={required}
                     className={`w-full rounded-lg border ${
                         error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-amber-500"
-                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100`}
+                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100 ${
+                        selectedMonth ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-500"
+                    }`}
                 >
                     <option value="">Month</option>
                     {MONTH_NAMES.map((m) => (
@@ -215,7 +221,9 @@ export function DateOfBirthField({
                     required={required}
                     className={`w-full rounded-lg border ${
                         error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-amber-500"
-                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100`}
+                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100 ${
+                        selectedDay ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-500"
+                    }`}
                 >
                     <option value="">Day</option>
                     {Array.from({ length: maxDays }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
@@ -231,7 +239,9 @@ export function DateOfBirthField({
                     required={required}
                     className={`w-full rounded-lg border ${
                         error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-amber-500"
-                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100`}
+                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100 ${
+                        selectedYear ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-500"
+                    }`}
                 >
                     <option value="">Year</option>
                     {years.map((y) => (
@@ -265,10 +275,11 @@ export function SelectField({
     const allOptions = (stringVal && !options.includes(stringVal))
         ? [stringVal, ...options]
         : options;
+    const hasValue = stringVal !== "";
 
     return (
         <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-stone-700">
+            <label className="text-sm font-semibold text-stone-800 dark:text-stone-200">
                 {label}
 
                 {required && (
@@ -281,7 +292,9 @@ export function SelectField({
                 onChange={onChange}
                 required={required}
                 disabled={disabled}
-                className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100 disabled:cursor-not-allowed disabled:bg-stone-100"
+                className={`w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100 disabled:cursor-not-allowed disabled:bg-stone-100 ${
+                    hasValue ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-500"
+                }`}
             >
                 <option value="">
                     Select {label}

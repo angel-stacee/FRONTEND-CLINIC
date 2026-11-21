@@ -197,7 +197,7 @@ function Reports() {
     return (
         <div
             id="reports-page"
-            className="tcc-module-page min-h-screen px-5 py-5 lg:px-6 lg:py-6"
+            className="tcc-module-page min-h-screen w-full px-3.5 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6"
         >
 
             <div className="tcc-module-header mb-5 flex flex-col gap-4 rounded-2xl border px-5 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between print:hidden">
@@ -402,7 +402,7 @@ function Reports() {
                         </div>
                     </header>
 
-                    <section className="report-summary-grid grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                    <section className="report-summary-grid grid grid-cols-2 gap-2.5 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
                         <SummaryCard title="Total Visits" value={summary.total_visits || 0} icon={<Activity size={21} />} />
                         <SummaryCard title="Students Treated" value={summary.students_treated ?? summary.student_visits ?? 0} icon={<Users size={21} />} />
                         <SummaryCard title="Student Visits" value={summary.student_visits || 0} icon={<Users size={21} />} />
@@ -527,8 +527,8 @@ function Reports() {
                                 <p className="text-xs text-stone-500">{visits.length.toLocaleString()} records</p>
                             </div>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="report-visit-table w-full min-w-[900px] table-fixed">
+                        <div className="hidden md:block print:block overflow-x-auto scrollbar-thin">
+                            <table className="report-visit-table w-full min-w-[760px] lg:min-w-full table-fixed">
                                 <colgroup>
                                     <col style={{ width: "12%" }} />
                                     <col style={{ width: "18%" }} />
@@ -569,6 +569,59 @@ function Reports() {
                                     )}
                                 </tbody>
                             </table>
+                        </div>
+
+                        {/* Mobile Visit Card View */}
+                        <div className="block md:hidden print:hidden divide-y divide-[#eee7de] p-3 space-y-3">
+                            {visits.length > 0 ? (
+                                visits.map((visit) => (
+                                    <div
+                                        key={visit.id}
+                                        className="rounded-xl border border-[#e8dfd4] bg-white p-3.5 shadow-xs"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div>
+                                                <span className="text-[11px] font-semibold text-stone-500">
+                                                    {formatVisitDate(visit.date)}
+                                                </span>
+                                                <h3 className="text-sm font-bold text-stone-900">
+                                                    {formatNA(visit.person)}
+                                                </h3>
+                                            </div>
+                                            <span className="inline-flex rounded-md border border-stone-200 bg-stone-50 px-2 py-0.5 text-[10px] font-bold uppercase text-stone-600">
+                                                {formatNA(visit.person_type)}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-2.5 space-y-1.5 text-xs text-stone-600">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-stone-400">Department:</span>
+                                                <span className="font-medium text-stone-700">{formatNA(visit.department)}</span>
+                                            </div>
+                                            <div className="flex items-start justify-between gap-2">
+                                                <span className="text-stone-400 shrink-0">Reason:</span>
+                                                <div className="text-right">
+                                                    <ReasonBadge reason={visit.reason} symptoms={visit.symptoms} />
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-stone-400">Medicine:</span>
+                                                <span className="font-medium text-stone-700">
+                                                    {visit.medicine ? `${visit.medicine}${visit.medicine_quantity ? ` (${visit.medicine_quantity})` : ""}` : "None"}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-stone-400">Nurse:</span>
+                                                <span className="font-medium text-stone-700">{formatNA(visit.nurse)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="px-5 py-8 text-center text-sm text-stone-500">
+                                    No clinic visits were recorded for this reporting period.
+                                </p>
+                            )}
                         </div>
                     </section>
 

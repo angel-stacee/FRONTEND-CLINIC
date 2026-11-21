@@ -4,6 +4,7 @@ import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, Eye, FileBadg
 import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache } from "../services/recordCache";
 import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components/student-management/FieldsAndModals";
+import { RestorePatientsModal } from "../components/student-management/RestorePatientsModal";
 import { StudentForms, validateContactNumber, type StudentFormValues, type StaffFormValues, type FacultyFormValues } from "../components/student-management/StudentForms";
 import FloatingToast from "../components/common/FloatingToast";
 import { addClinicNotification } from "../services/notifications";
@@ -151,6 +152,8 @@ function StudentManagement() {
     const [error, setError] = useState("");
     const [formError, setFormError] = useState("");
     const [successToast, setSuccessToast] = useState("");
+    const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | undefined>(undefined);
+    const [showRestoreModal, setShowRestoreModal] = useState(false);
 
     const [sexFilter, setSexFilter] = useState("all");
     const [courseFilter, setCourseFilter] = useState("all");
@@ -1392,6 +1395,26 @@ function StudentManagement() {
 
 
 
+    const handleRestoreQuick = async (id: number | string, type: "student" | "staff" | "faculty") => {
+        try {
+            const endpoint =
+                type === "student"
+                    ? `/students/${id}/restore`
+                    : type === "staff"
+                    ? `/staff/${id}/restore`
+                    : `/faculties/${id}/restore`;
+
+            await api.post(endpoint);
+            setSuccessToast("Patient record restored successfully.");
+            setToastAction(undefined);
+            invalidateRecordCache();
+            await fetchData();
+        } catch (err: any) {
+            console.error("Failed to restore record:", err);
+            setError("Failed to restore record.");
+        }
+    };
+
     const handleConfirmation = async () => {
         if (!confirmation || saving) {
             return;
@@ -1442,18 +1465,23 @@ function StudentManagement() {
                     break;
 
                 case "deleteStudent":
+                    const deletedStudentId = confirmation.person.id;
                     await api.delete(
-                        `/students/${confirmation.person.id}`
+                        `/students/${deletedStudentId}`
                     );
 
                     if (
                         viewingStudent?.id ===
-                        confirmation.person.id
+                        deletedStudentId
                     ) {
                         setViewingStudent(null);
                     }
 
-                    completedMessage = "Student deleted successfully.";
+                    completedMessage = "Student record moved to trash.";
+                    setToastAction({
+                        label: "Undo",
+                        onClick: () => handleRestoreQuick(deletedStudentId, "student"),
+                    });
                     addClinicNotification({
                         type: "delete",
                         title: "Student Deleted",
@@ -1495,18 +1523,23 @@ function StudentManagement() {
                     break;
 
                 case "deleteStaff":
+                    const deletedStaffId = confirmation.person.id;
                     await api.delete(
-                        `/staff/${confirmation.person.id}`
+                        `/staff/${deletedStaffId}`
                     );
 
                     if (
                         viewingStaff?.id ===
-                        confirmation.person.id
+                        deletedStaffId
                     ) {
                         setViewingStaff(null);
                     }
 
-                    completedMessage = "Staff member deleted successfully.";
+                    completedMessage = "Staff record moved to trash.";
+                    setToastAction({
+                        label: "Undo",
+                        onClick: () => handleRestoreQuick(deletedStaffId, "staff"),
+                    });
                     addClinicNotification({
                         type: "delete",
                         title: "Staff Deleted",
@@ -1548,18 +1581,23 @@ function StudentManagement() {
                     break;
 
                 case "deleteFaculty":
+                    const deletedFacultyId = confirmation.person.id;
                     await api.delete(
-                        `/faculties/${confirmation.person.id}`
+                        `/faculties/${deletedFacultyId}`
                     );
 
                     if (
                         viewingFaculty?.id ===
-                        confirmation.person.id
+                        deletedFacultyId
                     ) {
                         setViewingFaculty(null);
                     }
 
-                    completedMessage = "Faculty member deleted successfully.";
+                    completedMessage = "Faculty record moved to trash.";
+                    setToastAction({
+                        label: "Undo",
+                        onClick: () => handleRestoreQuick(deletedFacultyId, "faculty"),
+                    });
                     addClinicNotification({
                         type: "delete",
                         title: "Faculty Deleted",
@@ -1604,7 +1642,7 @@ function StudentManagement() {
 
 
     return (
-        <div className="tcc-module-page relative min-h-screen overflow-hidden p-5 sm:p-6">
+        <div className="tcc-module-page relative min-h-screen overflow-hidden p-3.5 sm:p-5 lg:p-6">
 
 
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -1624,42 +1662,48 @@ function StudentManagement() {
                 />
             </div>
 
-            <div className="tcc-module-content relative mx-auto max-w-[1500px]">
+            <div className="tcc-module-content relative w-full">
 
 
-                <div className="tcc-module-header mb-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="tcc-module-header mb-4 sm:mb-5 flex flex-col gap-3.5 sm:gap-4 md:flex-row md:items-center md:justify-between rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 shadow-sm">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-[#3d3329] dark:text-[#f8f3eb]">
+                        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#3d3329] dark:text-[#f8f3eb]">
                             PATIENT MANAGEMENT
                         </h1>
 
-                        <p className="mt-1 text-sm text-[#887d70] dark:text-[#a99d8f]">
+                        <p className="mt-1 text-xs sm:text-sm text-[#887d70] dark:text-[#a99d8f]">
                             Manage patient, staff, and faculty information.
                         </p>
                     </div>
 
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setError("");
-                            if (activeTab === "staff") {
-                                openStaffForm();
-                            } else if (activeTab === "faculty") {
-                                openFacultyForm();
-                            } else {
-                                openStudentForm();
-                            }
-                        }}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505] focus:outline-none focus:ring-2 focus:ring-[#70091f]/40"
-                    >
-                        <span>
-                            {activeTab === "staff"
-                                ? "+ Add Staff"
-                                : activeTab === "faculty"
-                                ? "+ Add Faculty"
-                                : "+ Add Student"}
-                        </span>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <button
+                            type="button"
+                            onClick={() => setShowRestoreModal(true)}
+                            className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-[#e8dfd4] bg-white px-4 py-3 text-sm font-semibold text-[#6d5942] shadow-xs transition hover:bg-[#fcfaf6] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#211c17] dark:text-[#e5dcd1] dark:hover:bg-[#2c231a] cursor-pointer"
+                            title="Restore deleted patient records"
+                        >
+                            <RotateCcw size={15} className="text-[#8a6f50]" />
+                            <span>Restore Deleted</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setError("");
+                                if (activeTab === "staff") {
+                                    openStaffForm();
+                                } else if (activeTab === "faculty") {
+                                    openFacultyForm();
+                                } else {
+                                    openStudentForm();
+                                }
+                            }}
+                            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-[#70091f]/20 transition hover:bg-[#8b1505] focus:outline-none focus:ring-2 focus:ring-[#70091f]/40 cursor-pointer"
+                        >
+                            <span>+ Add Patient</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Patient Category Tabs Navigation */}
@@ -1976,8 +2020,8 @@ function StudentManagement() {
                                     </p>
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[900px] table-fixed text-left text-sm">
+                                <div className="hidden md:block overflow-x-auto scrollbar-thin">
+                                    <table className="w-full min-w-[760px] lg:min-w-full table-fixed text-left text-sm">
                                         <colgroup>
                                             <col style={{ width: "15%" }} />
                                             <col style={{ width: "25%" }} />
@@ -2120,6 +2164,83 @@ function StudentManagement() {
                                         </tbody>
                                     </table>
                                 </div>
+
+                                {/* Mobile Student Card View */}
+                                <div className="block md:hidden divide-y divide-[#eee7de] p-3 space-y-3 dark:divide-[#382f25]">
+                                    {filteredStudents.length === 0 ? (
+                                        <div className="py-8 text-center text-sm text-[#887d70] dark:text-[#a99d8f]">
+                                            No students found.
+                                        </div>
+                                    ) : (
+                                        filteredStudents.map((student) => (
+                                            <div
+                                                key={student.id}
+                                                className="rounded-xl border border-[#e8dfd4] bg-white p-3.5 shadow-xs dark:border-[#4e4234] dark:bg-[#261f19]"
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div>
+                                                        <span className="font-mono text-xs font-bold text-[#70091f] dark:text-[#f8a598]">
+                                                            {formatNA(student.student_id)}
+                                                        </span>
+                                                        <h3 className="mt-0.5 text-sm font-bold text-[#3d3329] dark:text-[#f8f3eb]">
+                                                            {formatNA(getFullName(student))}
+                                                        </h3>
+                                                    </div>
+                                                    <span className="inline-flex rounded-md border border-[#e8dfd4] bg-[#fcfaf6] px-2 py-0.5 text-[11px] font-medium text-[#766959] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#c4b5a5]">
+                                                        {formatNA(student.sex)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-2.5 flex flex-wrap gap-1.5 text-xs text-[#766959] dark:text-[#c4b5a5]">
+                                                    <span className="rounded-md bg-[#f3ebdf] px-2 py-0.5 text-[11px] font-semibold text-[#8a6f50] dark:bg-[#342a22] dark:text-[#d4b996]">
+                                                        {formatNA(student.course)}
+                                                    </span>
+                                                    <span className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                                                        {formatNA(student.year_level)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#eee7de] pt-3 dark:border-[#382f25]">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openMedicalReport(student)}
+                                                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
+                                                    >
+                                                        <FileBadge size={14} className="shrink-0" />
+                                                        <span>Medical Certificate</span>
+                                                    </button>
+
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => viewStudentRecord(student)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1]"
+                                                            title="View Student Record"
+                                                        >
+                                                            <Eye size={15} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openStudentForm(student)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200/80 bg-amber-50 text-amber-700 transition hover:bg-amber-100 hover:text-amber-800 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1]"
+                                                            title="Edit Student Record"
+                                                        >
+                                                            <Pencil size={15} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => deleteStudent(student)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-red-400"
+                                                            title="Delete Student Record"
+                                                        >
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                                 <div className="flex flex-col gap-3 border-t border-[#e8dfd4] bg-white px-5 py-4 text-sm text-[#887d70] sm:flex-row sm:items-center sm:justify-between dark:border-[#4e4234] dark:bg-[#211c17] dark:text-[#a99d8f]">
                                     <span className="text-center sm:text-left">
                                         Page {studentPagination.current_page} of {studentPagination.last_page}
@@ -2176,8 +2297,8 @@ function StudentManagement() {
                                     </p>
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[900px] table-fixed text-left text-sm">
+                                <div className="hidden md:block overflow-x-auto scrollbar-thin">
+                                    <table className="w-full min-w-[760px] lg:min-w-full table-fixed text-left text-sm">
                                         <colgroup>
                                             <col style={{ width: "15%" }} />
                                             <col style={{ width: "25%" }} />
@@ -2321,6 +2442,83 @@ function StudentManagement() {
                                         </tbody>
                                     </table>
                                 </div>
+
+                                {/* Mobile Staff Card View */}
+                                <div className="block md:hidden divide-y divide-[#eee7de] p-3 space-y-3 dark:divide-[#382f25]">
+                                    {filteredStaff.length === 0 ? (
+                                        <div className="py-8 text-center text-sm text-[#887d70] dark:text-[#a99d8f]">
+                                            No staff found.
+                                        </div>
+                                    ) : (
+                                        filteredStaff.map((person) => (
+                                            <div
+                                                key={person.id}
+                                                className="rounded-xl border border-[#e8dfd4] bg-white p-3.5 shadow-xs dark:border-[#4e4234] dark:bg-[#261f19]"
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div>
+                                                        <span className="font-mono text-xs font-bold text-[#70091f] dark:text-[#f8a598]">
+                                                            {formatNA(person.staff_id)}
+                                                        </span>
+                                                        <h3 className="mt-0.5 text-sm font-bold text-[#3d3329] dark:text-[#f8f3eb]">
+                                                            {formatNA(getFullName(person))}
+                                                        </h3>
+                                                    </div>
+                                                    <span className="inline-flex rounded-md border border-[#e8dfd4] bg-[#fcfaf6] px-2 py-0.5 text-[11px] font-medium text-[#766959] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#c4b5a5]">
+                                                        {formatNA(person.sex)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-2.5 flex flex-wrap gap-1.5 text-xs text-[#766959] dark:text-[#c4b5a5]">
+                                                    <span className="rounded-md bg-[#f3ebdf] px-2 py-0.5 text-[11px] font-semibold text-[#8a6f50] dark:bg-[#342a22] dark:text-[#d4b996]">
+                                                        {formatNA(person.position)}
+                                                    </span>
+                                                    <span className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                                                        {formatNA(person.department)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#eee7de] pt-3 dark:border-[#382f25]">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openMedicalReport(person, "staff")}
+                                                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
+                                                    >
+                                                        <FileBadge size={14} className="shrink-0" />
+                                                        <span>Medical Certificate</span>
+                                                    </button>
+
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => viewStaffRecord(person)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1]"
+                                                            title="View Staff Record"
+                                                        >
+                                                            <Eye size={15} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openStaffForm(person)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200/80 bg-amber-50 text-amber-700 transition hover:bg-amber-100 hover:text-amber-800 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1]"
+                                                            title="Edit Staff Record"
+                                                        >
+                                                            <Pencil size={15} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => deleteStaff(person)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-red-400"
+                                                            title="Delete Staff Record"
+                                                        >
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                                 <div className="flex flex-col gap-3 border-t border-[#e8dfd4] bg-white px-5 py-4 text-sm text-[#887d70] sm:flex-row sm:items-center sm:justify-between dark:border-[#4e4234] dark:bg-[#211c17] dark:text-[#a99d8f]">
                                     <span className="text-center sm:text-left">Page {staffPagination.current_page} of {staffPagination.last_page}</span>
                                     <div className="flex justify-center gap-2 sm:justify-end">
@@ -2351,8 +2549,8 @@ function StudentManagement() {
                                     </p>
                                 </div>
 
-                                <div className="overflow-x-auto">
-                                    <table className="w-full min-w-[900px] table-fixed text-left text-sm">
+                                <div className="hidden md:block overflow-x-auto scrollbar-thin">
+                                    <table className="w-full min-w-[760px] lg:min-w-full table-fixed text-left text-sm">
                                         <colgroup>
                                             <col style={{ width: "15%" }} />
                                             <col style={{ width: "25%" }} />
@@ -2495,6 +2693,83 @@ function StudentManagement() {
                                             )}
                                         </tbody>
                                     </table>
+                                </div>
+
+                                {/* Mobile Faculty Card View */}
+                                <div className="block md:hidden divide-y divide-[#eee7de] p-3 space-y-3 dark:divide-[#382f25]">
+                                    {filteredFaculties.length === 0 ? (
+                                        <div className="py-8 text-center text-sm text-[#887d70] dark:text-[#a99d8f]">
+                                            No faculty found.
+                                        </div>
+                                    ) : (
+                                        filteredFaculties.map((faculty) => (
+                                            <div
+                                                key={faculty.id}
+                                                className="rounded-xl border border-[#e8dfd4] bg-white p-3.5 shadow-xs dark:border-[#4e4234] dark:bg-[#261f19]"
+                                            >
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div>
+                                                        <span className="font-mono text-xs font-bold text-[#70091f] dark:text-[#f8a598]">
+                                                            {formatNA(faculty.employee_id)}
+                                                        </span>
+                                                        <h3 className="mt-0.5 text-sm font-bold text-[#3d3329] dark:text-[#f8f3eb]">
+                                                            {formatNA(getFullName(faculty))}
+                                                        </h3>
+                                                    </div>
+                                                    <span className="inline-flex rounded-md border border-[#e8dfd4] bg-[#fcfaf6] px-2 py-0.5 text-[11px] font-medium text-[#766959] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#c4b5a5]">
+                                                        {formatNA(faculty.sex)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-2.5 flex flex-wrap gap-1.5 text-xs text-[#766959] dark:text-[#c4b5a5]">
+                                                    <span className="rounded-md bg-[#f3ebdf] px-2 py-0.5 text-[11px] font-semibold text-[#8a6f50] dark:bg-[#342a22] dark:text-[#d4b996]">
+                                                        {formatNA(faculty.position)}
+                                                    </span>
+                                                    <span className="rounded-md bg-stone-100 px-2 py-0.5 text-[11px] text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                                                        {formatNA(faculty.department)}
+                                                    </span>
+                                                </div>
+
+                                                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#eee7de] pt-3 dark:border-[#382f25]">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openMedicalReport(faculty, "faculty")}
+                                                        className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#70091f]/40 bg-[#fdf5f3] px-2.5 text-xs font-semibold text-[#70091f] transition hover:bg-[#70091f] hover:text-white dark:border-[#70091f]/50 dark:bg-[#70091f]/20 dark:text-[#f8a598]"
+                                                    >
+                                                        <FileBadge size={14} className="shrink-0" />
+                                                        <span>Medical Certificate</span>
+                                                    </button>
+
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => viewFacultyRecord(faculty)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#e8dfd4] bg-[#fcfaf6] text-[#766959] transition hover:bg-[#f3ebdf] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1]"
+                                                            title="View Faculty Record"
+                                                        >
+                                                            <Eye size={15} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openFacultyForm(faculty)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-amber-200/80 bg-amber-50 text-amber-700 transition hover:bg-amber-100 hover:text-amber-800 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-[#e5dcd1]"
+                                                            title="Edit Faculty Record"
+                                                        >
+                                                            <Pencil size={15} />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => deleteFaculty(faculty)}
+                                                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-red-200/80 bg-red-50 text-red-600 transition hover:bg-red-100 hover:text-red-700 dark:border-[#4e4234] dark:bg-[#2c231a] dark:text-red-400"
+                                                            title="Delete Faculty Record"
+                                                        >
+                                                            <Trash2 size={15} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                                 <div className="flex flex-col gap-3 border-t border-[#e8dfd4] bg-white px-5 py-4 text-sm text-[#887d70] sm:flex-row sm:items-center sm:justify-between dark:border-[#4e4234] dark:bg-[#211c17] dark:text-[#a99d8f]">
                                     <span className="text-center sm:text-left">Page {facultyPagination.current_page} of {facultyPagination.last_page}</span>
@@ -3297,7 +3572,21 @@ function StudentManagement() {
 
             <FloatingToast
                 message={successToast}
-                onClose={() => setSuccessToast("")}
+                onClose={() => {
+                    setSuccessToast("");
+                    setToastAction(undefined);
+                }}
+                action={toastAction}
+            />
+
+            {/* Restore Deleted Patients Modal */}
+            <RestorePatientsModal
+                open={showRestoreModal}
+                onClose={() => setShowRestoreModal(false)}
+                onRestored={() => {
+                    invalidateRecordCache();
+                    fetchData();
+                }}
             />
         </div>
     );

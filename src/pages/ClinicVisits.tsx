@@ -13,11 +13,13 @@ import {
     CircleHelp,
     FileBadge,
     FileText,
+    RotateCcw,
 } from "lucide-react";
 import api from "../services/api";
 import { getCachedRecord } from "../services/recordCache";
 import { ClinicVisitTable, type VisitRecord } from "../components/clinic-visits/ClinicVisitTable";
 import { ClinicVisitModal } from "../components/clinic-visits/ClinicVisitModal";
+import { RestoreVisitsModal } from "../components/clinic-visits/RestoreVisitsModal";
 import FloatingToast from "../components/common/FloatingToast";
 import { addClinicNotification } from "../services/notifications";
 import { formatNA, formatTemperature, formatDate, mapCourseToDepartment } from "../utils/formatters";
@@ -126,6 +128,8 @@ function ClinicVisits() {
     const [viewingVisit, setViewingVisit] = useState<VisitRecord | null>(null);
     const [deleteVisit, setDeleteVisit] = useState<VisitRecord | null>(null);
     const [toastMessage, setToastMessage] = useState("");
+    const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | undefined>(undefined);
+    const [showRestoreModal, setShowRestoreModal] = useState(false);
 
     const [medicalReportTarget, setMedicalReportTarget] = useState<{
         patient: any;
@@ -1176,19 +1180,38 @@ function ClinicVisits() {
 
 
 
+    const handleRestoreQuick = async (id: number | string) => {
+        try {
+            await api.post(`/clinic-visits/${id}/restore`);
+            setToastMessage("Clinic visit restored successfully.");
+            setToastAction(undefined);
+            await fetchVisits(visitPagination.current_page, search);
+            window.dispatchEvent(new Event("medicine-stock-updated"));
+        } catch (error) {
+            console.error("Error restoring clinic visit:", error);
+            setToastMessage("Failed to restore clinic visit.");
+        }
+    };
+
     const handleDelete = async () => {
         if (!deleteVisit) {
             return;
         }
 
         try {
+            const deletedId = deleteVisit.id;
+            const patient = getPatientName(deleteVisit);
+
             await api.delete(
-                `/clinic-visits/${deleteVisit.id}`
+                `/clinic-visits/${deletedId}`
             );
 
-            setToastMessage("Clinic visit deleted successfully.");
+            setToastMessage(`Visit record for ${patient.name || "Patient"} deleted.`);
+            setToastAction({
+                label: "Undo",
+                onClick: () => handleRestoreQuick(deletedId),
+            });
 
-            const patient = getPatientName(deleteVisit);
             addClinicNotification({
                 type: "delete",
                 title: "Clinic Visit Deleted",
@@ -1458,119 +1481,133 @@ function ClinicVisits() {
 
 
     return (
-        <div className="tcc-module-page min-h-screen px-5 py-5 lg:px-6 lg:py-6">
+        <div className="tcc-module-page min-h-screen w-full px-3.5 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
             <FloatingToast
                 message={toastMessage}
-                onClose={() => setToastMessage("")}
+                onClose={() => {
+                    setToastMessage("");
+                    setToastAction(undefined);
+                }}
+                action={toastAction}
             />
-            <div className="mx-auto max-w-[1500px]">
+            <div className="w-full space-y-4">
 
 
-                <div className="tcc-module-header mb-5 rounded-2xl border px-5 py-5 shadow-sm">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="tcc-module-header mb-4 sm:mb-5 rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 shadow-sm">
+                    <div className="flex flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-between">
 
-                        <div className="flex items-center gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#fcebe7] text-[#70091f]">
-                                <Stethoscope size={24} />
+                        <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl bg-[#fcebe7] text-[#70091f]">
+                                <Stethoscope className="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
 
-                            <div>
+                            <div className="min-w-0">
                                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#70091f]">
                                     Clinic Management
                                 </p>
 
-                                <h1 className="text-2xl font-bold tracking-tight text-[#3d3329]">
+                                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#3d3329] truncate">
                                     Clinic Visits
                                 </h1>
 
-                                <p className="mt-1 text-xs text-[#887d70]">
-                                    View and manage student,
-                                    faculty, and staff
-                                    clinic visit records.
+                                <p className="mt-0.5 sm:mt-1 text-xs text-[#887d70] line-clamp-1 sm:line-clamp-none">
+                                    View and manage student, faculty, and staff clinic visit records.
                                 </p>
                             </div>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={openAddForm}
-                            className="flex items-center justify-center gap-2 rounded-xl bg-[#70091f] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#8b1505]"
-                        >
-                            <Plus size={17} />
-                            Add Clinic Visit
-                        </button>
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            <button
+                                type="button"
+                                onClick={() => setShowRestoreModal(true)}
+                                className="flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl border border-[#e8dfd4] bg-white px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm font-semibold text-[#6d5942] shadow-xs transition hover:bg-[#fcfaf6] hover:text-[#3d3329] dark:border-[#4e4234] dark:bg-[#211c17] dark:text-[#e5dcd1] dark:hover:bg-[#2c231a] cursor-pointer"
+                                title="Restore deleted clinic visits"
+                            >
+                                <RotateCcw size={15} className="text-[#8a6f50]" />
+                                <span>Restore Deleted</span>
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={openAddForm}
+                                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-[#70091f] px-4 py-2.5 sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#8b1505] active:scale-[0.99] cursor-pointer"
+                            >
+                                <Plus size={17} />
+                                <span>Add Clinic Visit</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
 
-                <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="mb-4 sm:mb-5 grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 lg:gap-4">
 
-                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#fcebe7] text-[#70091f]">
-                                <Stethoscope size={19} />
+                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-3 sm:p-4 shadow-sm dark:border-[#4e4234] dark:bg-[#211c17]">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-[#fcebe7] text-[#70091f]">
+                                <Stethoscope size={18} />
                             </div>
 
-                            <div>
-                                <p className="text-xs text-[#887d70]">
+                            <div className="min-w-0">
+                                <p className="text-[11px] sm:text-xs text-[#887d70] truncate">
                                     Total Visits
                                 </p>
 
-                                <p className="text-2xl font-bold text-[#3c332a]">
+                                <p className="text-lg sm:text-2xl font-bold text-[#3c332a] dark:text-stone-100">
                                     {visitPagination.total}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-amber-600">
-                                <UserRound size={19} />
+                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-3 sm:p-4 shadow-sm dark:border-[#4e4234] dark:bg-[#211c17]">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                                <UserRound size={18} />
                             </div>
 
-                            <div>
-                                <p className="text-xs text-[#887d70]">
+                            <div className="min-w-0">
+                                <p className="text-[11px] sm:text-xs text-[#887d70] truncate">
                                     Students
                                 </p>
 
-                                <p className="text-2xl font-bold text-[#3c332a]">
+                                <p className="text-lg sm:text-2xl font-bold text-[#3c332a] dark:text-stone-100">
                                     {studentTotal}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-amber-600">
-                                <UserRound size={19} />
+                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-3 sm:p-4 shadow-sm dark:border-[#4e4234] dark:bg-[#211c17]">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                                <UserRound size={18} />
                             </div>
 
-                            <div>
-                                <p className="text-xs text-[#887d70]">
+                            <div className="min-w-0">
+                                <p className="text-[11px] sm:text-xs text-[#887d70] truncate">
                                     Faculty & Staff
                                 </p>
 
-                                <p className="text-2xl font-bold text-[#3c332a]">
+                                <p className="text-lg sm:text-2xl font-bold text-[#3c332a] dark:text-stone-100">
                                     {facultyStaffTotal}
                                 </p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-4 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 text-green-600">
-                                <Activity size={19} />
+                    <div className="rounded-xl border border-[#e8dfd4] bg-white p-3 sm:p-4 shadow-sm dark:border-[#4e4234] dark:bg-[#211c17]">
+                        <div className="flex items-center gap-2.5 sm:gap-3">
+                            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-green-50 text-green-600 dark:bg-green-950/40 dark:text-green-400">
+                                <Activity size={18} />
                             </div>
 
-                            <div>
-                                <p className="text-xs text-[#887d70]">
+                            <div className="min-w-0">
+                                <p className="text-[11px] sm:text-xs text-[#887d70] truncate">
                                     Nurses
                                 </p>
 
-                                <p className="text-2xl font-bold text-[#3c332a]">
+                                <p className="text-lg sm:text-2xl font-bold text-[#3c332a] dark:text-stone-100">
                                     {nurses.length}
                                 </p>
                             </div>
@@ -1614,10 +1651,10 @@ function ClinicVisits() {
                 />
 
                 {/* Search and Filters Controls */}
-                <div className="mb-6 rounded-2xl border border-[#e8dfd4] bg-white p-4 shadow-sm sm:p-5 dark:border-[#4e4234] dark:bg-[#211c17]">
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-12">
+                <div className="mb-4 sm:mb-6 rounded-2xl border border-[#e8dfd4] bg-white p-3.5 sm:p-5 shadow-sm dark:border-[#4e4234] dark:bg-[#211c17]">
+                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-12 sm:gap-3">
                         {/* Search Input */}
-                        <div className="relative sm:col-span-2 md:col-span-4">
+                        <div className="relative col-span-1 sm:col-span-2 lg:col-span-4">
                             <label htmlFor="visit-search" className="sr-only">
                                 Search clinic visits
                             </label>
@@ -1648,7 +1685,7 @@ function ClinicVisits() {
                         </div>
 
                         {/* Patient Type Filter */}
-                        <div className="md:col-span-2">
+                        <div className="col-span-1 sm:col-span-1 lg:col-span-2">
                             <label htmlFor="patient-type-filter" className="sr-only">
                                 Filter by Patient Type
                             </label>
@@ -1667,7 +1704,7 @@ function ClinicVisits() {
                         </div>
 
                         {/* Date Filter */}
-                        <div className="md:col-span-2">
+                        <div className="col-span-1 sm:col-span-1 lg:col-span-2">
                             <label htmlFor="date-filter" className="sr-only">
                                 Filter by Date
                             </label>
@@ -1687,7 +1724,7 @@ function ClinicVisits() {
                         </div>
 
                         {/* Treatment Filter */}
-                        <div className="md:col-span-2">
+                        <div className="col-span-1 sm:col-span-1 lg:col-span-2">
                             <label htmlFor="treatment-filter" className="sr-only">
                                 Filter by Treatment
                             </label>
@@ -1708,7 +1745,7 @@ function ClinicVisits() {
                         </div>
 
                         {/* Sort Filter */}
-                        <div className="md:col-span-2">
+                        <div className="col-span-1 sm:col-span-1 lg:col-span-2">
                             <label htmlFor="sort-filter" className="sr-only">
                                 Sort visits
                             </label>
@@ -2241,6 +2278,12 @@ function ClinicVisits() {
                         </section>
                     </div>
                 )}
+                {/* Restore Deleted Visits Modal */}
+                <RestoreVisitsModal
+                    open={showRestoreModal}
+                    onClose={() => setShowRestoreModal(false)}
+                    onRestored={() => fetchVisits(visitPagination.current_page, search)}
+                />
             </div>
         </div>
     );
