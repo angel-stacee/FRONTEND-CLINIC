@@ -128,7 +128,7 @@ export default function Landing(): React.JSX.Element {
         {
             question: "Where is the clinic located on campus and what are the operating hours?",
             answer:
-                "The clinic is located on the Ground Floor of the Main Administration Building at Baluarte Campus, Tagoloan, Misamis Oriental. Regular hours are Monday through Friday from 8:00 AM to 5:00 PM, with active duty nurse coverage throughout the day.",
+                "The clinic is located on the Ground Floor, beside the UniFAST Building at Baluarte Campus, Tagoloan, Misamis Oriental. Regular hours are Monday through Friday from 8:00 AM to 5:00 PM, with active duty nurse coverage throughout the day.",
         },
         {
             question: "What emergency protocols are followed if a patient requires urgent hospital care?",
@@ -886,7 +886,7 @@ export default function Landing(): React.JSX.Element {
                             </span>
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold text-[#fcebe7] border border-white/10">
                                 <MapPin size={11} className="text-[#e5a93b]" />
-                                <span>Ground Floor, Baluarte</span>
+                                <span>Ground Floor, Beside UniFAST Building</span>
                             </span>
                         </div>
                         <h3 className="mt-6 text-lg sm:text-xl font-bold text-white group-hover:text-[#e5a93b] transition-colors">
@@ -1497,7 +1497,7 @@ export default function Landing(): React.JSX.Element {
                                 Need Immediate First-Aid or Consultation on Campus?
                             </h3>
                             <p className="mt-0.5 text-xs sm:text-sm text-[#fcebe7]/80">
-                                Walk-ins are always welcomed at Baluarte Campus Clinic (Ground Floor Main Building).
+                                Walk-ins are always welcomed at Baluarte Campus Clinic (Ground Floor, Beside UniFAST Building).
                             </p>
                         </div>
                     </div>
