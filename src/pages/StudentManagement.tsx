@@ -540,8 +540,8 @@ function StudentManagement() {
         setShowStudentForm(true);
     };
 
-    const closeStudentForm = () => {
-        if (saving) {
+    const closeStudentForm = (force = false) => {
+        if (saving && !force) {
             return;
         }
 
@@ -579,8 +579,8 @@ function StudentManagement() {
         setShowStaffForm(true);
     };
 
-    const closeStaffForm = () => {
-        if (saving) {
+    const closeStaffForm = (force = false) => {
+        if (saving && !force) {
             return;
         }
 
@@ -627,8 +627,8 @@ function StudentManagement() {
         setShowFacultyForm(true);
     };
 
-    const closeFacultyForm = () => {
-        if (saving) {
+    const closeFacultyForm = (force = false) => {
+        if (saving && !force) {
             return;
         }
 
@@ -704,10 +704,7 @@ function StudentManagement() {
         setError("");
 
         try {
-            const response = await getCachedRecord(
-                `students:detail:${student.id}`,
-                () => api.get(`/students/${student.id}`)
-            );
+            const response = await api.get(`/students/${student.id}`);
 
             setViewingStudent(response.data);
         } catch (err) {
@@ -745,6 +742,9 @@ function StudentManagement() {
 
             const res = await api.get(endpoint);
             setMedicalReportData(res.data);
+            if (res.data?.patient) {
+                setMedicalReportStudent((prev: any) => ({ ...prev, ...res.data.patient }));
+            }
         } catch (err) {
             console.error("Failed to load medical history:", err);
             const fullName = getFullName(item);
@@ -931,10 +931,7 @@ function StudentManagement() {
         setError("");
 
         try {
-            const response = await getCachedRecord(
-                `staff:detail:${person.id}`,
-                () => api.get(`/staff/${person.id}`)
-            );
+            const response = await api.get(`/staff/${person.id}`);
 
             setViewingStaff(response.data);
         } catch (err) {
@@ -961,10 +958,7 @@ function StudentManagement() {
         setError("");
 
         try {
-            const response = await getCachedRecord(
-                `faculties:detail:${faculty.id}`,
-                () => api.get(`/faculties/${faculty.id}`)
-            );
+            const response = await api.get(`/faculties/${faculty.id}`);
 
             setViewingFaculty(response.data);
         } catch (err) {
@@ -1438,7 +1432,7 @@ function StudentManagement() {
                         studentForm
                     );
 
-                    closeStudentForm();
+                    closeStudentForm(true);
                     completedMessage = "Student added successfully.";
                     addClinicNotification({
                         type: "add",
@@ -1449,12 +1443,22 @@ function StudentManagement() {
                     break;
 
                 case "updateStudent":
-                    await api.put(
+                    const updatedStudentRes = await api.put(
                         `/students/${editingStudent.id}`,
                         studentForm
                     );
+                    const updatedStudentData = updatedStudentRes.data || { ...editingStudent, ...studentForm };
+                    setStudents((prev) =>
+                        prev.map((s: any) => (s.id === editingStudent.id ? { ...s, ...updatedStudentData } : s))
+                    );
+                    if (viewingStudent?.id === editingStudent.id) {
+                        setViewingStudent(updatedStudentData);
+                    }
+                    if (medicalReportStudent?.id === editingStudent.id) {
+                        setMedicalReportStudent((prev: any) => ({ ...prev, ...updatedStudentData }));
+                    }
 
-                    closeStudentForm();
+                    closeStudentForm(true);
                     completedMessage = "Student updated successfully.";
                     addClinicNotification({
                         type: "edit",
@@ -1496,7 +1500,7 @@ function StudentManagement() {
                         staffForm
                     );
 
-                    closeStaffForm();
+                    closeStaffForm(true);
                     completedMessage = "Staff member added successfully.";
                     addClinicNotification({
                         type: "add",
@@ -1507,12 +1511,22 @@ function StudentManagement() {
                     break;
 
                 case "updateStaff":
-                    await api.put(
+                    const updatedStaffRes = await api.put(
                         `/staff/${editingStaff.id}`,
                         staffForm
                     );
+                    const updatedStaffData = updatedStaffRes.data || { ...editingStaff, ...staffForm };
+                    setStaff((prev) =>
+                        prev.map((st: any) => (st.id === editingStaff.id ? { ...st, ...updatedStaffData } : st))
+                    );
+                    if (viewingStaff?.id === editingStaff.id) {
+                        setViewingStaff(updatedStaffData);
+                    }
+                    if (medicalReportStudent?.id === editingStaff.id) {
+                        setMedicalReportStudent((prev: any) => ({ ...prev, ...updatedStaffData }));
+                    }
 
-                    closeStaffForm();
+                    closeStaffForm(true);
                     completedMessage = "Staff member updated successfully.";
                     addClinicNotification({
                         type: "edit",
@@ -1554,7 +1568,7 @@ function StudentManagement() {
                         facultyForm
                     );
 
-                    closeFacultyForm();
+                    closeFacultyForm(true);
                     completedMessage = "Faculty member added successfully.";
                     addClinicNotification({
                         type: "add",
@@ -1565,12 +1579,22 @@ function StudentManagement() {
                     break;
 
                 case "updateFaculty":
-                    await api.put(
+                    const updatedFacultyRes = await api.put(
                         `/faculties/${editingFaculty.id}`,
                         facultyForm
                     );
+                    const updatedFacultyData = updatedFacultyRes.data || { ...editingFaculty, ...facultyForm };
+                    setFaculties((prev) =>
+                        prev.map((f: any) => (f.id === editingFaculty.id ? { ...f, ...updatedFacultyData } : f))
+                    );
+                    if (viewingFaculty?.id === editingFaculty.id) {
+                        setViewingFaculty(updatedFacultyData);
+                    }
+                    if (medicalReportStudent?.id === editingFaculty.id) {
+                        setMedicalReportStudent((prev: any) => ({ ...prev, ...updatedFacultyData }));
+                    }
 
-                    closeFacultyForm();
+                    closeFacultyForm(true);
                     completedMessage = "Faculty member updated successfully.";
                     addClinicNotification({
                         type: "edit",
