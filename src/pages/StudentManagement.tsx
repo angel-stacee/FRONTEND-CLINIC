@@ -19,7 +19,7 @@ import { ReasonBadge } from "../utils/reasonColors";
 
 
 const EMPTY_STUDENT_FORM = {
-    student_id: "",
+    student_id: "20",
     first_name: "",
     middle_name: "",
     last_name: "",
@@ -547,6 +547,10 @@ function StudentManagement() {
             });
         } else {
             resetAllPatientForms();
+            setStudentForm((prev) => ({
+                ...prev,
+                student_id: "20",
+            }));
         }
 
         setShowStudentForm(true);
@@ -655,6 +659,7 @@ function StudentManagement() {
             const currentSource = showFacultyForm ? facultyForm : staffForm;
             setStudentForm((prev) => ({
                 ...prev,
+                student_id: prev.student_id && prev.student_id.startsWith("20") ? prev.student_id : "20",
                 first_name: currentSource.first_name || prev.first_name,
                 middle_name: currentSource.middle_name || prev.middle_name,
                 last_name: currentSource.last_name || prev.last_name,
@@ -1007,19 +1012,25 @@ function StudentManagement() {
             return;
         }
 
-        if (!/^\d+$/.test(studentForm.student_id.trim())) {
+        const sId = studentForm.student_id.trim();
+
+        if (!/^\d+$/.test(sId)) {
             setError("Student ID must contain numbers only.");
             setFormError("Student ID must contain numbers only.");
             return;
         }
 
-        if (studentForm.student_id.trim().length > 8) {
+        if (!sId.startsWith("20")) {
+            setError("Student ID must start with 20 (e.g. 20241041).");
+            setFormError("Student ID must start with 20 (e.g. 20241041).");
+            return;
+        }
+
+        if (sId.length > 8) {
             setError("Student ID must not exceed 8 numbers.");
             setFormError("Student ID must not exceed 8 numbers.");
             return;
         }
-
-        const sId = studentForm.student_id.trim();
         const dupStudent = students.find(
             (s: any) => String(s.student_id).trim() === sId && (!editingStudent || s.id !== editingStudent.id)
         );

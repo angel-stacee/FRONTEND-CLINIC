@@ -10,16 +10,16 @@ export interface FacultyFormValues { employee_id: string; first_name: string; mi
 const COURSES = ["BSIT", "BSBA", "MidWifery", "BSHM", "BLIS", "BSED", "BSCRIM"];
 const YEAR_LEVELS = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 const SECTIONS_BY_YEAR: Record<string, string[]> = {
-    "1st Year": ["1A", "1B", "1C", "1D"],
-    "2nd Year": ["2A", "2B", "2C", "2D"],
-    "3rd Year": ["3A", "3B", "3C", "3D"],
-    "4th Year": ["4A", "4B", "4C", "4D"],
+    "1st Year": ["1A", "1B", "1C", "1D", "1E", "1F", "1G", "1H", "1I", "1J"],
+    "2nd Year": ["2A", "2B", "2C", "2D", "2E", "2F", "2G", "2H", "2I", "2J"],
+    "3rd Year": ["3A", "3B", "3C", "3D", "3E", "3F", "3G", "3H", "3I", "3J"],
+    "4th Year": ["4A", "4B", "4C", "4D", "4E", "4F", "4G", "4H", "4I", "4J"],
 };
 const SECTIONS = [
-    "1A", "1B", "1C", "1D",
-    "2A", "2B", "2C", "2D",
-    "3A", "3B", "3C", "3D",
-    "4A", "4B", "4C", "4D",
+   "1A", "1B", "1C", "1D", "1E", "1F", "1G", "1H", "1I", "1J",
+   "2A", "2B", "2C", "2D", "2E", "2F", "2G", "2H", "2I", "2J",
+   "3A", "3B", "3C", "3D", "3E", "3F", "3G", "3H", "3I", "3J",
+   "4A", "4B", "4C", "4D", "4E", "4F", "4G", "4H", "4I", "4J",
 ];
 const SEX_OPTIONS = ["Male", "Female"];
 
@@ -472,6 +472,18 @@ export function StudentForms({
             setLocalError("Please enter a valid Student ID (numbers only).");
             return;
         }
+        if (!sId.startsWith("20")) {
+            const msg = "Student ID must start with 20 (e.g. 20241041).";
+            setIdError(msg);
+            setLocalError(msg);
+            return;
+        }
+        if (sId.length > 8) {
+            const msg = "Student ID must not exceed 8 numbers.";
+            setIdError(msg);
+            setLocalError(msg);
+            return;
+        }
         const dateErr = validateBirthDate(studentForm.birth_date);
         if (dateErr) {
             setLocalError(dateErr);
@@ -580,7 +592,7 @@ export function StudentForms({
         setPhoneError("");
         onClearServerError?.();
         setStudentForm({
-            student_id: "",
+            student_id: "20",
             first_name: "",
             middle_name: "",
             last_name: "",
@@ -796,18 +808,28 @@ export function StudentForms({
                                     studentForm.student_id
                                 }
                                 onChange={(e) => {
-                                    setIdError("");
-                                    setLocalError("");
-                                    onClearServerError?.();
+                                    const clean = sanitizeNumericId(e.target.value, 8);
                                     setStudentForm({
                                         ...studentForm,
-                                        student_id:
-                                            sanitizeNumericId(e.target.value, 8),
+                                        student_id: clean,
                                     });
+                                    onClearServerError?.();
+                                    setLocalError("");
+                                    if (clean && clean.length >= 2 && !clean.startsWith("20")) {
+                                        setIdError("Student ID must start with 20 (e.g. 20241041)");
+                                    } else if (clean && clean.length === 1 && clean !== "2") {
+                                        setIdError("Student ID must start with 20 (e.g. 20241041)");
+                                    } else {
+                                        setIdError("");
+                                    }
                                 }}
                                 onBlur={() => {
                                     if (studentForm.student_id) {
-                                        checkIdUniqueness(studentForm.student_id, "student", editingStudentId);
+                                        if (!studentForm.student_id.startsWith("20")) {
+                                            setIdError("Student ID must start with 20 (e.g. 20241041)");
+                                        } else {
+                                            checkIdUniqueness(studentForm.student_id, "student", editingStudentId);
+                                        }
                                     }
                                 }}
                                 onKeyDown={allowOnlyDigitsKeyDown}
@@ -816,15 +838,19 @@ export function StudentForms({
                                     e.preventDefault();
                                     const text = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 8);
                                     setStudentForm({ ...studentForm, student_id: text });
-                                    setIdError("");
-                                    setLocalError("");
                                     onClearServerError?.();
-                                    if (text) {
-                                        checkIdUniqueness(text, "student", editingStudentId);
+                                    setLocalError("");
+                                    if (text && !text.startsWith("20")) {
+                                        setIdError("Student ID must start with 20 (e.g. 20241041)");
+                                    } else {
+                                        setIdError("");
+                                        if (text) {
+                                            checkIdUniqueness(text, "student", editingStudentId);
+                                        }
                                     }
                                 }}
                                 inputMode="numeric"
-                                pattern="[0-9]*"
+                                pattern="20[0-9]{0,6}"
                                 placeholder="e.g. 20241041"
                                 maxLength={8}
                                 required
