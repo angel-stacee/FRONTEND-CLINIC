@@ -9,12 +9,6 @@ import { InteractiveClinicVisitsChart } from "../components/dashboard/Interactiv
 import { VisitReasonsPieChart } from "../components/dashboard/VisitReasonsPieChart";
 import "./Dashboard.css";
 
-const DashboardAssistant = lazy(() =>
-    import("../components/dashboard/DashboardAssistant").then((m) => ({
-        default: m.DashboardAssistant,
-    }))
-);
-
 import {
     Users,
     Stethoscope,
@@ -2002,9 +1996,7 @@ function Dashboard() {
 
 
 
-            <Suspense fallback={null}>
-                <DashboardAssistant />
-            </Suspense>
+
 
             {/* Confirmation Modal for Clear All Activities */}
             <ConfirmationModal

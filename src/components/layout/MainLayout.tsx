@@ -5,6 +5,12 @@ import Header from "./Header";
 import { PageLoadingContent } from "./PageLoading";
 import ErrorBoundary from "./ErrorBoundary";
 
+const DashboardAssistant = React.lazy(() =>
+    import("../dashboard/DashboardAssistant").then((m) => ({
+        default: m.DashboardAssistant,
+    }))
+);
+
 interface MainLayoutProps {
     children?: React.ReactNode;
 }
@@ -117,6 +123,11 @@ function MainLayout({ children }: MainLayoutProps): React.JSX.Element {
                     </ErrorBoundary>
                 </main>
             </div>
+
+            {/* AI Chatbot Assistant for every internal portal tab */}
+            <Suspense fallback={null}>
+                <DashboardAssistant />
+            </Suspense>
         </div>
     );
 }
