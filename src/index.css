@@ -1146,6 +1146,46 @@ html.dark .tcc-module-page table tbody tr:hover {
     -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
 
+/* ── TCC CHATBOT SCROLLBAR UTILITIES ───────────────────────────────────── */
+.tcc-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.tcc-scrollbar::-webkit-scrollbar-track {
+    background: rgba(22, 2, 7, 0.6);
+    border-radius: 9999px;
+}
+.tcc-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(229, 169, 59, 0.4);
+    border-radius: 9999px;
+}
+.tcc-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(229, 169, 59, 0.8);
+}
+.tcc-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(229, 169, 59, 0.4) rgba(22, 2, 7, 0.6);
+}
+
+.tcc-scrollbar-x::-webkit-scrollbar {
+    height: 4px;
+}
+.tcc-scrollbar-x::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 9999px;
+}
+.tcc-scrollbar-x::-webkit-scrollbar-thumb {
+    background: rgba(229, 169, 59, 0.5);
+    border-radius: 9999px;
+}
+.tcc-scrollbar-x::-webkit-scrollbar-thumb:hover {
+    background: rgba(229, 169, 59, 0.9);
+}
+.tcc-scrollbar-x {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(229, 169, 59, 0.5) rgba(255, 255, 255, 0.05);
+}
+
 /* ── TCC LOGIN FORM INPUTS & AUTOFILL STYLING ──────────────────────────── */
 .tcc-login-input {
     color: #ffffff !important;

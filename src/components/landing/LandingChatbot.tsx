@@ -5,11 +5,10 @@ import {
     Send,
     RotateCcw,
     Sparkles,
-    ChevronDown,
-    ExternalLink,
+    ChevronLeft,
+    ChevronRight,
     MapPin,
     Clock,
-    ShieldAlert,
     Pill,
     FileText,
 } from "lucide-react";
@@ -35,6 +34,9 @@ const SUGGESTED_QUESTIONS = [
     { label: "💊 Free Medicines", query: "Are medicines and consultations free?" },
     { label: "📋 Medical Certificate", query: "How do I request an official Medical Certificate?" },
     { label: "🚨 Emergency Protocols", query: "What emergency protocols do you follow?" },
+    { label: "🩺 Vital Signs Triage", query: "What vital signs and checkups are available?" },
+    { label: "👥 Who Can Visit?", query: "Who is eligible to visit the TCC clinic?" },
+    { label: "🔐 Portal Access", query: "How do clinic staff log in to the portal?" },
 ];
 
 export function LandingChatbot() {
@@ -46,6 +48,7 @@ export function LandingChatbot() {
 
     const chatEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const questionsRef = useRef<HTMLDivElement>(null);
 
     // Auto-scroll to bottom on new messages
     useEffect(() => {
@@ -65,6 +68,14 @@ export function LandingChatbot() {
     const formatCurrentTime = () => {
         const now = new Date();
         return now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    };
+
+    // Scroll helper for quick questions container
+    const scrollQuestions = (direction: "left" | "right") => {
+        if (questionsRef.current) {
+            const offset = direction === "left" ? -170 : 170;
+            questionsRef.current.scrollBy({ left: offset, behavior: "smooth" });
+        }
     };
 
     // Client-side knowledge base fallback if API is unreachable
@@ -89,6 +100,14 @@ export function LandingChatbot() {
 
         if (q.includes("emergency") || q.includes("urgent") || q.includes("ambulance") || q.includes("hospital") || q.includes("severe") || q.includes("accident")) {
             return "🚨 **Emergency Protocols:**\nIn case of critical emergencies:\n1. The campus clinic team stabilizes the patient immediately.\n2. We coordinate rapid emergency transport with the **Tagoloan Municipal Health Office** and municipal rescue units.\n3. The patient's emergency contact or parents are notified immediately.";
+        }
+
+        if (q.includes("vital") || q.includes("blood pressure") || q.includes("bp") || q.includes("temp") || q.includes("pulse")) {
+            return "🩺 **Vital Signs & Triage:**\nThe clinic performs complete vital sign evaluations including Blood Pressure (BP), Heart Rate, Body Temperature, Respiratory Rate, and physical assessment for all walk-in patients.";
+        }
+
+        if (q.includes("who") || q.includes("eligible") || q.includes("visitor") || q.includes("student")) {
+            return "👥 **Eligibility:**\nAll actively enrolled Tagoloan Community College students, faculty members, administrative staff, and official campus visitors are welcome and covered at zero cost.";
         }
 
         if (q.includes("fever") || q.includes("headache") || q.includes("pain") || q.includes("cough") || q.includes("sick") || q.includes("cold") || q.includes("dizzy") || q.includes("vomit") || q.includes("stomach") || q.includes("wound")) {
@@ -228,9 +247,9 @@ export function LandingChatbot() {
         <aside aria-label="TCC Clinic Virtual Assistant" className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end">
             {/* ── EXPANDED CHAT WINDOW ──────────────────────────────────────── */}
             {isOpen && (
-                <div className="mb-4 w-[92vw] sm:w-[400px] h-[550px] max-h-[82vh] rounded-3xl border border-[#e5a93b]/40 bg-[#160207] shadow-2xl shadow-black/80 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
+                <div className="mb-4 w-[92vw] sm:w-[410px] h-[560px] max-h-[85vh] rounded-3xl border border-[#e5a93b]/40 bg-[#160207] shadow-2xl shadow-black/80 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-300">
                     {/* Header */}
-                    <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#2c040e] via-[#200309] to-[#160207] border-b border-[#70091f]/50">
+                    <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-[#2c040e] via-[#200309] to-[#160207] border-b border-[#70091f]/50 shrink-0">
                         <div className="flex items-center gap-3">
                             <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-[#70091f] to-[#450512] border border-[#e5a93b]/40 shadow-md">
                                 <Bot size={20} className="text-[#e5a93b]" />
@@ -257,7 +276,7 @@ export function LandingChatbot() {
                                 type="button"
                                 onClick={handleResetChat}
                                 title="Reset Conversation"
-                                className="flex h-8 w-8 items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                                className="flex h-8 w-8 items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                             >
                                 <RotateCcw size={15} />
                             </button>
@@ -265,7 +284,7 @@ export function LandingChatbot() {
                                 type="button"
                                 onClick={() => setIsOpen(false)}
                                 title="Close Assistant"
-                                className="flex h-8 w-8 items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                                className="flex h-8 w-8 items-center justify-center rounded-xl text-white/60 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                             >
                                 <X size={17} />
                             </button>
@@ -273,7 +292,7 @@ export function LandingChatbot() {
                     </div>
 
                     {/* Messages Container */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-left text-white scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-left text-white tcc-scrollbar">
                         {messages.map((msg) => {
                             const isUser = msg.role === "user";
                             return (
@@ -316,23 +335,59 @@ export function LandingChatbot() {
                         <div ref={chatEndRef} />
                     </div>
 
-                    {/* Quick Suggestion Pills */}
-                    <div className="px-3.5 py-2 border-t border-white/5 bg-[#120105]/80 overflow-x-auto scrollbar-none flex items-center gap-1.5">
-                        {SUGGESTED_QUESTIONS.map((s, idx) => (
-                            <button
-                                key={idx}
-                                type="button"
-                                disabled={isTyping}
-                                onClick={() => handleSendMessage(s.query)}
-                                className="whitespace-nowrap rounded-full bg-white/5 hover:bg-[#70091f]/50 border border-white/10 hover:border-[#e5a93b]/50 px-2.5 py-1 text-[11px] font-medium text-[#fcebe7]/90 hover:text-white transition-all disabled:opacity-40 cursor-pointer shrink-0"
-                            >
-                                {s.label}
-                            </button>
-                        ))}
+                    {/* ── SCROLLABLE QUICK QUESTIONS BAR ────────────────────────── */}
+                    <div className="border-t border-white/10 bg-[#120105] px-2.5 pt-2 pb-2.5 shrink-0">
+                        <div className="flex items-center justify-between px-1 mb-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#e5a93b] flex items-center gap-1">
+                                <Sparkles size={11} className="text-[#e5a93b]" />
+                                Ask a Question (Scroll to view):
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    onClick={() => scrollQuestions("left")}
+                                    title="Scroll left"
+                                    className="flex h-5 w-5 items-center justify-center rounded-md bg-white/10 hover:bg-[#e5a93b] hover:text-[#160207] text-[#fcebe7] transition-colors cursor-pointer"
+                                >
+                                    <ChevronLeft size={12} />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => scrollQuestions("right")}
+                                    title="Scroll right"
+                                    className="flex h-5 w-5 items-center justify-center rounded-md bg-white/10 hover:bg-[#e5a93b] hover:text-[#160207] text-[#fcebe7] transition-colors cursor-pointer"
+                                >
+                                    <ChevronRight size={12} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Scrollable Container with Gold Scrollbar and Mouse Wheel Support */}
+                        <div
+                            ref={questionsRef}
+                            onWheel={(e) => {
+                                if (e.deltaY !== 0) {
+                                    e.currentTarget.scrollLeft += e.deltaY;
+                                }
+                            }}
+                            className="overflow-x-auto tcc-scrollbar-x flex items-center gap-1.5 pb-1.5 pt-0.5 scroll-smooth"
+                        >
+                            {SUGGESTED_QUESTIONS.map((s, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    disabled={isTyping}
+                                    onClick={() => handleSendMessage(s.query)}
+                                    className="whitespace-nowrap rounded-full bg-white/5 hover:bg-[#70091f] border border-white/15 hover:border-[#e5a93b]/70 px-3 py-1.5 text-[11px] font-medium text-[#fcebe7] hover:text-white hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-40 cursor-pointer shrink-0 shadow-sm"
+                                >
+                                    {s.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {/* Input Area */}
-                    <div className="p-3 bg-gradient-to-t from-[#0e0104] to-[#160207] border-t border-[#70091f]/50">
+                    <div className="p-3 bg-gradient-to-t from-[#0e0104] to-[#160207] border-t border-[#70091f]/50 shrink-0">
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
