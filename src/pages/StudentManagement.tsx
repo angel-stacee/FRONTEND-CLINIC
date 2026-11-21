@@ -711,11 +711,9 @@ function StudentManagement() {
         }
     };
 
-
-
-
-
-
+    const handleClearServerError = useCallback(() => {
+        setFormError("");
+    }, []);
 
     const viewStudentRecord = async (student) => {
         setError("");
@@ -3043,7 +3041,7 @@ function StudentManagement() {
                 setFacultyForm={setFacultyForm}
                 onSwitchCategory={handleSwitchCategory}
                 serverError={formError}
-                onClearServerError={() => setFormError("")}
+                onClearServerError={handleClearServerError}
                 students={students}
                 staff={staff}
                 faculties={faculties}

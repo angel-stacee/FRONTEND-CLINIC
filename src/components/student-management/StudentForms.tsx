@@ -430,10 +430,9 @@ export function StudentForms({
         setLocalError("");
         setIdError("");
         setPhoneError("");
-        onClearServerError?.();
-    }, [showStudentForm, showStaffForm, showFacultyForm, onClearServerError]);
+    }, [showStudentForm, showStaffForm, showFacultyForm]);
 
-    const activeError = idError || phoneError || localError || serverError || "";
+    const activeError = localError || serverError || "";
 
     const checkIdUniqueness = useCallback(async (
         rawId: string,

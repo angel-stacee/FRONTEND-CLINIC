@@ -337,7 +337,7 @@ export function Modal({
             }}
         >
             <div
-                className={`my-auto max-h-[92vh] w-full ${maxWidth} overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-[#1f1915] transition-all`}
+                className={`my-auto max-h-[92vh] w-full ${maxWidth} overflow-y-auto rounded-2xl bg-white shadow-2xl dark:bg-[#1f1915]`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e8dfd4] bg-white/95 px-6 py-4 backdrop-blur-sm dark:border-[#382f25] dark:bg-[#1f1915]/95">
