@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import api from "../services/api";
+import { ConfirmationModal } from "../components/student-management/FieldsAndModals";
+import FloatingToast from "../components/common/FloatingToast";
+import { addClinicNotification } from "../services/notifications";
 import {
     Network,
     Users,
@@ -856,6 +859,16 @@ export default function Organization(): React.JSX.Element {
         }
     });
 
+    const [confirmDeleteMember, setConfirmDeleteMember] = useState<OrgMember | null>(null);
+    const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
+
+    useEffect(() => {
+        if (!toastMessage) return;
+        const timer = setTimeout(() => setToastMessage(""), 4500);
+        return () => clearTimeout(timer);
+    }, [toastMessage]);
+
     // Synchronize with database on mount and listen to updates
     useEffect(() => {
         let isMounted = true;
@@ -1028,14 +1041,30 @@ export default function Organization(): React.JSX.Element {
             setDbSyncStatus("synced");
         } finally {
             setIsSavingDb(false);
+            setToastMessage(`Personnel member "${updated.name}" saved successfully.`);
+            addClinicNotification({
+                type: isCreatingNew ? "add" : "edit",
+                title: isCreatingNew ? "Personnel Member Added" : "Personnel Member Updated",
+                description: `${updated.name} (${updated.role}) profile updated in organization directory`,
+                category: "system",
+            });
         }
     };
 
-    const handleDeleteMember = async (memberId: string) => {
-        if (!window.confirm("Are you sure you want to remove this personnel member from the organizational chart?")) {
-            return;
+    const handleDeleteMember = (memberId: string) => {
+        const found =
+            orgData.clinic.members.find((m) => m.id === memberId) ||
+            orgData.admin.members.find((m) => m.id === memberId);
+        if (found) {
+            setConfirmDeleteMember(found);
+        } else {
+            setConfirmDeleteMember({ id: memberId, name: "Personnel Member", role: "" } as OrgMember);
         }
+    };
 
+    const handleExecuteDelete = async (memberId: string) => {
+        const memberToDelete = confirmDeleteMember;
+        setConfirmDeleteMember(null);
         setIsSavingDb(true);
         setDbSyncStatus("syncing");
 
@@ -1084,43 +1113,52 @@ export default function Organization(): React.JSX.Element {
             setDbSyncStatus("synced");
         } finally {
             setIsSavingDb(false);
+            const memberName = memberToDelete?.name || "Personnel member";
+            setToastMessage(`"${memberName}" has been removed from the organizational chart.`);
+            addClinicNotification({
+                type: "delete",
+                title: "Personnel Member Removed",
+                description: `${memberName} was removed from the organization directory`,
+                category: "system",
+            });
         }
     };
 
-    const handleResetDefaults = async () => {
-        if (
-            window.confirm(
-                "Reset all personnel and organization charts to official institution defaults? All customized edits will be cleared from the database."
-            )
-        ) {
-            setIsSavingDb(true);
-            setDbSyncStatus("syncing");
+    const handleResetDefaults = () => {
+        setConfirmResetOpen(true);
+    };
 
-            try {
-                const res = await api.post("/organization/reset");
-                if (res.data?.organization) {
-                    const formatted = {
-                        clinic: { ...res.data.organization.clinic, icon: ORG_DATA.clinic.icon },
-                        admin: { ...res.data.organization.admin, icon: ORG_DATA.admin.icon },
-                    };
-                    setOrgData(formatted);
-                } else {
-                    setOrgData(ORG_DATA);
-                }
-                localStorage.removeItem(STORAGE_KEY);
-                setHasCustomChanges(false);
-                window.dispatchEvent(new Event("tcc-org-updated"));
-                setDbSyncStatus("synced");
-            } catch (err) {
-                console.warn("Database reset fallback to defaults:", err);
-                localStorage.removeItem(STORAGE_KEY);
+    const handleExecuteReset = async () => {
+        setConfirmResetOpen(false);
+        setIsSavingDb(true);
+        setDbSyncStatus("syncing");
+
+        try {
+            const res = await api.post("/organization/reset");
+            if (res.data?.organization) {
+                const formatted = {
+                    clinic: { ...res.data.organization.clinic, icon: ORG_DATA.clinic.icon },
+                    admin: { ...res.data.organization.admin, icon: ORG_DATA.admin.icon },
+                };
+                setOrgData(formatted);
+            } else {
                 setOrgData(ORG_DATA);
-                setHasCustomChanges(false);
-                window.dispatchEvent(new Event("tcc-org-updated"));
-                setDbSyncStatus("synced");
-            } finally {
-                setIsSavingDb(false);
             }
+            localStorage.removeItem(STORAGE_KEY);
+            setHasCustomChanges(false);
+            window.dispatchEvent(new Event("tcc-org-updated"));
+            setDbSyncStatus("synced");
+            setToastMessage("Organizational chart reset to official defaults.");
+        } catch (err) {
+            console.warn("Database reset fallback to defaults:", err);
+            localStorage.removeItem(STORAGE_KEY);
+            setOrgData(ORG_DATA);
+            setHasCustomChanges(false);
+            window.dispatchEvent(new Event("tcc-org-updated"));
+            setDbSyncStatus("synced");
+            setToastMessage("Organizational chart reset to official defaults.");
+        } finally {
+            setIsSavingDb(false);
         }
     };
 
@@ -1423,6 +1461,46 @@ export default function Organization(): React.JSX.Element {
                 isNew={isCreatingNew}
                 onSave={handleSaveMember}
                 onDelete={handleDeleteMember}
+            />
+
+            {/* ── CONFIRMATION MODAL FOR DELETING MEMBER ────────────────── */}
+            {confirmDeleteMember && (
+                <ConfirmationModal
+                    open={Boolean(confirmDeleteMember)}
+                    title="Confirm Delete"
+                    message={`Are you sure you want to remove "${confirmDeleteMember.name}" (${confirmDeleteMember.role || "Personnel Member"}) from the organizational chart?`}
+                    confirmText="Delete Member"
+                    cancelText="Cancel"
+                    danger={true}
+                    loading={isSavingDb}
+                    onClose={() => {
+                        if (!isSavingDb) setConfirmDeleteMember(null);
+                    }}
+                    onConfirm={() => handleExecuteDelete(confirmDeleteMember.id)}
+                />
+            )}
+
+            {/* ── CONFIRMATION MODAL FOR RESETTING DEFAULTS ─────────────── */}
+            {confirmResetOpen && (
+                <ConfirmationModal
+                    open={confirmResetOpen}
+                    title="Reset to Institution Defaults"
+                    message="Are you sure you want to reset all personnel and organization charts to official institution defaults? All customized edits will be cleared from the database."
+                    confirmText="Reset to Defaults"
+                    cancelText="Cancel"
+                    danger={true}
+                    loading={isSavingDb}
+                    onClose={() => {
+                        if (!isSavingDb) setConfirmResetOpen(false);
+                    }}
+                    onConfirm={handleExecuteReset}
+                />
+            )}
+
+            {/* ── FLOATING TOAST MESSAGE ─────────────────────────────────── */}
+            <FloatingToast
+                message={toastMessage}
+                onClose={() => setToastMessage("")}
             />
         </div>
     );
