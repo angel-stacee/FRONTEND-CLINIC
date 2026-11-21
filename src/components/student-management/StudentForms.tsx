@@ -591,7 +591,7 @@ export function StudentForms({
         setPhoneError("");
         onClearServerError?.();
         setStudentForm({
-            student_id: "20",
+            student_id: "",
             first_name: "",
             middle_name: "",
             last_name: "",

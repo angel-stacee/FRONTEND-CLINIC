@@ -19,7 +19,7 @@ import { ReasonBadge } from "../utils/reasonColors";
 
 
 const EMPTY_STUDENT_FORM = {
-    student_id: "20",
+    student_id: "",
     first_name: "",
     middle_name: "",
     last_name: "",
@@ -547,10 +547,6 @@ function StudentManagement() {
             });
         } else {
             resetAllPatientForms();
-            setStudentForm((prev) => ({
-                ...prev,
-                student_id: "20",
-            }));
         }
 
         setShowStudentForm(true);
@@ -659,7 +655,7 @@ function StudentManagement() {
             const currentSource = showFacultyForm ? facultyForm : staffForm;
             setStudentForm((prev) => ({
                 ...prev,
-                student_id: prev.student_id && prev.student_id.startsWith("20") ? prev.student_id : "20",
+                student_id: prev.student_id && prev.student_id.startsWith("20") ? prev.student_id : "",
                 first_name: currentSource.first_name || prev.first_name,
                 middle_name: currentSource.middle_name || prev.middle_name,
                 last_name: currentSource.last_name || prev.last_name,
