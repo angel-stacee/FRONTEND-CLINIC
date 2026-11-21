@@ -180,33 +180,43 @@ function Sidebar({
 
             {/* Logo and Brand Header */}
             <div className={`transition-all duration-300 ${sidebarCollapsed ? "px-2 pb-4 pt-5" : "px-5 pb-6 pt-7"}`}>
-                <div className={`flex items-center ${sidebarCollapsed ? "justify-center" : "justify-between"}`}>
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div
-                            className={`flex shrink-0 items-center justify-center rounded-full bg-white/10 p-1 transition-all duration-300 ${
-                                sidebarCollapsed ? "h-11 w-11" : "h-13 w-13"
-                            }`}
-                        >
-                            <img
-                                src={tccLogo}
-                                alt="TCC Logo"
-                                onError={(e) => {
-                                    const target = e.currentTarget;
-                                    if (!target.dataset.fallback) {
-                                        target.dataset.fallback = "1";
-                                        target.src = "/tcc-logo.png";
-                                    } else if (target.dataset.fallback === "1") {
-                                        target.dataset.fallback = "2";
-                                        target.src = "/tcc-logo.jpg";
-                                    }
-                                }}
-                                className={`rounded-full object-contain transition-all duration-300 ${
-                                    sidebarCollapsed ? "h-9 w-9" : "h-11 w-11 hover:rotate-6 hover:scale-105"
-                                }`}
-                            />
-                        </div>
+                {sidebarCollapsed ? (
+                    /* Collapsed view: centered hamburger button to expand */
+                    <div className="flex items-center justify-center">
+                        {onToggleSidebar && (
+                            <button
+                                type="button"
+                                onClick={onToggleSidebar}
+                                className="hidden lg:flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-[#fcebe7] transition-all duration-200 hover:bg-white/20 hover:text-white hover:scale-105 active:scale-95 cursor-pointer shadow-sm"
+                                title="Expand sidebar"
+                                aria-label="Expand sidebar"
+                            >
+                                <Menu size={22} />
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    /* Expanded view: Logo + Title + collapse hamburger button */
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className="flex shrink-0 items-center justify-center rounded-full bg-white/10 p-1 transition-all duration-300 h-13 w-13">
+                                <img
+                                    src={tccLogo}
+                                    alt="TCC Logo"
+                                    onError={(e) => {
+                                        const target = e.currentTarget;
+                                        if (!target.dataset.fallback) {
+                                            target.dataset.fallback = "1";
+                                            target.src = "/tcc-logo.png";
+                                        } else if (target.dataset.fallback === "1") {
+                                            target.dataset.fallback = "2";
+                                            target.src = "/tcc-logo.jpg";
+                                        }
+                                    }}
+                                    className="h-11 w-11 rounded-full object-contain transition-all duration-300 hover:rotate-6 hover:scale-105"
+                                />
+                            </div>
 
-                        {!sidebarCollapsed && (
                             <div className="min-w-0">
                                 <p className="truncate text-base font-bold text-[#fcebe7]">
                                     TCC Clinic
@@ -216,24 +226,22 @@ function Sidebar({
                                     Management System
                                 </p>
                             </div>
+                        </div>
+
+                        {/* Toggle Button inside sidebar on desktop */}
+                        {onToggleSidebar && (
+                            <button
+                                type="button"
+                                onClick={onToggleSidebar}
+                                className="hidden lg:flex h-9 w-9 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white cursor-pointer"
+                                title="Collapse sidebar"
+                                aria-label="Collapse sidebar"
+                            >
+                                <Menu size={20} />
+                            </button>
                         )}
                     </div>
-
-                    {/* Toggle Button inside sidebar on desktop */}
-                    {onToggleSidebar && (
-                        <button
-                            type="button"
-                            onClick={onToggleSidebar}
-                            className={`hidden lg:flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white cursor-pointer ${
-                                sidebarCollapsed ? "mt-2 mx-auto" : ""
-                            }`}
-                            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                        >
-                            <Menu size={18} />
-                        </button>
-                    )}
-                </div>
+                )}
             </div>
 
             <div className={`border-t border-white/10 ${sidebarCollapsed ? "mx-2" : "mx-5"}`} />
