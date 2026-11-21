@@ -1443,7 +1443,7 @@ export default function Landing(): React.JSX.Element {
                         return (
                             <div
                                 key={index}
-                                className={`reveal-item rounded-3xl border transition-all duration-300 overflow-hidden ${
+                                className={`rounded-3xl border transition-all duration-300 overflow-hidden ${
                                     isOpen
                                         ? "border-[#e5a93b]/70 bg-gradient-to-r from-[#2a040d] via-[#1f0309] to-[#170206] shadow-xl shadow-black/40"
                                         : "border-[#70091f]/50 bg-[#1a0207] hover:border-[#e5a93b]/40"
