@@ -49,7 +49,7 @@ export function InputField({
 
     return (
         <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+            <label className="text-sm font-semibold text-stone-700 dark:text-stone-300">
                 {label}
 
                 {required && (
@@ -74,9 +74,9 @@ export function InputField({
                 inputMode={inputMode}
                 pattern={pattern}
                 className={`w-full rounded-lg border ${
-                    error ? "border-red-400 focus:border-red-500 focus:ring-red-100" : "border-stone-300 focus:border-amber-500 focus:ring-amber-100"
-                } bg-white px-3 py-2.5 text-sm outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-stone-100 ${
-                    hasValue ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-700 placeholder:text-stone-400"
+                    error ? "border-red-400 focus:border-red-500 focus:ring-red-100" : "border-stone-300 focus:border-[#70091f] focus:ring-[#70091f]/15"
+                } bg-white px-3.5 py-2.5 text-sm outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-stone-100 dark:border-stone-700 dark:bg-stone-800 ${
+                    hasValue ? "font-medium text-stone-900 dark:text-stone-100" : "font-normal text-stone-700 placeholder:text-stone-400 dark:text-stone-300 dark:placeholder:text-stone-500"
                 }`}
             />
 
@@ -191,7 +191,7 @@ export function DateOfBirthField({
 
     return (
         <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+            <label className="text-sm font-semibold text-stone-700 dark:text-stone-300">
                 {label}
                 {required && <span className="ml-1 text-red-500">*</span>}
             </label>
@@ -202,14 +202,14 @@ export function DateOfBirthField({
                     onChange={(e) => handlePartChange("month", e.target.value)}
                     required={required}
                     className={`w-full rounded-lg border ${
-                        error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-amber-500"
-                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100 ${
-                        selectedMonth ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-500"
+                        error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-[#70091f]"
+                    } bg-white px-2.5 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-[#70091f]/15 dark:border-stone-700 dark:bg-stone-800 ${
+                        selectedMonth ? "font-medium text-stone-900 dark:text-stone-100" : "font-normal text-stone-500 dark:text-stone-400"
                     }`}
                 >
-                    <option value="">Month</option>
+                    <option value="" className="text-stone-500 dark:bg-stone-800">Month</option>
                     {MONTH_NAMES.map((m) => (
-                        <option key={m.value} value={m.value}>
+                        <option key={m.value} value={m.value} className="text-stone-900 dark:bg-stone-800 dark:text-stone-100">
                             {m.label}
                         </option>
                     ))}
@@ -220,14 +220,14 @@ export function DateOfBirthField({
                     onChange={(e) => handlePartChange("day", e.target.value)}
                     required={required}
                     className={`w-full rounded-lg border ${
-                        error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-amber-500"
-                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100 ${
-                        selectedDay ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-500"
+                        error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-[#70091f]"
+                    } bg-white px-2.5 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-[#70091f]/15 dark:border-stone-700 dark:bg-stone-800 ${
+                        selectedDay ? "font-medium text-stone-900 dark:text-stone-100" : "font-normal text-stone-500 dark:text-stone-400"
                     }`}
                 >
-                    <option value="">Day</option>
+                    <option value="" className="text-stone-500 dark:bg-stone-800">Day</option>
                     {Array.from({ length: maxDays }, (_, i) => String(i + 1).padStart(2, "0")).map((d) => (
-                        <option key={d} value={d}>
+                        <option key={d} value={d} className="text-stone-900 dark:bg-stone-800 dark:text-stone-100">
                             {d}
                         </option>
                     ))}
@@ -238,14 +238,14 @@ export function DateOfBirthField({
                     onChange={(e) => handlePartChange("year", e.target.value)}
                     required={required}
                     className={`w-full rounded-lg border ${
-                        error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-amber-500"
-                    } bg-white px-2 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-amber-100 ${
-                        selectedYear ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-500"
+                        error ? "border-red-400 focus:border-red-500" : "border-stone-300 focus:border-[#70091f]"
+                    } bg-white px-2.5 py-2.5 text-xs sm:text-sm outline-none transition focus:ring-2 focus:ring-[#70091f]/15 dark:border-stone-700 dark:bg-stone-800 ${
+                        selectedYear ? "font-medium text-stone-900 dark:text-stone-100" : "font-normal text-stone-500 dark:text-stone-400"
                     }`}
                 >
-                    <option value="">Year</option>
+                    <option value="" className="text-stone-500 dark:bg-stone-800">Year</option>
                     {years.map((y) => (
-                        <option key={y} value={String(y)}>
+                        <option key={y} value={String(y)} className="text-stone-900 dark:bg-stone-800 dark:text-stone-100">
                             {y}
                         </option>
                     ))}
@@ -279,7 +279,7 @@ export function SelectField({
 
     return (
         <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+            <label className="text-sm font-semibold text-stone-700 dark:text-stone-300">
                 {label}
 
                 {required && (
@@ -292,16 +292,16 @@ export function SelectField({
                 onChange={onChange}
                 required={required}
                 disabled={disabled}
-                className={`w-full rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-100 disabled:cursor-not-allowed disabled:bg-stone-100 ${
-                    hasValue ? "font-bold text-stone-950 dark:text-white" : "font-normal text-stone-500"
+                className={`w-full rounded-lg border border-stone-300 bg-white px-3.5 py-2.5 text-sm outline-none transition focus:border-[#70091f] focus:ring-2 focus:ring-[#70091f]/15 disabled:cursor-not-allowed disabled:bg-stone-100 dark:border-stone-700 dark:bg-stone-800 ${
+                    hasValue ? "font-medium text-stone-900 dark:text-stone-100" : "font-normal text-stone-500 dark:text-stone-400"
                 }`}
             >
-                <option value="">
+                <option value="" className="text-stone-500 dark:bg-stone-800">
                     Select {label}
                 </option>
 
                 {allOptions.map((option) => (
-                    <option key={option} value={option}>
+                    <option key={option} value={option} className="text-stone-900 dark:bg-stone-800 dark:text-stone-100">
                         {option}
                     </option>
                 ))}
