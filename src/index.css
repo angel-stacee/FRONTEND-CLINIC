@@ -1147,24 +1147,54 @@ html.dark .tcc-module-page table tbody tr:hover {
     -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
 
-/* Ensure inputs and selects with values or autofill are crisp and bold for maximum readability */
-input:not(:placeholder-shown):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
-select:has(option:checked:not([value=""])),
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus,
-select:-webkit-autofill {
+/* ── TCC LOGIN FORM INPUTS & AUTOFILL STYLING ──────────────────────────── */
+.tcc-login-input {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    caret-color: #ffffff !important;
+    font-weight: 600 !important;
+    background-color: #160307 !important;
+}
+
+.tcc-login-input::placeholder {
+    color: #dfcfc7 !important;
+    -webkit-text-fill-color: #dfcfc7 !important;
+    opacity: 0.75 !important;
+}
+
+/* Prevent browser autofill from turning login inputs into bright light blue/white */
+.tcc-login-input:-webkit-autofill,
+.tcc-login-input:-webkit-autofill:hover,
+.tcc-login-input:-webkit-autofill:focus,
+.tcc-login-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px #1a0308 inset !important;
+    box-shadow: 0 0 0 1000px #1a0308 inset !important;
+    -webkit-text-fill-color: #ffffff !important;
+    color: #ffffff !important;
+    caret-color: #ffffff !important;
+    border-color: #70091f !important;
+    font-weight: 600 !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Ensure inputs and selects on light forms with values or autofill are crisp and bold for maximum readability */
+.tcc-module-page input:not(:placeholder-shown):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not(.tcc-login-input),
+.tcc-module-page select:has(option:checked:not([value=""])),
+.tcc-module-page input:-webkit-autofill:not(.tcc-login-input),
+.tcc-module-page input:-webkit-autofill:hover:not(.tcc-login-input), 
+.tcc-module-page input:-webkit-autofill:focus:not(.tcc-login-input),
+.tcc-module-page select:-webkit-autofill {
     font-weight: 700 !important;
     color: #1c1917 !important;
     -webkit-text-fill-color: #1c1917 !important;
 }
 
-html.tcc-dark input:not(:placeholder-shown):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
-html.tcc-dark select:has(option:checked:not([value=""])),
-html.tcc-dark input:-webkit-autofill,
-html.tcc-dark input:-webkit-autofill:hover,
-html.tcc-dark input:-webkit-autofill:focus,
-html.tcc-dark select:-webkit-autofill {
+html.tcc-dark .tcc-module-page input:not(:placeholder-shown):not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not(.tcc-login-input),
+html.tcc-dark .tcc-module-page select:has(option:checked:not([value=""])),
+html.tcc-dark .tcc-module-page input:-webkit-autofill:not(.tcc-login-input),
+html.tcc-dark .tcc-module-page input:-webkit-autofill:hover:not(.tcc-login-input),
+html.tcc-dark .tcc-module-page input:-webkit-autofill:focus:not(.tcc-login-input),
+html.tcc-dark .tcc-module-page select:-webkit-autofill {
     font-weight: 700 !important;
     color: #f8f3eb !important;
     -webkit-text-fill-color: #f8f3eb !important;

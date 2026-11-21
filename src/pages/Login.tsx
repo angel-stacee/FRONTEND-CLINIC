@@ -284,7 +284,7 @@ export default function Login(): React.JSX.Element {
                                 placeholder="e.g. admin.clinic.edu@gmail.com"
                                 required
                                 disabled={loading}
-                                className="h-11 w-full rounded-xl border border-[#70091f]/60 bg-[#160307]/80 pl-10 pr-4 text-sm text-white placeholder:text-stone-400 outline-none transition focus:border-[#d4a017] focus:ring-1 focus:ring-[#d4a017] disabled:cursor-not-allowed disabled:opacity-60"
+                                className="tcc-login-input h-11 w-full rounded-xl border border-[#70091f]/60 bg-[#160307] pl-10 pr-4 text-sm font-semibold text-white placeholder:text-[#dfcfc7]/75 outline-none transition focus:border-[#d4a017] focus:ring-1 focus:ring-[#d4a017] disabled:cursor-not-allowed disabled:opacity-60"
                             />
                         </div>
                     </div>
@@ -330,7 +330,7 @@ export default function Login(): React.JSX.Element {
                                 placeholder="Enter your password"
                                 required
                                 disabled={loading}
-                                className="h-11 w-full rounded-xl border border-[#70091f]/60 bg-[#160307]/80 pl-10 pr-11 text-sm text-white placeholder:text-stone-400 outline-none transition focus:border-[#d4a017] focus:ring-1 focus:ring-[#d4a017] disabled:cursor-not-allowed disabled:opacity-60"
+                                className="tcc-login-input h-11 w-full rounded-xl border border-[#70091f]/60 bg-[#160307] pl-10 pr-11 text-sm font-semibold text-white placeholder:text-[#dfcfc7]/75 outline-none transition focus:border-[#d4a017] focus:ring-1 focus:ring-[#d4a017] disabled:cursor-not-allowed disabled:opacity-60"
                             />
                             <button
                                 type="button"
@@ -492,7 +492,7 @@ export default function Login(): React.JSX.Element {
                                                 if (forgotError) setForgotError("");
                                             }}
                                             placeholder="e.g. nurse@tcc.edu.ph"
-                                            className="w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 pl-10 pr-3.5 text-sm text-white placeholder:text-stone-400 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
+                                            className="tcc-login-input w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 pl-10 pr-3.5 text-sm font-semibold text-white placeholder:text-[#dfcfc7]/75 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
                                         />
                                     </div>
                                 </div>
@@ -579,7 +579,7 @@ export default function Login(): React.JSX.Element {
                                             if (forgotError) setForgotError("");
                                         }}
                                         placeholder="• • • • • •"
-                                        className="w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 text-center font-mono text-xl tracking-[0.4em] text-white placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-stone-400 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
+                                        className="tcc-login-input w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 text-center font-mono text-xl tracking-[0.4em] font-bold text-white placeholder:tracking-normal placeholder:font-sans placeholder:text-sm placeholder:text-[#dfcfc7]/75 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
                                     />
                                     <p className="mt-1.5 text-center text-xs text-white/60">
                                         Please enter the 6-digit code received in your email.
@@ -679,7 +679,7 @@ export default function Login(): React.JSX.Element {
                                                 if (forgotError) setForgotError("");
                                             }}
                                             placeholder="Minimum 8 characters"
-                                            className="w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-stone-400 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
+                                            className="tcc-login-input w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 pl-10 pr-10 text-sm font-semibold text-white placeholder:text-[#dfcfc7]/75 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
                                         />
                                         <button
                                             type="button"
@@ -719,7 +719,7 @@ export default function Login(): React.JSX.Element {
                                                 if (forgotError) setForgotError("");
                                             }}
                                             placeholder="Re-enter new password"
-                                            className="w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 pl-10 pr-10 text-sm text-white placeholder:text-stone-400 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
+                                            className="tcc-login-input w-full rounded-xl border border-[#70091f]/60 bg-[#160307] py-2.5 pl-10 pr-10 text-sm font-semibold text-white placeholder:text-[#dfcfc7]/75 focus:border-[#d4a017] focus:outline-none focus:ring-1 focus:ring-[#d4a017] disabled:bg-stone-900"
                                         />
                                     </div>
                                 </div>
