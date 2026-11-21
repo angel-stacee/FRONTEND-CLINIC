@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, Eye, FileBadge, FileText, GraduationCap, MapPin, Pencil, RotateCcw, Search, ShieldCheck, Stethoscope, Trash2, User, X } from "lucide-react";
+import { AlertCircle, BookOpen, Briefcase, CheckCircle2, ChevronDown, Download, Eye, FileBadge, FileText, GraduationCap, MapPin, Pencil, RotateCcw, Search, ShieldCheck, Stethoscope, Trash2, User, X } from "lucide-react";
 import api from "../services/api";
 import { getCachedRecord, invalidateRecordCache } from "../services/recordCache";
 import { ConfirmationModal, InfoItem, Modal, RecordSection } from "../components/student-management/FieldsAndModals";
@@ -153,6 +153,12 @@ function StudentManagement() {
     const [formError, setFormError] = useState("");
     const [successToast, setSuccessToast] = useState("");
     const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | undefined>(undefined);
+    const [inlineNotification, setInlineNotification] = useState<{
+        type: "add" | "edit" | "delete" | "restore" | "error";
+        title: string;
+        message: string;
+        action?: { label: string; onClick: () => void };
+    } | null>(null);
     const [showRestoreModal, setShowRestoreModal] = useState(false);
 
     const [sexFilter, setSexFilter] = useState("all");
@@ -251,6 +257,12 @@ function StudentManagement() {
         const timeout = setTimeout(() => setSuccessToast(""), 4500);
         return () => clearTimeout(timeout);
     }, [successToast]);
+
+    useEffect(() => {
+        if (!inlineNotification) return;
+        const timer = setTimeout(() => setInlineNotification(null), 6000);
+        return () => clearTimeout(timer);
+    }, [inlineNotification]);
 
     const initialStudentSearch = useRef(true);
 
@@ -1400,12 +1412,22 @@ function StudentManagement() {
 
             await api.post(endpoint);
             setSuccessToast("Patient record restored successfully.");
+            setInlineNotification({
+                type: "restore",
+                title: "Record Restored",
+                message: "Patient record has been restored successfully.",
+            });
             setToastAction(undefined);
             invalidateRecordCache();
             await fetchData();
         } catch (err: any) {
             console.error("Failed to restore record:", err);
             setError("Failed to restore record.");
+            setInlineNotification({
+                type: "error",
+                title: "Restore Failed",
+                message: "Failed to restore record. Please try again.",
+            });
         }
     };
 
@@ -1434,6 +1456,11 @@ function StudentManagement() {
 
                     closeStudentForm(true);
                     completedMessage = "Student added successfully.";
+                    setInlineNotification({
+                        type: "add",
+                        title: "Student Added Successfully",
+                        message: `${getFullName(studentForm)} (${studentForm.student_id || "Student"}) has been registered.`,
+                    });
                     addClinicNotification({
                         type: "add",
                         title: "Student Registered",
@@ -1460,6 +1487,11 @@ function StudentManagement() {
 
                     closeStudentForm(true);
                     completedMessage = "Student updated successfully.";
+                    setInlineNotification({
+                        type: "edit",
+                        title: "Student Updated Successfully",
+                        message: `${getFullName(studentForm)} profile and information have been updated.`,
+                    });
                     addClinicNotification({
                         type: "edit",
                         title: "Student Updated",
@@ -1486,6 +1518,15 @@ function StudentManagement() {
                         label: "Undo",
                         onClick: () => handleRestoreQuick(deletedStudentId, "student"),
                     });
+                    setInlineNotification({
+                        type: "delete",
+                        title: "Student Record Deleted",
+                        message: `${getFullName(confirmation.person)} was moved to trash.`,
+                        action: {
+                            label: "Undo",
+                            onClick: () => handleRestoreQuick(deletedStudentId, "student"),
+                        },
+                    });
                     addClinicNotification({
                         type: "delete",
                         title: "Student Deleted",
@@ -1502,6 +1543,11 @@ function StudentManagement() {
 
                     closeStaffForm(true);
                     completedMessage = "Staff member added successfully.";
+                    setInlineNotification({
+                        type: "add",
+                        title: "Staff Added Successfully",
+                        message: `${getFullName(staffForm)} has been registered.`,
+                    });
                     addClinicNotification({
                         type: "add",
                         title: "Staff Registered",
@@ -1528,6 +1574,11 @@ function StudentManagement() {
 
                     closeStaffForm(true);
                     completedMessage = "Staff member updated successfully.";
+                    setInlineNotification({
+                        type: "edit",
+                        title: "Staff Updated Successfully",
+                        message: `${getFullName(staffForm)} profile and information have been updated.`,
+                    });
                     addClinicNotification({
                         type: "edit",
                         title: "Staff Updated",
@@ -1554,6 +1605,15 @@ function StudentManagement() {
                         label: "Undo",
                         onClick: () => handleRestoreQuick(deletedStaffId, "staff"),
                     });
+                    setInlineNotification({
+                        type: "delete",
+                        title: "Staff Record Deleted",
+                        message: `${getFullName(confirmation.person)} was moved to trash.`,
+                        action: {
+                            label: "Undo",
+                            onClick: () => handleRestoreQuick(deletedStaffId, "staff"),
+                        },
+                    });
                     addClinicNotification({
                         type: "delete",
                         title: "Staff Deleted",
@@ -1570,6 +1630,11 @@ function StudentManagement() {
 
                     closeFacultyForm(true);
                     completedMessage = "Faculty member added successfully.";
+                    setInlineNotification({
+                        type: "add",
+                        title: "Faculty Added Successfully",
+                        message: `${getFullName(facultyForm)} has been registered.`,
+                    });
                     addClinicNotification({
                         type: "add",
                         title: "Faculty Registered",
@@ -1596,6 +1661,11 @@ function StudentManagement() {
 
                     closeFacultyForm(true);
                     completedMessage = "Faculty member updated successfully.";
+                    setInlineNotification({
+                        type: "edit",
+                        title: "Faculty Updated Successfully",
+                        message: `${getFullName(facultyForm)} profile and information have been updated.`,
+                    });
                     addClinicNotification({
                         type: "edit",
                         title: "Faculty Updated",
@@ -1621,6 +1691,15 @@ function StudentManagement() {
                     setToastAction({
                         label: "Undo",
                         onClick: () => handleRestoreQuick(deletedFacultyId, "faculty"),
+                    });
+                    setInlineNotification({
+                        type: "delete",
+                        title: "Faculty Record Deleted",
+                        message: `${getFullName(confirmation.person)} was moved to trash.`,
+                        action: {
+                            label: "Undo",
+                            onClick: () => handleRestoreQuick(deletedFacultyId, "faculty"),
+                        },
                     });
                     addClinicNotification({
                         type: "delete",
@@ -1653,6 +1732,11 @@ function StudentManagement() {
 
             setError(validationMsg);
             setFormError(validationMsg);
+            setInlineNotification({
+                type: "error",
+                title: "Action Could Not Be Completed",
+                message: validationMsg,
+            });
             setConfirmation(null);
         } finally {
             setSaving(false);
@@ -1729,6 +1813,80 @@ function StudentManagement() {
                         </button>
                     </div>
                 </div>
+
+                {/* Inline Notification Banner under Header */}
+                {inlineNotification && (
+                    <div
+                        role="status"
+                        aria-live="polite"
+                        className={`mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border p-4 shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-top-2 ${
+                            inlineNotification.type === "delete"
+                                ? "border-amber-200 bg-amber-50/95 text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
+                                : inlineNotification.type === "edit"
+                                ? "border-blue-200 bg-blue-50/95 text-blue-950 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-200"
+                                : inlineNotification.type === "error"
+                                ? "border-red-200 bg-red-50/95 text-red-950 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200"
+                                : "border-emerald-200 bg-emerald-50/95 text-emerald-950 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200"
+                        }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl shadow-xs ${
+                                    inlineNotification.type === "delete"
+                                        ? "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300"
+                                        : inlineNotification.type === "edit"
+                                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300"
+                                        : inlineNotification.type === "error"
+                                        ? "bg-red-100 text-red-700 dark:bg-red-900/60 dark:text-red-300"
+                                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300"
+                                }`}
+                            >
+                                {inlineNotification.type === "delete" ? (
+                                    <Trash2 size={20} />
+                                ) : inlineNotification.type === "edit" ? (
+                                    <CheckCircle2 size={20} />
+                                ) : inlineNotification.type === "error" ? (
+                                    <AlertCircle size={20} />
+                                ) : inlineNotification.type === "restore" ? (
+                                    <RotateCcw size={20} />
+                                ) : (
+                                    <CheckCircle2 size={20} />
+                                )}
+                            </div>
+
+                            <div className="min-w-0">
+                                <p className="text-sm font-bold tracking-tight">
+                                    {inlineNotification.title}
+                                </p>
+                                <p className="text-xs opacity-90 leading-relaxed">
+                                    {inlineNotification.message}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                            {inlineNotification.action && (
+                                <button
+                                    type="button"
+                                    onClick={inlineNotification.action.onClick}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-amber-700 transition cursor-pointer"
+                                >
+                                    <RotateCcw size={13} />
+                                    <span>{inlineNotification.action.label}</span>
+                                </button>
+                            )}
+
+                            <button
+                                type="button"
+                                onClick={() => setInlineNotification(null)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:bg-black/5 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-white/10 dark:hover:text-stone-200 transition cursor-pointer"
+                                aria-label="Dismiss notification"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Patient Category Tabs Navigation */}
                 <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -3610,6 +3768,11 @@ function StudentManagement() {
                 onRestored={() => {
                     invalidateRecordCache();
                     fetchData();
+                    setInlineNotification({
+                        type: "restore",
+                        title: "Patient Record Restored",
+                        message: "The patient record has been successfully restored.",
+                    });
                 }}
             />
         </div>

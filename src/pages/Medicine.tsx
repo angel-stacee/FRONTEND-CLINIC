@@ -644,6 +644,49 @@ function Medicine() {
                     </div>
                 </div>
 
+                {/* Inline Notification Banner */}
+                {successMessage && (
+                    <div
+                        role="status"
+                        aria-live="polite"
+                        className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/95 p-4 text-emerald-950 shadow-sm transition-all duration-300 animate-in fade-in slide-in-from-top-2 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-200"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 shadow-xs dark:bg-emerald-900/60 dark:text-emerald-300">
+                                <CheckCircle2 size={20} />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold tracking-tight">Notification</p>
+                                <p className="text-xs opacity-90 leading-relaxed">{successMessage}</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                            {toastAction && (
+                                <button
+                                    type="button"
+                                    onClick={toastAction.onClick}
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-amber-700 transition cursor-pointer"
+                                >
+                                    <RotateCcw size={13} />
+                                    <span>{toastAction.label}</span>
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSuccessMessage("");
+                                    setToastAction(undefined);
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-stone-500 hover:bg-black/5 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-white/10 dark:hover:text-stone-200 transition cursor-pointer"
+                                aria-label="Dismiss notification"
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
 
                 {error && !showForm && (
                     <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
