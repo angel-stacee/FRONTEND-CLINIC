@@ -26,6 +26,7 @@ import api from "../services/api";
 import FloatingToast from "../components/common/FloatingToast";
 import { MedicineModal } from "../components/medicine/MedicineModal";
 import { RestoreMedicinesModal } from "../components/medicine/RestoreMedicinesModal";
+import { ConfirmationModal } from "../components/student-management/FieldsAndModals";
 import { addClinicNotification, getStoredNotifications } from "../services/notifications";
 
 const TREATMENT_TYPES = [
@@ -81,6 +82,8 @@ function Medicine() {
     const [successMessage, setSuccessMessage] = useState("");
     const [toastAction, setToastAction] = useState<{ label: string; onClick: () => void } | undefined>(undefined);
     const [showRestoreModal, setShowRestoreModal] = useState(false);
+    const [confirmDeleteMedicine, setConfirmDeleteMedicine] = useState<any | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         if (!successMessage) return undefined;
@@ -387,12 +390,14 @@ function Medicine() {
         }
     };
 
-    const deleteMedicine = async (medicine) => {
-        const confirmed = window.confirm(
-            `Are you sure you want to move "${medicine.medicine_name}" to trash?`
-        );
+    const deleteMedicine = (medicine: any) => {
+        setConfirmDeleteMedicine(medicine);
+    };
 
-        if (!confirmed) return;
+    const handleExecuteDelete = async () => {
+        if (!confirmDeleteMedicine) return;
+        const medicine = confirmDeleteMedicine;
+        setIsDeleting(true);
 
         try {
             await api.delete(`/medicines/${medicine.id}`);
@@ -402,6 +407,7 @@ function Medicine() {
                     (item) => item.id !== medicine.id
                 )
             );
+            setConfirmDeleteMedicine(null);
             await loadMedicines(pagination.current_page, search, statusFilter);
             setSuccessMessage(`${medicine.medicine_name} moved to trash.`);
             setToastAction({
@@ -415,12 +421,11 @@ function Medicine() {
                 description: `${medicine.medicine_name} moved to trash`,
                 category: "medicine",
             });
-        } catch (err) {
+        } catch (err: any) {
             console.error("Medicine delete error:", err);
-
-            alert(
-                "Unable to delete medicine. Please try again."
-            );
+            setError(err?.response?.data?.message || "Unable to delete medicine. Please try again.");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -1605,6 +1610,23 @@ function Medicine() {
                 onClose={() => setShowRestoreModal(false)}
                 onRestored={() => loadMedicines(pagination.current_page, search, statusFilter)}
             />
+
+            {/* Confirmation Modal to Move Medicine to Trash */}
+            {confirmDeleteMedicine && (
+                <ConfirmationModal
+                    open={Boolean(confirmDeleteMedicine)}
+                    title="Move Medicine to Trash"
+                    message={`Are you sure you want to move "${confirmDeleteMedicine.medicine_name}" to trash?`}
+                    confirmText="Move to Trash"
+                    cancelText="Cancel"
+                    danger={true}
+                    loading={isDeleting}
+                    onClose={() => {
+                        if (!isDeleting) setConfirmDeleteMedicine(null);
+                    }}
+                    onConfirm={handleExecuteDelete}
+                />
+            )}
         </div>
     );
 }
