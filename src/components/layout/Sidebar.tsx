@@ -360,12 +360,12 @@ function Sidebar({
                                 <Heart size={18} fill="currentColor" />
                             </div>
 
-                            <div className="min-w-0">
-                                <p className="text-xs font-bold text-white truncate">
+                            <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold text-white">
                                     Better Care
                                 </p>
 
-                                <p className="text-[11px] text-[#fcebe7]/70 truncate">
+                                <p className="text-[11px] leading-tight text-[#fcebe7]/80">
                                     Better Records, Better Monitoring
                                 </p>
                             </div>
