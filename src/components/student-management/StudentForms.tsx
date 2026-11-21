@@ -76,7 +76,7 @@ const DEPARTMENTS = [
 ];
 
 // All patient IDs (Student ID, Staff ID, Faculty ID): strictly digits (numbers) only, no letters, no special characters!
-const sanitizeNumericId = (val: string) => val.replace(/[^0-9]/g, "").slice(0, 15);
+const sanitizeNumericId = (val: string, maxLen = 15) => val.replace(/[^0-9]/g, "").slice(0, maxLen);
 
 // Keydown handler allowing only numeric keys, control keys, and clipboard shortcuts
 const allowOnlyDigitsKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -802,7 +802,7 @@ export function StudentForms({
                                     setStudentForm({
                                         ...studentForm,
                                         student_id:
-                                            sanitizeNumericId(e.target.value),
+                                            sanitizeNumericId(e.target.value, 8),
                                     });
                                 }}
                                 onBlur={() => {
@@ -814,7 +814,7 @@ export function StudentForms({
                                 onBeforeInput={allowOnlyDigitsBeforeInput}
                                 onPaste={(e) => {
                                     e.preventDefault();
-                                    const text = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 15);
+                                    const text = e.clipboardData.getData("text").replace(/[^0-9]/g, "").slice(0, 8);
                                     setStudentForm({ ...studentForm, student_id: text });
                                     setIdError("");
                                     setLocalError("");
@@ -826,7 +826,7 @@ export function StudentForms({
                                 inputMode="numeric"
                                 pattern="[0-9]*"
                                 placeholder="e.g. 20241041"
-                                maxLength={15}
+                                maxLength={8}
                                 required
                                 error={idError}
                             />

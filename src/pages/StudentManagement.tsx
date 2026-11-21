@@ -1013,6 +1013,12 @@ function StudentManagement() {
             return;
         }
 
+        if (studentForm.student_id.trim().length > 8) {
+            setError("Student ID must not exceed 8 numbers.");
+            setFormError("Student ID must not exceed 8 numbers.");
+            return;
+        }
+
         const sId = studentForm.student_id.trim();
         const dupStudent = students.find(
             (s: any) => String(s.student_id).trim() === sId && (!editingStudent || s.id !== editingStudent.id)
