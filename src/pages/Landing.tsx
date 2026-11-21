@@ -26,6 +26,14 @@ import {
     Database,
     Sparkles,
     Maximize2,
+    ChevronDown,
+    ChevronUp,
+    Star,
+    Phone,
+    HelpCircle,
+    Stethoscope,
+    HeartHandshake,
+    CalendarCheck,
 } from "lucide-react";
 
 /* ─── Smooth Scroll Helper ─────────────────────────────────────────────────── */
@@ -54,6 +62,35 @@ export default function Landing(): React.JSX.Element {
     const [orgCategory, setOrgCategory] = useState<OrgCategory>("clinic");
     const [orgData, setOrgData] = useState(() => loadStoredOrgData());
     const [selectedPhoto, setSelectedPhoto] = useState<GalleryItem | null>(null);
+    const [openFaq, setOpenFaq] = useState<number | null>(0);
+
+    const faqs = [
+        {
+            question: "Who is eligible to avail free health services at the TCC Clinic?",
+            answer:
+                "All currently enrolled Tagoloan Community College students across all departments (College of Engineering & Technology, Education, Criminology, Midwifery, Arts & Sciences, and Vocational Programs), along with all faculty and administrative staff, can access free clinical care simply by presenting their school ID.",
+        },
+        {
+            question: "Are medical consultations and primary medicines completely free?",
+            answer:
+                "Yes! All walk-in consultations, vital signs triage, emergency first-aid treatments, and basic dispensary medications (analgesics, antipyretics, antacids, oral rehydration, and topical care) are provided at zero cost as part of TCC's student health security commitment.",
+        },
+        {
+            question: "How do I request an official Medical Certificate for class excuse or OJT?",
+            answer:
+                "Visit the Baluarte Campus Clinic for in-person assessment. Our registered duty health officer examines your condition, records your clinical visit in the portal, and issues an officially signed Medical Certificate or Health Clearance.",
+        },
+        {
+            question: "Where is the clinic located on campus and what are the operating hours?",
+            answer:
+                "The clinic is located on the Ground Floor of the Main Administration Building at Baluarte Campus, Tagoloan, Misamis Oriental. Regular hours are Monday through Friday from 8:00 AM to 5:00 PM, with active duty nurse coverage throughout the day.",
+        },
+        {
+            question: "What emergency protocols are followed if a patient requires urgent hospital care?",
+            answer:
+                "In cases requiring advanced emergency intervention or hospital admission, our clinical team stabilizes the patient immediately and coordinates rapid emergency transport with the Tagoloan Municipal Health Office and municipal rescue units, accompanied by prompt parental or emergency contact notification.",
+        },
+    ];
 
     /* Synchronize in real-time from MySQL Database and local storage */
     useEffect(() => {
@@ -199,7 +236,7 @@ export default function Landing(): React.JSX.Element {
                     </div>
 
                     {/* Desktop Navigation Links */}
-                    <nav className="hidden md:flex items-center gap-6 lg:gap-8">
+                    <nav className="hidden md:flex items-center gap-5 lg:gap-7">
                         <button
                             type="button"
                             onClick={() => scrollTo("#about")}
@@ -209,10 +246,24 @@ export default function Landing(): React.JSX.Element {
                         </button>
                         <button
                             type="button"
+                            onClick={() => scrollTo("#workflow")}
+                            className="text-xs font-semibold text-[#fcebe7]/85 hover:text-[#e5a93b] transition duration-200 cursor-pointer"
+                        >
+                            Patient Care
+                        </button>
+                        <button
+                            type="button"
                             onClick={() => scrollTo("#features")}
                             className="text-xs font-semibold text-[#fcebe7]/85 hover:text-[#e5a93b] transition duration-200 cursor-pointer"
                         >
                             Features
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => scrollTo("#testimonials")}
+                            className="text-xs font-semibold text-[#fcebe7]/85 hover:text-[#e5a93b] transition duration-200 cursor-pointer"
+                        >
+                            Community
                         </button>
                         <button
                             type="button"
@@ -226,7 +277,14 @@ export default function Landing(): React.JSX.Element {
                             onClick={() => scrollTo("#gallery")}
                             className="text-xs font-semibold text-[#fcebe7]/85 hover:text-[#e5a93b] transition duration-200 cursor-pointer"
                         >
-                            Clinic in Action
+                            Gallery
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => scrollTo("#faq")}
+                            className="text-xs font-semibold text-[#fcebe7]/85 hover:text-[#e5a93b] transition duration-200 cursor-pointer"
+                        >
+                            FAQ
                         </button>
 
                         {/* Sign In Button */}
@@ -268,12 +326,32 @@ export default function Landing(): React.JSX.Element {
                             <button
                                 type="button"
                                 onClick={() => {
+                                    scrollTo("#workflow");
+                                    setMenuOpen(false);
+                                }}
+                                className="text-sm font-semibold text-[#fcebe7] hover:text-[#e5a93b] py-1 text-left"
+                            >
+                                Patient Care Journey
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
                                     scrollTo("#features");
                                     setMenuOpen(false);
                                 }}
                                 className="text-sm font-semibold text-[#fcebe7] hover:text-[#e5a93b] py-1 text-left"
                             >
                                 Features &amp; Capabilities
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    scrollTo("#testimonials");
+                                    setMenuOpen(false);
+                                }}
+                                className="text-sm font-semibold text-[#fcebe7] hover:text-[#e5a93b] py-1 text-left"
+                            >
+                                Community Voices
                             </button>
                             <button
                                 type="button"
@@ -294,6 +372,16 @@ export default function Landing(): React.JSX.Element {
                                 className="text-sm font-semibold text-[#fcebe7] hover:text-[#e5a93b] py-1 text-left"
                             >
                                 Clinic in Action
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    scrollTo("#faq");
+                                    setMenuOpen(false);
+                                }}
+                                className="text-sm font-semibold text-[#fcebe7] hover:text-[#e5a93b] py-1 text-left"
+                            >
+                                Frequently Asked Questions
                             </button>
                             <button
                                 type="button"
@@ -508,6 +596,96 @@ export default function Landing(): React.JSX.Element {
                 </div>
             </div>
 
+            {/* ── KEY CAMPUS HEALTH METRICS & IMPACT ────────────────────────── */}
+            <section id="stats" className="mx-auto w-full max-w-[1700px] px-6 sm:px-10 lg:px-16 pt-12 pb-6 text-left">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                    {/* Stat 1 */}
+                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                        <div className="flex items-center justify-between">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#70091f] to-[#9c182f] text-[#e5a93b] shadow-md ring-2 ring-[#e5a93b]/20 group-hover:scale-105 transition-transform">
+                                <Users size={22} />
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                All Colleges
+                            </span>
+                        </div>
+                        <h3 className="mt-4 text-3xl sm:text-4xl font-black text-white tracking-tight">
+                            10,000+
+                        </h3>
+                        <p className="mt-1 text-xs sm:text-sm font-bold text-[#e5a93b]">
+                            Campus Members Protected
+                        </p>
+                        <p className="mt-1 text-[11px] text-[#fcebe7]/70 leading-relaxed">
+                            Full health coverage for students, faculty, and non-teaching personnel across all departments.
+                        </p>
+                    </div>
+
+                    {/* Stat 2 */}
+                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                        <div className="flex items-center justify-between">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e5a93b] to-[#d69527] text-[#1c1005] shadow-md ring-2 ring-white/20 group-hover:scale-105 transition-transform">
+                                <Pill size={22} />
+                            </span>
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#e5a93b] bg-[#e5a93b]/10 border border-[#e5a93b]/30 px-2.5 py-1 rounded-full">
+                                100% Subsidized
+                            </span>
+                        </div>
+                        <h3 className="mt-4 text-3xl sm:text-4xl font-black text-white tracking-tight">
+                            100% Free
+                        </h3>
+                        <p className="mt-1 text-xs sm:text-sm font-bold text-[#e5a93b]">
+                            Consultations &amp; Medicines
+                        </p>
+                        <p className="mt-1 text-[11px] text-[#fcebe7]/70 leading-relaxed">
+                            Zero charge for primary checkups, vital triage, and first-line prescription dispensations.
+                        </p>
+                    </div>
+
+                    {/* Stat 3 */}
+                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                        <div className="flex items-center justify-between">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#70091f] to-[#9c182f] text-[#e5a93b] shadow-md ring-2 ring-[#e5a93b]/20 group-hover:scale-105 transition-transform">
+                                <Clock size={22} />
+                            </span>
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300 bg-amber-950/60 border border-amber-500/30 px-2.5 py-1 rounded-full">
+                                Rapid Walk-In
+                            </span>
+                        </div>
+                        <h3 className="mt-4 text-3xl sm:text-4xl font-black text-white tracking-tight">
+                            &lt; 5 mins
+                        </h3>
+                        <p className="mt-1 text-xs sm:text-sm font-bold text-[#e5a93b]">
+                            Average Triage Wait
+                        </p>
+                        <p className="mt-1 text-[11px] text-[#fcebe7]/70 leading-relaxed">
+                            Immediate medical attention with minimal queuing so scholars return safely to class on time.
+                        </p>
+                    </div>
+
+                    {/* Stat 4 */}
+                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                        <div className="flex items-center justify-between">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#70091f] to-[#9c182f] text-[#e5a93b] shadow-md ring-2 ring-[#e5a93b]/20 group-hover:scale-105 transition-transform">
+                                <ShieldCheck size={22} />
+                            </span>
+                            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                                Encrypted System
+                            </span>
+                        </div>
+                        <h3 className="mt-4 text-3xl sm:text-4xl font-black text-white tracking-tight">
+                            99.9%
+                        </h3>
+                        <p className="mt-1 text-xs sm:text-sm font-bold text-[#e5a93b]">
+                            Digital Records Integrity
+                        </p>
+                        <p className="mt-1 text-[11px] text-[#fcebe7]/70 leading-relaxed">
+                            Robust digital visit logs, accurate inventory tallies, and confidential patient archives.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
             {/* ── ABOUT TCC CLINIC ─────────────────────────────────────────── */}
             <section id="about" className="mx-auto w-full max-w-[1700px] px-6 sm:px-10 lg:px-16 py-20 text-left bg-[#140206] text-white">
                 {/* Header */}
@@ -606,6 +784,90 @@ export default function Landing(): React.JSX.Element {
                             <Award size={12} className="text-amber-300" />
                             <span>Excellence</span>
                         </span>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── PATIENT JOURNEY / HOW IT WORKS ──────────────────────────── */}
+            <section id="workflow" className="mx-auto w-full max-w-[1700px] px-6 sm:px-10 lg:px-16 py-20 text-left border-t border-[#70091f]/40 bg-[#160207] text-white">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+                    <div>
+                        <p className="text-[11px] font-black uppercase tracking-widest text-[#e5a93b]">
+                            Seamless Campus Healthcare
+                        </p>
+                        <h2 className="mt-1 text-2xl sm:text-4xl font-black text-white tracking-tight">
+                            How our clinic care works
+                        </h2>
+                        <p className="mt-2 max-w-2xl text-xs sm:text-sm text-[#fcebe7]/80 leading-relaxed font-normal">
+                            From walk-in triage to instant medicine dispensation and official health clearance, accessing care at TCC Baluarte Campus is straightforward and rapid.
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={goToLogin}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#e5a93b]/50 bg-[#e5a93b]/10 px-5 py-2.5 text-xs font-bold text-[#f5c358] hover:bg-[#e5a93b] hover:text-[#1c080e] transition-all duration-200 cursor-pointer self-start sm:self-auto shadow-md"
+                    >
+                        <span>Check In Online</span>
+                        <ArrowRight size={14} />
+                    </button>
+                </div>
+
+                <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+                    {/* Step 1 */}
+                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-b from-[#250309] to-[#1a0207] p-7 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex items-center justify-between">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#70091f] text-[#e5a93b] font-black text-sm shadow-md ring-2 ring-[#e5a93b]/30 group-hover:scale-105 transition-transform">
+                                01
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-[10px] font-bold text-[#fcebe7] border border-white/10">
+                                <MapPin size={11} className="text-[#e5a93b]" />
+                                <span>Ground Floor, Baluarte</span>
+                            </span>
+                        </div>
+                        <h3 className="mt-6 text-lg sm:text-xl font-bold text-white group-hover:text-[#e5a93b] transition-colors">
+                            Walk-In &amp; Quick Check-In
+                        </h3>
+                        <p className="mt-2 text-xs sm:text-sm text-[#fcebe7]/75 leading-relaxed">
+                            Present your Student ID (starting with 20) or Faculty/Staff ID at the clinic reception desk for immediate digital identification and triage entry.
+                        </p>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="group relative rounded-3xl border border-[#e5a93b]/70 bg-gradient-to-b from-[#380612] to-[#200309] p-7 shadow-2xl hover:border-[#e5a93b] hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex items-center justify-between">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e5a93b] to-[#d69527] text-[#1c1005] font-black text-sm shadow-md ring-2 ring-white/30 group-hover:scale-105 transition-transform">
+                                02
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e5a93b]/20 px-3 py-1 text-[10px] font-bold text-[#f5c358] border border-[#e5a93b]/40">
+                                <Stethoscope size={12} />
+                                <span>Clinical Assessment</span>
+                            </span>
+                        </div>
+                        <h3 className="mt-6 text-lg sm:text-xl font-bold text-white group-hover:text-[#e5a93b] transition-colors">
+                            Vital Signs &amp; Consultation
+                        </h3>
+                        <p className="mt-2 text-xs sm:text-sm text-[#fcebe7]/75 leading-relaxed">
+                            Our registered duty nurse assesses blood pressure, body temperature, pulse rate, and symptoms in a private, clean examination environment.
+                        </p>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-b from-[#250309] to-[#1a0207] p-7 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300">
+                        <div className="flex items-center justify-between">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#70091f] text-[#e5a93b] font-black text-sm shadow-md ring-2 ring-[#e5a93b]/30 group-hover:scale-105 transition-transform">
+                                03
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 text-[10px] font-bold text-emerald-400">
+                                <CheckCircle2 size={11} />
+                                <span>Care Completed</span>
+                            </span>
+                        </div>
+                        <h3 className="mt-6 text-lg sm:text-xl font-bold text-white group-hover:text-[#e5a93b] transition-colors">
+                            Free Meds &amp; Documentation
+                        </h3>
+                        <p className="mt-2 text-xs sm:text-sm text-[#fcebe7]/75 leading-relaxed">
+                            Receive prescribed medications from our dispensary, instant health guidance, and verified medical certificates for academic or work clearances.
+                        </p>
                     </div>
                 </div>
             </section>
@@ -767,6 +1029,89 @@ export default function Landing(): React.JSX.Element {
                             <p className="mt-1.5 text-xs text-[#fcebe7]/75 leading-relaxed">
                                 Standardized clinical ledgers ensure full audit readiness, compliance, and accurate health statistics.
                             </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── TESTIMONIALS / VOICES OF THE COMMUNITY ────────────────────── */}
+            <section id="testimonials" className="mx-auto w-full max-w-[1700px] px-6 sm:px-10 lg:px-16 py-20 text-left border-t border-[#70091f]/40 bg-[#140206] text-white">
+                <div>
+                    <p className="text-[11px] font-black uppercase tracking-widest text-[#e5a93b]">
+                        Campus Health In Real Life
+                    </p>
+                    <h2 className="mt-1 text-2xl sm:text-4xl font-black text-white tracking-tight">
+                        Trusted by students &amp; faculty
+                    </h2>
+                    <p className="mt-2 max-w-2xl text-xs sm:text-sm text-[#fcebe7]/80 leading-relaxed font-normal">
+                        Hear from scholars and mentors across Tagoloan Community College who rely on the Baluarte Campus Clinic every semester.
+                    </p>
+                </div>
+
+                <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
+                        <div>
+                            <div className="flex items-center gap-1 text-amber-400">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star key={i} size={15} fill="currentColor" />
+                                ))}
+                            </div>
+                            <p className="mt-4 text-xs sm:text-sm leading-relaxed text-[#fcebe7]/90 font-medium italic">
+                                "During our intensive programming finals, I had severe migraines and fever. The duty nurse was exceptionally attentive, administered medication right away, and recorded my visit securely."
+                            </p>
+                        </div>
+                        <div className="mt-6 flex items-center gap-3 pt-4 border-t border-[#70091f]/40">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#70091f] to-[#9c182f] text-sm font-bold text-white ring-2 ring-[#e5a93b]/40 group-hover:scale-105 transition-transform">
+                                JM
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-white">John Mark D.</p>
+                                <p className="text-[11px] text-[#e5a93b] font-medium">BS Information Technology · 3rd Year</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
+                        <div>
+                            <div className="flex items-center gap-1 text-amber-400">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star key={i} size={15} fill="currentColor" />
+                                ))}
+                            </div>
+                            <p className="mt-4 text-xs sm:text-sm leading-relaxed text-[#fcebe7]/90 font-medium italic">
+                                "The clinical management system streamlines everything. Requesting health records, student clearances, and checkup endorsements used to take hours—now it takes only a few minutes."
+                            </p>
+                        </div>
+                        <div className="mt-6 flex items-center gap-3 pt-4 border-t border-[#70091f]/40">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#e5a93b] to-[#d69527] text-sm font-black text-[#1c1005] ring-2 ring-white/40 group-hover:scale-105 transition-transform">
+                                MS
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-white">Prof. Maria Santos</p>
+                                <p className="text-[11px] text-[#e5a93b] font-medium">College of Education Faculty</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
+                        <div>
+                            <div className="flex items-center gap-1 text-amber-400">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star key={i} size={15} fill="currentColor" />
+                                ))}
+                            </div>
+                            <p className="mt-4 text-xs sm:text-sm leading-relaxed text-[#fcebe7]/90 font-medium italic">
+                                "As a midwifery student performing clinical training at Baluarte, I appreciate how clean, organized, and properly inventoried our clinic is. It reflects genuine public service."
+                            </p>
+                        </div>
+                        <div className="mt-6 flex items-center gap-3 pt-4 border-t border-[#70091f]/40">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-[#70091f] to-[#9c182f] text-sm font-bold text-white ring-2 ring-[#e5a93b]/40 group-hover:scale-105 transition-transform">
+                                AN
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-white">Aira Nicole P.</p>
+                                <p className="text-[11px] text-[#e5a93b] font-medium">Department of Midwifery · Intern</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1013,6 +1358,68 @@ export default function Landing(): React.JSX.Element {
                 </div>
             )}
 
+            {/* ── FREQUENTLY ASKED QUESTIONS (ACCORDION) ──────────────────── */}
+            <section id="faq" className="mx-auto w-full max-w-[1700px] px-6 sm:px-10 lg:px-16 py-20 text-left border-t border-[#70091f]/40 bg-[#140206] text-white">
+                <div className="text-center max-w-3xl mx-auto">
+                    <p className="text-[11px] font-black uppercase tracking-widest text-[#e5a93b]">
+                        Everything You Need to Know
+                    </p>
+                    <h2 className="mt-1 text-2xl sm:text-4xl font-black text-white tracking-tight">
+                        Frequently Asked Questions
+                    </h2>
+                    <p className="mt-3 text-xs sm:text-sm md:text-base text-[#fcebe7]/80 leading-relaxed font-normal">
+                        Got questions regarding clinic consultations, free medicine dispensary, or campus health certificates? Find quick answers below.
+                    </p>
+                </div>
+
+                <div className="mt-10 max-w-4xl mx-auto space-y-4">
+                    {faqs.map((faq, index) => {
+                        const isOpen = openFaq === index;
+                        return (
+                            <div
+                                key={index}
+                                className={`rounded-3xl border transition-all duration-300 overflow-hidden ${
+                                    isOpen
+                                        ? "border-[#e5a93b]/70 bg-gradient-to-r from-[#2a040d] via-[#1f0309] to-[#170206] shadow-xl shadow-black/40"
+                                        : "border-[#70091f]/50 bg-[#1a0207] hover:border-[#e5a93b]/40"
+                                }`}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => setOpenFaq(isOpen ? null : index)}
+                                    className="w-full flex items-center justify-between p-5 sm:p-6 text-left cursor-pointer transition-colors"
+                                    aria-expanded={isOpen}
+                                >
+                                    <div className="flex items-center gap-3.5 pr-4">
+                                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition-colors ${
+                                            isOpen
+                                                ? "bg-[#e5a93b] text-[#1c080e]"
+                                                : "bg-white/10 text-[#e5a93b]"
+                                        }`}>
+                                            Q{index + 1}
+                                        </span>
+                                        <span className="text-sm sm:text-base font-bold text-white leading-snug">
+                                            {faq.question}
+                                        </span>
+                                    </div>
+                                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-transform duration-300 ${
+                                        isOpen ? "rotate-180 bg-[#e5a93b]/20 text-[#e5a93b]" : "bg-white/10 text-white/70"
+                                    }`}>
+                                        <ChevronDown size={16} />
+                                    </div>
+                                </button>
+
+                                {isOpen && (
+                                    <div className="px-5 sm:px-6 pb-6 pt-1 text-xs sm:text-sm text-[#fcebe7]/85 leading-relaxed border-t border-white/10 mt-1">
+                                        {faq.answer}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+
             {/* ── CAMPUS WALK-IN & FIRST-AID CALLOUT BANNER ─────────────────── */}
             <section className="mx-auto w-full max-w-[1700px] px-6 sm:px-10 lg:px-16 py-8">
                 <div className="rounded-3xl border border-[#e5a93b]/40 bg-gradient-to-r from-[#32060f] via-[#24040c] to-[#1a0308] p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-2xl text-white">
@@ -1150,6 +1557,15 @@ export default function Landing(): React.JSX.Element {
                             <li>
                                 <button
                                     type="button"
+                                    onClick={() => scrollTo("#workflow")}
+                                    className="hover:text-[#e5a93b] transition cursor-pointer"
+                                >
+                                    Patient Care Journey
+                                </button>
+                            </li>
+                            <li>
+                                <button
+                                    type="button"
                                     onClick={() => scrollTo("#features")}
                                     className="hover:text-[#e5a93b] transition cursor-pointer"
                                 >
@@ -1159,10 +1575,28 @@ export default function Landing(): React.JSX.Element {
                             <li>
                                 <button
                                     type="button"
+                                    onClick={() => scrollTo("#testimonials")}
+                                    className="hover:text-[#e5a93b] transition cursor-pointer"
+                                >
+                                    Community Voices
+                                </button>
+                            </li>
+                            <li>
+                                <button
+                                    type="button"
                                     onClick={() => scrollTo("#team")}
                                     className="hover:text-[#e5a93b] transition cursor-pointer"
                                 >
                                     Clinic Team
+                                </button>
+                            </li>
+                            <li>
+                                <button
+                                    type="button"
+                                    onClick={() => scrollTo("#faq")}
+                                    className="hover:text-[#e5a93b] transition cursor-pointer"
+                                >
+                                    FAQ
                                 </button>
                             </li>
                             <li>
