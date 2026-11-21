@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import tccLogo from "../assets/tcc-logo.png";
 import api from "../services/api";
 import { ORG_DATA, loadStoredOrgData, type OrgCategory } from "./Organization";
@@ -40,6 +40,51 @@ import {
 function scrollTo(href: string) {
     const el = document.querySelector(href);
     if (el) el.scrollIntoView({ behavior: "smooth" });
+}
+
+/* ─── Animated Number Counter ──────────────────────────────────────────────── */
+function AnimatedCounter({ value, suffix = "", prefix = "" }: { value: number; suffix?: string; prefix?: string }) {
+    const [count, setCount] = useState(0);
+    const [started, setStarted] = useState(false);
+    const ref = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setStarted(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.2 }
+        );
+        if (ref.current) observer.observe(ref.current);
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (!started) return;
+        let startTimestamp: number | null = null;
+        const duration = 1500;
+        const step = (timestamp: number) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            setCount(Math.floor(easeOut * value));
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                setCount(value);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }, [started, value]);
+
+    return (
+        <span ref={ref}>
+            {prefix}{count.toLocaleString()}{suffix}
+        </span>
+    );
 }
 
 interface GalleryItem {
@@ -128,6 +173,25 @@ export default function Landing(): React.JSX.Element {
         const onScroll = () => setScrolled(window.scrollY > 20);
         window.addEventListener("scroll", onScroll, { passive: true });
         return () => window.removeEventListener("scroll", onScroll);
+    }, []);
+
+    /* Scroll Reveal Animation Observer */
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("revealed");
+                    }
+                });
+            },
+            { threshold: 0.08, rootMargin: "0px 0px -30px 0px" }
+        );
+
+        const elements = document.querySelectorAll(".reveal-item");
+        elements.forEach((el) => observer.observe(el));
+
+        return () => observer.disconnect();
     }, []);
 
     const goToLogin = () => {
@@ -479,8 +543,9 @@ export default function Landing(): React.JSX.Element {
                         <button
                             type="button"
                             onClick={goToLogin}
-                            className="group inline-flex items-center gap-2 rounded-full bg-[#e5a93b] px-8 py-3.5 text-xs sm:text-sm font-bold text-[#1c080e] shadow-xl shadow-amber-950/60 transition-all duration-200 hover:bg-[#f0b445] hover:shadow-2xl hover:scale-[1.03] active:scale-95 cursor-pointer"
+                            className="group relative overflow-hidden inline-flex items-center gap-2 rounded-full bg-[#e5a93b] px-8 py-3.5 text-xs sm:text-sm font-bold text-[#1c080e] shadow-xl shadow-amber-950/60 transition-all duration-300 hover:bg-[#f0b445] hover:shadow-2xl hover:scale-[1.04] active:scale-95 cursor-pointer"
                         >
+                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer pointer-events-none" />
                             <span>Access Clinic Portal</span>
                             <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
                         </button>
@@ -600,7 +665,7 @@ export default function Landing(): React.JSX.Element {
             <section id="stats" className="mx-auto w-full max-w-[1700px] px-6 sm:px-10 lg:px-16 pt-12 pb-6 text-left">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                     {/* Stat 1 */}
-                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                    <div className="reveal-item group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                         <div className="flex items-center justify-between">
                             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#70091f] to-[#9c182f] text-[#e5a93b] shadow-md ring-2 ring-[#e5a93b]/20 group-hover:scale-105 transition-transform">
                                 <Users size={22} />
@@ -611,7 +676,7 @@ export default function Landing(): React.JSX.Element {
                             </span>
                         </div>
                         <h3 className="mt-4 text-3xl sm:text-4xl font-black text-white tracking-tight">
-                            10,000+
+                            <AnimatedCounter value={10000} suffix="+" />
                         </h3>
                         <p className="mt-1 text-xs sm:text-sm font-bold text-[#e5a93b]">
                             Campus Members Protected
@@ -622,7 +687,7 @@ export default function Landing(): React.JSX.Element {
                     </div>
 
                     {/* Stat 2 */}
-                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                    <div className="reveal-item [transition-delay:100ms] group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                         <div className="flex items-center justify-between">
                             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e5a93b] to-[#d69527] text-[#1c1005] shadow-md ring-2 ring-white/20 group-hover:scale-105 transition-transform">
                                 <Pill size={22} />
@@ -632,7 +697,7 @@ export default function Landing(): React.JSX.Element {
                             </span>
                         </div>
                         <h3 className="mt-4 text-3xl sm:text-4xl font-black text-white tracking-tight">
-                            100% Free
+                            <AnimatedCounter value={100} suffix="%" /> Free
                         </h3>
                         <p className="mt-1 text-xs sm:text-sm font-bold text-[#e5a93b]">
                             Consultations &amp; Medicines
@@ -643,7 +708,7 @@ export default function Landing(): React.JSX.Element {
                     </div>
 
                     {/* Stat 3 */}
-                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                    <div className="reveal-item [transition-delay:200ms] group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                         <div className="flex items-center justify-between">
                             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#70091f] to-[#9c182f] text-[#e5a93b] shadow-md ring-2 ring-[#e5a93b]/20 group-hover:scale-105 transition-transform">
                                 <Clock size={22} />
@@ -664,7 +729,7 @@ export default function Landing(): React.JSX.Element {
                     </div>
 
                     {/* Stat 4 */}
-                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                    <div className="reveal-item [transition-delay:300ms] group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-br from-[#27030b] via-[#1a0207] to-[#120104] p-6 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                         <div className="flex items-center justify-between">
                             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#70091f] to-[#9c182f] text-[#e5a93b] shadow-md ring-2 ring-[#e5a93b]/20 group-hover:scale-105 transition-transform">
                                 <ShieldCheck size={22} />
@@ -674,7 +739,7 @@ export default function Landing(): React.JSX.Element {
                             </span>
                         </div>
                         <h3 className="mt-4 text-3xl sm:text-4xl font-black text-white tracking-tight">
-                            99.9%
+                            <AnimatedCounter value={99} suffix=".9%" />
                         </h3>
                         <p className="mt-1 text-xs sm:text-sm font-bold text-[#e5a93b]">
                             Digital Records Integrity
@@ -814,7 +879,7 @@ export default function Landing(): React.JSX.Element {
 
                 <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 relative">
                     {/* Step 1 */}
-                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-b from-[#250309] to-[#1a0207] p-7 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300">
+                    <div className="reveal-item group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-b from-[#250309] to-[#1a0207] p-7 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center justify-between">
                             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#70091f] text-[#e5a93b] font-black text-sm shadow-md ring-2 ring-[#e5a93b]/30 group-hover:scale-105 transition-transform">
                                 01
@@ -833,7 +898,7 @@ export default function Landing(): React.JSX.Element {
                     </div>
 
                     {/* Step 2 */}
-                    <div className="group relative rounded-3xl border border-[#e5a93b]/70 bg-gradient-to-b from-[#380612] to-[#200309] p-7 shadow-2xl hover:border-[#e5a93b] hover:-translate-y-1 transition-all duration-300">
+                    <div className="reveal-item [transition-delay:150ms] group relative rounded-3xl border border-[#e5a93b]/70 bg-gradient-to-b from-[#380612] to-[#200309] p-7 shadow-2xl hover:border-[#e5a93b] hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center justify-between">
                             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e5a93b] to-[#d69527] text-[#1c1005] font-black text-sm shadow-md ring-2 ring-white/30 group-hover:scale-105 transition-transform">
                                 02
@@ -852,7 +917,7 @@ export default function Landing(): React.JSX.Element {
                     </div>
 
                     {/* Step 3 */}
-                    <div className="group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-b from-[#250309] to-[#1a0207] p-7 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300">
+                    <div className="reveal-item [transition-delay:300ms] group relative rounded-3xl border border-[#70091f]/60 bg-gradient-to-b from-[#250309] to-[#1a0207] p-7 shadow-xl hover:border-[#e5a93b]/70 hover:-translate-y-1 transition-all duration-300">
                         <div className="flex items-center justify-between">
                             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#70091f] text-[#e5a93b] font-black text-sm shadow-md ring-2 ring-[#e5a93b]/30 group-hover:scale-105 transition-transform">
                                 03
@@ -1049,7 +1114,7 @@ export default function Landing(): React.JSX.Element {
                 </div>
 
                 <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
+                    <div className="reveal-item group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
                         <div>
                             <div className="flex items-center gap-1 text-amber-400">
                                 {[...Array(5)].map((_, i) => (
@@ -1071,7 +1136,7 @@ export default function Landing(): React.JSX.Element {
                         </div>
                     </div>
 
-                    <div className="group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
+                    <div className="reveal-item [transition-delay:150ms] group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
                         <div>
                             <div className="flex items-center gap-1 text-amber-400">
                                 {[...Array(5)].map((_, i) => (
@@ -1093,7 +1158,7 @@ export default function Landing(): React.JSX.Element {
                         </div>
                     </div>
 
-                    <div className="group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
+                    <div className="reveal-item [transition-delay:300ms] group rounded-3xl border border-[#70091f]/60 bg-[#1d0309] p-7 shadow-xl flex flex-col justify-between hover:border-[#e5a93b]/60 hover:-translate-y-1 transition-all duration-300">
                         <div>
                             <div className="flex items-center gap-1 text-amber-400">
                                 {[...Array(5)].map((_, i) => (
@@ -1378,7 +1443,7 @@ export default function Landing(): React.JSX.Element {
                         return (
                             <div
                                 key={index}
-                                className={`rounded-3xl border transition-all duration-300 overflow-hidden ${
+                                className={`reveal-item rounded-3xl border transition-all duration-300 overflow-hidden ${
                                     isOpen
                                         ? "border-[#e5a93b]/70 bg-gradient-to-r from-[#2a040d] via-[#1f0309] to-[#170206] shadow-xl shadow-black/40"
                                         : "border-[#70091f]/50 bg-[#1a0207] hover:border-[#e5a93b]/40"
@@ -1425,7 +1490,7 @@ export default function Landing(): React.JSX.Element {
                 <div className="rounded-3xl border border-[#e5a93b]/40 bg-gradient-to-r from-[#32060f] via-[#24040c] to-[#1a0308] p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6 shadow-2xl text-white">
                     <div className="flex items-start sm:items-center gap-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#70091f] text-white shadow-md border border-[#e5a93b]/30">
-                            <HeartPulse size={22} className="text-[#e5a93b]" />
+                            <HeartPulse size={22} className="text-[#e5a93b] animate-heartbeat" />
                         </div>
                         <div className="text-left">
                             <h3 className="text-base sm:text-lg font-bold text-white">
@@ -1440,10 +1505,11 @@ export default function Landing(): React.JSX.Element {
                         <button
                             type="button"
                             onClick={goToLogin}
-                            className="inline-flex items-center gap-2 rounded-full bg-[#e5a93b] px-6 py-2.5 text-xs font-bold text-[#1c080e] shadow-md hover:bg-[#d89c2f] transition active:scale-95 cursor-pointer"
+                            className="group relative overflow-hidden inline-flex items-center gap-2 rounded-full bg-[#e5a93b] px-6 py-2.5 text-xs font-bold text-[#1c080e] shadow-md hover:bg-[#d89c2f] transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
                         >
+                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer pointer-events-none" />
                             <span>Access Portal</span>
-                            <ArrowRight size={14} />
+                            <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-1" />
                         </button>
                     </div>
                 </div>
@@ -1487,10 +1553,11 @@ export default function Landing(): React.JSX.Element {
                         <button
                             type="button"
                             onClick={goToLogin}
-                            className="inline-flex items-center gap-2 rounded-full bg-[#e5a93b] px-8 py-3.5 text-xs sm:text-sm font-bold text-[#1c080e] shadow-xl shadow-amber-950/60 transition hover:bg-[#d89c2f] hover:scale-105 active:scale-95 cursor-pointer"
+                            className="group relative overflow-hidden inline-flex items-center gap-2 rounded-full bg-[#e5a93b] px-8 py-3.5 text-xs sm:text-sm font-bold text-[#1c080e] shadow-xl shadow-amber-950/60 transition-all duration-300 hover:bg-[#f0b445] hover:scale-105 active:scale-95 cursor-pointer"
                         >
+                            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer pointer-events-none" />
                             <span>Access Clinic Portal</span>
-                            <ArrowRight size={15} />
+                            <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-1" />
                         </button>
                         <button
                             type="button"
