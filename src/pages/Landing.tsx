@@ -3,6 +3,7 @@ import tccLogo from "../assets/tcc-logo.png";
 import api from "../services/api";
 import { ORG_DATA, loadStoredOrgData, type OrgCategory } from "./Organization";
 import { useNavigate } from "react-router-dom";
+import { LandingChatbot } from "../components/landing/LandingChatbot";
 import {
     Menu,
     X,
@@ -1721,6 +1722,9 @@ export default function Landing(): React.JSX.Element {
                     </div>
                 </div>
             )}
+
+            {/* ── AI CHATBOT VIRTUAL ASSISTANT ────────────────────────────── */}
+            <LandingChatbot />
         </div>
     );
 }
